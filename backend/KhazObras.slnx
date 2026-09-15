@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KhazObras.Api/KhazObras.Api.csproj" />
+    <Project Path="src/KhazObras.Application/KhazObras.Application.csproj" />
+    <Project Path="src/KhazObras.Domain/KhazObras.Domain.csproj" />
+    <Project Path="src/KhazObras.Infrastructure/KhazObras.Infrastructure.csproj" />
+  </Folder>
+</Solution>

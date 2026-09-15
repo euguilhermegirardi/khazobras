@@ -1,0 +1,6 @@
+@KhazObras.Api_HostAddress = http://localhost:5285
+
+GET {{KhazObras.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
