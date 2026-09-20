@@ -1,3 +1,7 @@
+using FluentValidation;
+using KhazObras.Application.Dtos.Obras;
+using KhazObras.Infrastructure.Repositories;
+using KhazObras.Application.Validators;
 using System.Security.Claims;
 using System.Text;
 using Dapper;
@@ -7,7 +11,6 @@ using KhazObras.Application.Dtos.Auth;
 using KhazObras.Application.Dtos.Users;
 using KhazObras.Application.Services;
 using KhazObras.Infrastructure.Persistence;
-using KhazObras.Infrastructure.Repositories;
 using KhazObras.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -27,6 +30,9 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 // Application services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IObraRepository, ObraRepository>();
+builder.Services.AddScoped<ObraService>();
+builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -117,10 +123,34 @@ app.MapGet("/users/me", async (ClaimsPrincipal principal, IUserRepository userRe
 .RequireAuthorization()
 .WithName("GetMe");
 
-app.MapPost("/dev/hash-password", (string password, IPasswordHasher hasher) =>
+app.MapPost("/obras", async (CreateObraRequest request, IValidator<CreateObraRequest> validator, ObraService obraService) =>
 {
-    return Results.Ok(new { hash = hasher.Hash(password) });
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var result = await obraService.CreateAsync(request);
+    return Results.Created($"/obras/{result.Id}", result);
 })
-.WithName("DevHashPassword");
+.RequireAuthorization()
+.WithName("CreateObra");
+
+app.MapGet("/obras/{id:guid}", async (Guid id, ObraService obraService) =>
+{
+    var result = await obraService.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetObraById");
+
+app.MapGet("/obras", async (ObraService obraService, int pageIndex = 0, int pageSize = 20) =>
+{
+    var result = await obraService.GetPagedAsync(pageIndex, pageSize);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetObras");
 
 app.Run();
