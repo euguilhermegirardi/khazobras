@@ -155,16 +155,4 @@ app.MapGet("/obras", async (ObraService obraService, int pageIndex = 0, int page
 .RequireAuthorization()
 .WithName("GetObras");
 
-app.MapPost("/dev/test-upload", async (IStorageService storage) =>
-{
-    var content = "Arquivo de teste do KhazObras"u8.ToArray();
-    using var stream = new MemoryStream(content);
-
-    var key = $"test/{Guid.NewGuid()}.txt";
-    await storage.UploadAsync(key, stream, "text/plain");
-
-    return Results.Ok(new { key, message = "Upload realizado com sucesso" });
-})
-.WithName("DevTestUpload");
-
 app.Run();
