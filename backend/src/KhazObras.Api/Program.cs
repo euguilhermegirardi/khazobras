@@ -1,3 +1,4 @@
+using KhazObras.Application.Dtos.Etapas;
 using KhazObras.Infrastructure.Storage;
 using FluentValidation;
 using KhazObras.Application.Dtos.Obras;
@@ -34,6 +35,8 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<IObraRepository, ObraRepository>();
 builder.Services.AddScoped<ObraService>();
+builder.Services.AddScoped<IEtapaRepository, EtapaRepository>();
+builder.Services.AddScoped<EtapaService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
@@ -154,5 +157,35 @@ app.MapGet("/obras", async (ObraService obraService, int pageIndex = 0, int page
 })
 .RequireAuthorization()
 .WithName("GetObras");
+
+app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapaRequest> validator, EtapaService etapaService) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var result = await etapaService.CreateAsync(request);
+    return Results.Created($"/etapas/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateEtapa");
+
+app.MapGet("/etapas/{id:guid}", async (Guid id, EtapaService etapaService) =>
+{
+    var result = await etapaService.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetEtapaById");
+
+app.MapGet("/obras/{obraId:guid}/etapas", async (Guid obraId, EtapaService etapaService) =>
+{
+    var result = await etapaService.GetByObraIdAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetEtapasByObra");
 
 app.Run();
