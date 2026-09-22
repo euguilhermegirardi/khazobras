@@ -1,3 +1,4 @@
+using KhazObras.Application.Dtos.Medicoes;
 using KhazObras.Application.Dtos.Etapas;
 using KhazObras.Infrastructure.Storage;
 using FluentValidation;
@@ -37,6 +38,8 @@ builder.Services.AddScoped<IObraRepository, ObraRepository>();
 builder.Services.AddScoped<ObraService>();
 builder.Services.AddScoped<IEtapaRepository, EtapaRepository>();
 builder.Services.AddScoped<EtapaService>();
+builder.Services.AddScoped<IMedicaoRepository, MedicaoRepository>();
+builder.Services.AddScoped<MedicaoService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
@@ -187,5 +190,67 @@ app.MapGet("/obras/{obraId:guid}/etapas", async (Guid obraId, EtapaService etapa
 })
 .RequireAuthorization()
 .WithName("GetEtapasByObra");
+
+app.MapPost("/medicoes", async (CreateMedicaoRequest request, IValidator<CreateMedicaoRequest> validator, MedicaoService medicaoService) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var result = await medicaoService.CreateAsync(request);
+    return Results.Created($"/medicoes/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateMedicao");
+
+app.MapGet("/medicoes/{id:guid}", async (Guid id, MedicaoService medicaoService) =>
+{
+    var result = await medicaoService.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetMedicaoById");
+
+app.MapGet("/obras/{obraId:guid}/medicoes", async (Guid obraId, MedicaoService medicaoService) =>
+{
+    var result = await medicaoService.GetByObraIdAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetMedicoesByObra");
+
+app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal principal, MedicaoService medicaoService) =>
+{
+    var userId = Guid.Parse(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    try
+    {
+        var result = await medicaoService.ApproveAsync(id, userId);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Conflict(new { message = ex.Message });
+    }
+})
+.RequireAuthorization()
+.WithName("ApproveMedicao");
+
+app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceRequest request, MedicaoService medicaoService) =>
+{
+    try
+    {
+        var result = await medicaoService.IssueInvoiceAsync(id, request.NfNumber);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Conflict(new { message = ex.Message });
+    }
+})
+.RequireAuthorization()
+.WithName("IssueMedicaoInvoice");
 
 app.Run();
