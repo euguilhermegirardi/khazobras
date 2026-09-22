@@ -1,3 +1,4 @@
+using KhazObras.Infrastructure.Storage;
 using FluentValidation;
 using KhazObras.Application.Dtos.Obras;
 using KhazObras.Infrastructure.Repositories;
@@ -26,6 +27,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Seguranca
 builder.Services.AddScoped<IPasswordHasher, PasswordHasherAdapter>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddSingleton<IStorageService, R2StorageService>();
 
 // Application services
 builder.Services.AddScoped<AuthService>();
@@ -152,5 +154,17 @@ app.MapGet("/obras", async (ObraService obraService, int pageIndex = 0, int page
 })
 .RequireAuthorization()
 .WithName("GetObras");
+
+app.MapPost("/dev/test-upload", async (IStorageService storage) =>
+{
+    var content = "Arquivo de teste do KhazObras"u8.ToArray();
+    using var stream = new MemoryStream(content);
+
+    var key = $"test/{Guid.NewGuid()}.txt";
+    await storage.UploadAsync(key, stream, "text/plain");
+
+    return Results.Ok(new { key, message = "Upload realizado com sucesso" });
+})
+.WithName("DevTestUpload");
 
 app.Run();
