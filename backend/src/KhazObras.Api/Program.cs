@@ -1,3 +1,4 @@
+using KhazObras.Application.Dtos.Financeiro;
 using KhazObras.Application.Dtos.Medicoes;
 using KhazObras.Application.Dtos.Etapas;
 using KhazObras.Infrastructure.Storage;
@@ -40,6 +41,8 @@ builder.Services.AddScoped<IEtapaRepository, EtapaRepository>();
 builder.Services.AddScoped<EtapaService>();
 builder.Services.AddScoped<IMedicaoRepository, MedicaoRepository>();
 builder.Services.AddScoped<MedicaoService>();
+builder.Services.AddScoped<IFinanceiroLancamentoRepository, FinanceiroLancamentoRepository>();
+builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
@@ -252,5 +255,60 @@ app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceReq
 })
 .RequireAuthorization()
 .WithName("IssueMedicaoInvoice");
+
+app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest request, IValidator<CreateFinanceiroLancamentoRequest> validator, FinanceiroService financeiroService, ClaimsPrincipal principal) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var result = await financeiroService.CreateAsync(request, userId);
+    return Results.Created($"/financeiro/lancamentos/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateFinanceiroLancamento");
+
+app.MapGet("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroService financeiroService) =>
+{
+    var result = await financeiroService.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetFinanceiroLancamentoById");
+
+app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, FinanceiroService financeiroService, int pageIndex = 0, int pageSize = 20) =>
+{
+    var result = await financeiroService.GetPagedByObraIdAsync(obraId, pageIndex, pageSize);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetFinanceiroLancamentosByObra");
+
+app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFile file, FinanceiroService financeiroService) =>
+{
+    using var stream = file.OpenReadStream();
+    var result = await financeiroService.UploadAnexoAsync(id, stream, file.FileName, file.ContentType, file.Length);
+    return Results.Created($"/financeiro/anexos/{result.Id}", result);
+})
+.DisableAntiforgery()
+.RequireAuthorization()
+.WithName("UploadFinanceiroAnexo");
+
+app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, FinanceiroService financeiroService) =>
+{
+    var result = await financeiroService.DownloadAnexoAsync(anexoId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    var (content, fileName, contentType) = result.Value;
+    return Results.File(content, contentType ?? "application/octet-stream", fileName);
+})
+.RequireAuthorization()
+.WithName("DownloadFinanceiroAnexo");
 
 app.Run();
