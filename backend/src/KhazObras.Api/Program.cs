@@ -1,6 +1,9 @@
+using KhazObras.Application.Dtos.Fornecedores;
+using KhazObras.Application.Dtos.Prestadores;
+using KhazObras.Application.Dtos.Estoque;
+using KhazObras.Application.Dtos.Pipelines;
 using KhazObras.Application.Dtos.RelatoriosFotograficos;
 using KhazObras.Application.Dtos.RelatoriosMensais;
-using KhazObras.Application.Dtos.ProjetosDocumentos;
 using KhazObras.Application.Dtos.Financeiro;
 using KhazObras.Application.Dtos.Medicoes;
 using KhazObras.Application.Dtos.Etapas;
@@ -52,6 +55,14 @@ builder.Services.AddScoped<IRelatorioMensalRepository, RelatorioMensalRepository
 builder.Services.AddScoped<RelatorioMensalService>();
 builder.Services.AddScoped<IProjetoDocumentoRepository, ProjetoDocumentoRepository>();
 builder.Services.AddScoped<ProjetoDocumentoService>();
+builder.Services.AddScoped<IFornecedorRepository, FornecedorRepository>();
+builder.Services.AddScoped<FornecedorService>();
+builder.Services.AddScoped<IPrestadorRepository, PrestadorRepository>();
+builder.Services.AddScoped<PrestadorService>();
+builder.Services.AddScoped<IEstoqueRepository, EstoqueRepository>();
+builder.Services.AddScoped<EstoqueService>();
+builder.Services.AddScoped<IPipelineRepository, PipelineRepository>();
+builder.Services.AddScoped<PipelineService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
@@ -437,5 +448,104 @@ app.MapGet("/obras/{obraId:guid}/projetos", async (Guid obraId, ProjetoDocumento
 })
 .RequireAuthorization()
 .WithName("GetProjetosByObra");
+
+app.MapPost("/fornecedores", async (CreateFornecedorRequest request, FornecedorService service) =>
+{
+    var result = await service.CreateAsync(request);
+    return Results.Created($"/fornecedores/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateFornecedor");
+
+app.MapGet("/fornecedores/{id:guid}", async (Guid id, FornecedorService service) =>
+{
+    var result = await service.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetFornecedorById");
+
+app.MapGet("/fornecedores", async (FornecedorService service) =>
+{
+    var result = await service.GetAllAsync();
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetFornecedores");
+
+app.MapPost("/prestadores", async (CreatePrestadorRequest request, PrestadorService service) =>
+{
+    var result = await service.CreateAsync(request);
+    return Results.Created($"/prestadores/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreatePrestador");
+
+app.MapGet("/prestadores/{id:guid}", async (Guid id, PrestadorService service) =>
+{
+    var result = await service.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetPrestadorById");
+
+app.MapGet("/obras/{obraId:guid}/prestadores", async (Guid obraId, PrestadorService service) =>
+{
+    var result = await service.GetByObraIdAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetPrestadoresByObra");
+
+app.MapPost("/estoque/itens", async (CreateEstoqueItemRequest request, EstoqueService service) =>
+{
+    var result = await service.CreateItemAsync(request);
+    return Results.Created($"/estoque/itens/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateEstoqueItem");
+
+app.MapGet("/obras/{obraId:guid}/estoque/itens", async (Guid obraId, EstoqueService service) =>
+{
+    var result = await service.GetItensByObraIdAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetEstoqueItensByObra");
+
+app.MapPost("/estoque/itens/{itemId:guid}/movimentacoes", async (Guid itemId, CreateMovimentacaoRequest request, EstoqueService service) =>
+{
+    try
+    {
+        var result = await service.AddMovimentacaoAsync(itemId, request);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.NotFound(new { message = ex.Message });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+})
+.RequireAuthorization()
+.WithName("AddEstoqueMovimentacao");
+
+app.MapPost("/pipeline", async (CreatePipelineRequest request, PipelineService service) =>
+{
+    var result = await service.CreateAsync(request);
+    return Results.Created($"/pipeline/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreatePipeline");
+
+app.MapGet("/pipeline", async (PipelineService service) =>
+{
+    var result = await service.GetAllAsync();
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetPipeline");
 
 app.Run();
