@@ -1,3 +1,6 @@
+using KhazObras.Application.Dtos.RelatoriosFotograficos;
+using KhazObras.Application.Dtos.RelatoriosMensais;
+using KhazObras.Application.Dtos.ProjetosDocumentos;
 using KhazObras.Application.Dtos.Financeiro;
 using KhazObras.Application.Dtos.Medicoes;
 using KhazObras.Application.Dtos.Etapas;
@@ -43,6 +46,12 @@ builder.Services.AddScoped<IMedicaoRepository, MedicaoRepository>();
 builder.Services.AddScoped<MedicaoService>();
 builder.Services.AddScoped<IFinanceiroLancamentoRepository, FinanceiroLancamentoRepository>();
 builder.Services.AddScoped<FinanceiroService>();
+builder.Services.AddScoped<IRelatorioFotograficoRepository, RelatorioFotograficoRepository>();
+builder.Services.AddScoped<RelatorioFotograficoService>();
+builder.Services.AddScoped<IRelatorioMensalRepository, RelatorioMensalRepository>();
+builder.Services.AddScoped<RelatorioMensalService>();
+builder.Services.AddScoped<IProjetoDocumentoRepository, ProjetoDocumentoRepository>();
+builder.Services.AddScoped<ProjetoDocumentoService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
@@ -310,5 +319,123 @@ app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, Fi
 })
 .RequireAuthorization()
 .WithName("DownloadFinanceiroAnexo");
+
+app.MapPost("/relatorios-fotograficos", async (CreateRelatorioFotograficoRequest request, IValidator<CreateRelatorioFotograficoRequest> validator, RelatorioFotograficoService service) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var result = await service.CreateAsync(request);
+    return Results.Created($"/relatorios-fotograficos/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateRelatorioFotografico");
+
+app.MapGet("/relatorios-fotograficos/{id:guid}", async (Guid id, RelatorioFotograficoService service) =>
+{
+    var result = await service.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetRelatorioFotograficoById");
+
+app.MapGet("/obras/{obraId:guid}/relatorios-fotograficos", async (Guid obraId, RelatorioFotograficoService service) =>
+{
+    var result = await service.GetByObraIdAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetRelatoriosFotograficosByObra");
+
+app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFile file, RelatorioFotograficoService service, DateOnly? dataFoto, string? descricao, int ordem = 0) =>
+{
+    using var stream = file.OpenReadStream();
+    var result = await service.UploadFotoAsync(id, stream, file.FileName, file.ContentType, dataFoto, descricao, ordem);
+    return Results.Created($"/fotos/{result.Id}", result);
+})
+.DisableAntiforgery()
+.RequireAuthorization()
+.WithName("UploadFoto");
+
+app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, IValidator<CreateRelatorioMensalRequest> validator, RelatorioMensalService service, ClaimsPrincipal principal) =>
+{
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var result = await service.CreateAsync(request, userId);
+    return Results.Created($"/relatorios-mensais/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateRelatorioMensal");
+
+app.MapGet("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalService service) =>
+{
+    var result = await service.GetByIdAsync(id);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetRelatorioMensalById");
+
+app.MapGet("/obras/{obraId:guid}/relatorios-mensais", async (Guid obraId, RelatorioMensalService service, bool onlyPublished = false) =>
+{
+    var result = await service.GetByObraIdAsync(obraId, onlyPublished);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetRelatoriosMensaisByObra");
+
+app.MapPost("/relatorios-mensais/{id:guid}/publish", async (Guid id, RelatorioMensalService service) =>
+{
+    try
+    {
+        var result = await service.PublishAsync(id);
+        return Results.Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Conflict(new { message = ex.Message });
+    }
+})
+.RequireAuthorization()
+.WithName("PublishRelatorioMensal");
+
+app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file, ProjetoDocumentoService service, Guid? etapaId, string? tipoDocumento) =>
+{
+    using var stream = file.OpenReadStream();
+    var result = await service.UploadAsync(obraId, etapaId, stream, file.FileName, file.ContentType, tipoDocumento);
+    return Results.Created($"/projetos/{result.Id}", result);
+})
+.DisableAntiforgery()
+.RequireAuthorization()
+.WithName("UploadProjetoDocumento");
+
+app.MapGet("/projetos/{id:guid}/download", async (Guid id, ProjetoDocumentoService service) =>
+{
+    var result = await service.DownloadAsync(id);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    var (content, fileName, contentType) = result.Value;
+    return Results.File(content, contentType ?? "application/octet-stream", fileName);
+})
+.RequireAuthorization()
+.WithName("DownloadProjetoDocumento");
+
+app.MapGet("/obras/{obraId:guid}/projetos", async (Guid obraId, ProjetoDocumentoService service) =>
+{
+    var result = await service.GetByObraIdAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetProjetosByObra");
 
 app.Run();
