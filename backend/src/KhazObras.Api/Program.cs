@@ -1,3 +1,5 @@
+using KhazObras.Application.Dtos.Notificacoes;
+using KhazObras.Application.Dtos.Auditoria;
 using KhazObras.Application.Dtos.Fornecedores;
 using KhazObras.Application.Dtos.Prestadores;
 using KhazObras.Application.Dtos.Estoque;
@@ -63,6 +65,10 @@ builder.Services.AddScoped<IEstoqueRepository, EstoqueRepository>();
 builder.Services.AddScoped<EstoqueService>();
 builder.Services.AddScoped<IPipelineRepository, PipelineRepository>();
 builder.Services.AddScoped<PipelineService>();
+builder.Services.AddScoped<INotificacaoRepository, NotificacaoRepository>();
+builder.Services.AddScoped<NotificacaoService>();
+builder.Services.AddScoped<ILogAuditoriaRepository, LogAuditoriaRepository>();
+builder.Services.AddScoped<LogAuditoriaService>();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateObraRequestValidator>();
 
 // Erro global
@@ -547,5 +553,38 @@ app.MapGet("/pipeline", async (PipelineService service) =>
 })
 .RequireAuthorization()
 .WithName("GetPipeline");
+
+app.MapPost("/notificacoes", async (CreateNotificacaoRequest request, NotificacaoService service) =>
+{
+    var result = await service.CreateAsync(request);
+    return Results.Created($"/notificacoes/{result.Id}", result);
+})
+.RequireAuthorization()
+.WithName("CreateNotificacao");
+
+app.MapGet("/notificacoes/minhas", async (ClaimsPrincipal principal, NotificacaoService service) =>
+{
+    var userId = Guid.Parse(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var result = await service.GetByUserIdAsync(userId);
+    return Results.Ok(result);
+})
+.RequireAuthorization()
+.WithName("GetMinhasNotificacoes");
+
+app.MapPost("/notificacoes/{id:guid}/marcar-lida", async (Guid id, NotificacaoService service) =>
+{
+    await service.MarkAsReadAsync(id);
+    return Results.NoContent();
+})
+.RequireAuthorization()
+.WithName("MarkNotificacaoAsRead");
+
+app.MapGet("/auditoria/{entidade}/{entidadeId:guid}", async (string entidade, Guid entidadeId, LogAuditoriaService service) =>
+{
+    var result = await service.GetByEntidadeAsync(entidade, entidadeId);
+    return Results.Ok(result);
+})
+.RequireAuthorization("MasterOnly")
+.WithName("GetAuditoriaByEntidade");
 
 app.Run();
