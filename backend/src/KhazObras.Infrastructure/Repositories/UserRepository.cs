@@ -51,7 +51,7 @@ public sealed class UserRepository : IUserRepository
 
         const string sql = @"
             INSERT INTO users (id, name, email, password_hash, role, invited_by_user_id, is_active, created_at, updated_at)
-            VALUES (@Id, @Name, @Email, @PasswordHash, @Role, @InvitedByUserId, @IsActive, @CreatedAt, @UpdatedAt)";
+            VALUES (@Id, @Name, @Email, @PasswordHash, @Role::user_role, @InvitedByUserId, @IsActive, @CreatedAt, @UpdatedAt)";
 
         await connection.ExecuteAsync(sql, new
         {
