@@ -32,10 +32,18 @@ public sealed class NotificacaoService
         return notificacoes.Select(ToResponse).ToList();
     }
 
-    public async Task MarkAsReadAsync(Guid id)
+    public async Task MarkAsReadAsync(Guid id, Guid userId)
+{
+    var notificacao = await _repository.GetByIdAsync(id)
+        ?? throw new InvalidOperationException("Notificacao nao encontrada.");
+
+    if (notificacao.UserId != userId)
     {
-        await _repository.MarkAsReadAsync(id, DateTime.UtcNow);
+        throw new UnauthorizedAccessException("Notificacao nao pertence a este usuario.");
     }
+
+    await _repository.MarkAsReadAsync(id, DateTime.UtcNow);
+}
 
     private static NotificacaoResponse ToResponse(Notificacao n) => new(
         n.Id, n.ObraId, n.UserId, n.Modulos, n.Canal, n.EnviadoAt, n.LidaAt);

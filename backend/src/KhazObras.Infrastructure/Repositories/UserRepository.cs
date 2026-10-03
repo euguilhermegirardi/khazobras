@@ -69,6 +69,21 @@ public sealed class UserRepository : IUserRepository
         return user;
     }
 
+    public async Task<IReadOnlyList<User>> GetAllAsync()
+{
+    using var connection = _connectionFactory.CreateConnection();
+
+    const string sql = @"
+        SELECT id, name, email, password_hash AS PasswordHash, role,
+               invited_by_user_id AS InvitedByUserId, is_active AS IsActive,
+               created_at AS CreatedAt, updated_at AS UpdatedAt
+        FROM users
+        ORDER BY created_at DESC";
+
+    var rows = await connection.QueryAsync<UserRow>(sql);
+    return rows.Select(r => r.ToEntity()).ToList();
+}
+
     private sealed class UserRow
     {
         public Guid Id { get; set; }

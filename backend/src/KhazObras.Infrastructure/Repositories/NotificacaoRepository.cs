@@ -56,6 +56,20 @@ public sealed class NotificacaoRepository : INotificacaoRepository
         await connection.ExecuteAsync(sql, new { Id = id, LidaAt = lidaAt });
     }
 
+    public async Task<Notificacao?> GetByIdAsync(Guid id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT id, obra_id AS ObraId, user_id AS UserId, modulos::text AS ModulosJson,
+                canal, enviado_at AS EnviadoAt, lida_at AS LidaAt
+            FROM notificacoes
+            WHERE id = @Id";
+
+        var row = await connection.QuerySingleOrDefaultAsync<NotificacaoRow>(sql, new { Id = id });
+        return row?.ToEntity();
+    }
+
     private sealed class NotificacaoRow
     {
         public Guid Id { get; set; }

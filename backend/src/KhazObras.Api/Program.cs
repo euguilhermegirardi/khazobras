@@ -117,7 +117,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/healthcheck", async (IDbConnectionFactory dbFactory) =>
+app.MapGet("/healthcheck", async (IDbConnectionFactory dbFactory, ILogger<Program> logger) =>
 {
     try
     {
@@ -127,10 +127,11 @@ app.MapGet("/healthcheck", async (IDbConnectionFactory dbFactory) =>
     }
     catch (Exception ex)
     {
+        logger.LogError(ex, "Healthcheck falhou - banco de dados indisponivel");
         return Results.Problem(
-            detail: ex.Message,
+            detail: "Banco de dados indisponivel.",
             statusCode: 500,
-            title: "Banco de dados indisponível");
+            title: "Servico indisponivel");
     }
 })
 .WithName("HealthCheck");
@@ -142,9 +143,15 @@ app.MapPost("/auth/login", async (LoginRequest request, AuthService authService)
 })
 .WithName("Login");
 
-app.MapPost("/users", async (CreateUserRequest request, UserService userService, ClaimsPrincipal principal) =>
+app.MapPost("/users", async (CreateUserRequest request, IValidator<CreateUserRequest> validator, UserService userService, ClaimsPrincipal principal) =>
 {
-    var createdByUserId = Guid.Parse(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var createdByUserId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     var result = await userService.CreateAsync(request, createdByUserId);
     return Results.Created($"/users/{result.Id}", result);
 })
@@ -465,8 +472,28 @@ app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, Fi
 .RequireAuthorization()
 .WithName("GetFinanceiroLancamentosByObra");
 
-app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFile file, FinanceiroService financeiroService) =>
+app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFile file, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
+    var lancamento = await financeiroService.GetByIdAsync(id);
+    if (lancamento is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, lancamento.ObraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    if (!KhazObras.Api.Validation.FileUploadValidator.IsValid(file, out var validationError))
+    {
+        return Results.BadRequest(new { message = validationError });
+    }
+
     using var stream = file.OpenReadStream();
     var result = await financeiroService.UploadAnexoAsync(id, stream, file.FileName, file.ContentType, file.Length);
     return Results.Created($"/financeiro/anexos/{result.Id}", result);
@@ -566,10 +593,14 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
         return Results.NotFound();
     }
 
-    // Upload de foto e acao administrativa - so admin/master sobem fotos (SPEC: cliente so visualiza)
     if (!accessService.IsAdminOrMaster(principal))
     {
         return Results.Forbid();
+    }
+
+    if (!KhazObras.Api.Validation.FileUploadValidator.IsValid(file, out var validationError))
+    {
+        return Results.BadRequest(new { message = validationError });
     }
 
     using var stream = file.OpenReadStream();
@@ -678,6 +709,11 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
+    }
+
+    if (!KhazObras.Api.Validation.FileUploadValidator.IsValid(file, out var validationError))
+    {
+        return Results.BadRequest(new { message = validationError });
     }
 
     using var stream = file.OpenReadStream();
@@ -841,10 +877,19 @@ app.MapGet("/notificacoes/minhas", async (ClaimsPrincipal principal, Notificacao
 .RequireAuthorization()
 .WithName("GetMinhasNotificacoes");
 
-app.MapPost("/notificacoes/{id:guid}/marcar-lida", async (Guid id, NotificacaoService service) =>
+app.MapPost("/notificacoes/{id:guid}/marcar-lida", async (Guid id, ClaimsPrincipal principal, NotificacaoService service) =>
 {
-    await service.MarkAsReadAsync(id);
-    return Results.NoContent();
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+    try
+    {
+        await service.MarkAsReadAsync(id, userId);
+        return Results.NoContent();
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
 })
 .RequireAuthorization()
 .WithName("MarkNotificacaoAsRead");
@@ -864,5 +909,14 @@ app.MapPost("/users/{userId:guid}/obras/{obraId:guid}", async (Guid userId, Guid
 })
 .RequireAuthorization("MasterOnly")
 .WithName("LinkUserToObra");
+
+app.MapGet("/users", async (IUserRepository userRepository) =>
+{
+    var users = await userRepository.GetAllAsync();
+    var result = users.Select(u => new UserResponse(u.Id, u.Name, u.Email, u.Role.ToString(), u.IsActive, u.CreatedAt)).ToList();
+    return Results.Ok(result);
+})
+.RequireAuthorization("MasterOnly")
+.WithName("GetUsers");
 
 app.Run();
