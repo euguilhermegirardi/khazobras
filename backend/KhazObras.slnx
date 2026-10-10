@@ -5,4 +5,7 @@
     <Project Path="src/KhazObras.Domain/KhazObras.Domain.csproj" />
     <Project Path="src/KhazObras.Infrastructure/KhazObras.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/KhazObras.Security.Tests/KhazObras.Security.Tests.csproj" />
+  </Folder>
 </Solution>

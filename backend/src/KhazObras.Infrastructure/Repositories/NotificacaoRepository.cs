@@ -48,12 +48,12 @@ public sealed class NotificacaoRepository : INotificacaoRepository
         return rows.Select(r => r.ToEntity()).ToList();
     }
 
-    public async Task MarkAsReadAsync(Guid id, DateTime lidaAt)
+    public async Task MarkAsReadAsync(Guid id, Guid userId, DateTime lidaAt)
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = "UPDATE notificacoes SET lida_at = @LidaAt WHERE id = @Id";
-        await connection.ExecuteAsync(sql, new { Id = id, LidaAt = lidaAt });
+        const string sql = "UPDATE notificacoes SET lida_at = @LidaAt WHERE id = @Id AND user_id = @UserId";
+        await connection.ExecuteAsync(sql, new { Id = id, UserId = userId, LidaAt = lidaAt });
     }
 
     public async Task<Notificacao?> GetByIdAsync(Guid id)

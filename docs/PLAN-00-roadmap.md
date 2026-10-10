@@ -22,14 +22,56 @@ serem executáveis em blocos pequenos, sem precisar de sessões longas.
 | 6 | Módulos client-facing | ✅ Concluída |
 | 7 | Módulos de operação interna | ✅ Concluída |
 | 8 | Notificações e auditoria | ✅ Concluída |
-| — | **Reunião de revisão do backend** | 🔄 Próximo passo |
-| 9 | Frontend React | ⬜ Não iniciada |
+| — | Reunião de revisão do backend (SPEC) | ✅ Concluída |
+| — | Revisão de segurança (interna + auditoria externa) | ✅ Concluída |
+| 9 | Frontend React | ⬜ Próximo passo |
 | 10 | PDF consolidado | ⬜ Não iniciada |
 | 11 | Deploy no Render | ⬜ Não iniciada |
 
-**Backend 100% implementado e testado, módulo por módulo, de ponta a ponta.**
-Antes de avançar para o frontend, uma reunião de revisão vai conferir o que foi
-construído contra o `SPEC.md`, seção por seção.
+**Backend oficialmente entregue.** 100% implementado, testado módulo por
+módulo de ponta a ponta, revisado contra o `SPEC.md`, e auditado em duas
+rodadas de segurança (interna e externa). A partir daqui, o trabalho migra
+para **Claude Code no VS Code**.
+
+---
+
+## Revisão de segurança — resumo final
+
+**Corrigido:**
+- Isolamento de dados por obra (`user_obra` nunca era checado em código —
+  qualquer client autenticado lia qualquer obra e todos os módulos internos)
+- IDOR em `POST /notificacoes/{id}/marcar-lida` (sem checagem de dono,
+  achado pela auditoria externa)
+- `UploadFinanceiroAnexo` sem checagem de acesso por obra
+- `POST /users` sem cast `::user_role` (nunca tinha sido testado de verdade)
+- `/healthcheck` vazando detalhe de exceção para chamador anônimo
+- Validação de upload nos 3 endpoints: tamanho, allow-list de extensão, extensão
+  compatível com o MIME e assinatura do arquivo (magic bytes de JPEG, PNG, GIF,
+  WebP, PDF, OOXML e OLE2)
+- `marcar-lida` com `AND user_id` no `UPDATE` (defesa em profundidade) e `404`
+  para ID inexistente
+- Projeto de testes `KhazObras.Security.Tests` (xUnit) com 5 testes de regressão
+  (IDOR em notificações e validação de upload)
+- Validação de formato de e-mail e complexidade de senha em `CreateUserRequest`
+- `database/seed/001_seed_master.sql` (hash de senha real) removido do
+  versionamento e adicionado ao `.gitignore`
+- `GET /users` (listagem, `MasterOnly`) adicionado
+
+**Descartado (falso positivo, confirmado com evidência):**
+- "appsettings.Development.json exposto no repositório" — confirmado via
+  `git log`/`git ls-files` que nunca foi commitado; o `.gitignore` da Fase 1
+  funcionou corretamente desde o início
+
+**Pendências conscientes, aceitas para o V1:**
+- Sem rate limiting em `/auth/login`
+- JWT sem revogação/refresh (expira em 8h — trade-off já previsto no `SPEC.md`)
+- `DownloadFinanceiroAnexo` e `DownloadProjetoDocumento` ainda restritos a
+  `AdminOrMaster` (stopgap — os services ainda não expõem `ObraId` para
+  liberar o cliente dono)
+- Validação de upload confere a assinatura do arquivo, não o conteúdo inteiro:
+  `.txt` não tem checagem de conteúdo e um ZIP qualquer renomeado para
+  `.docx`/`.xlsx` passa
+- Histórico do Git ainda contém o seed removido (repo privado, risco aceito)
 
 ---
 
@@ -59,8 +101,9 @@ Repositório Git privado no GitHub, com README.
 Autenticação JWT construída à mão sobre Dapper (sem EF Core Identity):
 `User` (Domain), `AuthService`/`UserService`, `PasswordHasherAdapter`,
 `JwtTokenGenerator`, `UserRepository`. Endpoints `/auth/login`,
-`/users` (`MasterOnly`), `/users/me`. Seed do primeiro usuário master.
-Testado de ponta a ponta: login → JWT válido → acesso a rota protegida.
+`/users` (`MasterOnly`), `/users/me`, `GET /users`. Seed do primeiro usuário
+master (removido do versionamento após a revisão de segurança). Testado de
+ponta a ponta: login → JWT válido → acesso a rota protegida.
 
 **Detalhes:** `PLAN-02-autenticacao.md`
 
@@ -114,40 +157,23 @@ ponta a ponta.
 
 Fornecedores, Prestadores (por obra), Estoque (itens + movimentações de
 entrada/saída com recálculo automático de quantidade), Pipeline (CRM de
-oportunidades). CRUDs simples, sem exposição ao cliente.
+oportunidades). CRUDs simples, restritos a Admin/Master, sem exposição ao
+cliente.
 
 ---
 
 ## Fase 8 — Notificações e auditoria ✅
 
 `Notificações` com lista de módulos serializada em `JSONB` (via
-`System.Text.Json`, ida e volta testada). Consulta restrita ao próprio usuário
-(`/notificacoes/minhas`, via `ClaimsPrincipal`, sem expor `userId` na URL).
-`LogAuditoria` como serviço reutilizável (`RegistrarAsync`) — estrutura pronta,
-ainda não integrada retroativamente nas ações dos outros módulos (fica para
-quando fizer sentido, ação por ação). Endpoint de consulta restrito a `MasterOnly`.
+`System.Text.Json`, ida e volta testada). Consulta e marcação de leitura
+restritas ao próprio usuário (corrigido IDOR na revisão de segurança).
+`LogAuditoria` como serviço reutilizável (`RegistrarAsync`) — estrutura
+pronta, ainda não integrada retroativamente nas ações dos outros módulos.
+Endpoint de consulta restrito a `MasterOnly`.
 
 ---
 
-## Próximo passo — Reunião de revisão do backend 🔄
-
-Antes de iniciar o frontend, conferir o backend inteiro contra o `SPEC.md`:
-
-- [ ] Revisar visão CLIENTE (seção 5 do SPEC) — todos os dados necessários têm
-      endpoint correspondente?
-- [ ] Revisar visão ADMIN/MASTER (seção 6) — idem
-- [ ] Conferir se os valores sensíveis (custo real interno, rentabilidade)
-      estão de fato isolados dos endpoints que a visão cliente vai consumir
-- [ ] Decidir sobre a integração retroativa do `LogAuditoria` nas ações
-      sensíveis (aprovar medição, emitir NF, criar usuário, etc.) — fazer
-      agora ou registrar como débito técnico para depois
-- [ ] Confirmar que os 3 itens "fora do escopo do V1.0" (seção 10 do SPEC)
-      continuam corretamente fora
-- [ ] Levantar quaisquer endpoints faltantes antes de começar o frontend
-
----
-
-## Fase 9 — Frontend React ⬜
+## Fase 9 — Frontend React ⬜ (próximo passo)
 
 Projeto Vite, roteamento com guarda por role, layout com navbar diferenciada
 por perfil, telas — começando pelas do cliente (menor escopo, somente
@@ -170,6 +196,31 @@ variáveis de ambiente, publicar backend e frontend, apontar o domínio.
 
 ---
 
+## Decisão em aberto — produto/SaaS
+
+Guilherme está considerando transformar o sistema num SaaS vendável, não só
+um projeto sob medida para a Khaz Engenharia. Pontos levantados que precisam
+de decisão antes de ir nessa direção:
+
+- **Multi-tenancy:** o sistema hoje é single-tenant (Fornecedores, Pipeline e
+  Categorias são globais, não por empresa) — adicionar isolamento por empresa
+  agora, antes de dados reais de múltiplos clientes, é bem mais barato que
+  depois
+- **Nome do produto:** "KhazObras" vem do nome da empresa do amigo (Khaz
+  Engenharia) — precisa de um nome neutro antes de qualquer venda a
+  terceiros. Renomear agora (namespaces, banco, bucket, repositório) é
+  mecânico; depois de clientes reais, é caro
+- **Validação de mercado:** concorrentes estabelecidos existem (Sienge,
+  Obra Prima, UAU); vale conversar com outros engenheiros/pequenas
+  construtoras antes de investir em cobrança e landing page
+- **Alinhamento com o amigo:** quem é dono do quê, se a Khaz Engenharia seria
+  o cliente zero, divisão de receita — conversar antes de avançar
+
+Decisão: continuar com o escopo atual (projeto para a Khaz Engenharia) por
+ora; revisitar a ideia de SaaS depois do frontend.
+
+---
+
 ## Princípios de execução
 
 1. **Vertical antes de horizontal.** Uma fatia completa de uma entidade
@@ -182,3 +233,7 @@ variáveis de ambiente, publicar backend e frontend, apontar o domínio.
    necessária desde a Fase 1 — a modelagem inicial se sustentou.
 5. **Commit pequeno e frequente.** Cada fase fechou com commit próprio,
    sincronizado com o GitHub.
+6. **Segurança revisada em camadas.** Revisão própria contra o SPEC, depois
+   auditoria externa independente — a segunda camada pegou algo que a
+   primeira não viu (IDOR em notificações), confirmando o valor de olhos
+   diferentes sobre o mesmo código.

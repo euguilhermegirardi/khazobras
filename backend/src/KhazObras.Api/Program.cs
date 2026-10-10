@@ -890,6 +890,10 @@ app.MapPost("/notificacoes/{id:guid}/marcar-lida", async (Guid id, ClaimsPrincip
     {
         return Results.Forbid();
     }
+    catch (InvalidOperationException)
+    {
+        return Results.NotFound();
+    }
 })
 .RequireAuthorization()
 .WithName("MarkNotificacaoAsRead");
