@@ -73,7 +73,7 @@ Mudança de schema = novo script numerado em `database/schema/` (nunca editar os
 9. CORS ainda não configurado: ao ligar o frontend, liberar só a origem exata do front. Nunca `AllowAnyOrigin`.
 10. Mudou regra de acesso → adicionar teste em `KhazObras.Security.Tests`.
 
-Lacunas de segurança aceitas no V1: sem rate limit em `/auth/login`; JWT sem revogação/refresh (8h); `.txt` e ZIP renomeado para `.docx/.xlsx` com checagem fraca; histórico do git ainda contém o seed antigo (repo privado).
+Lacunas de segurança aceitas no V1: sem rate limit em `/auth/login`; JWT sem revogação/refresh (8h); `.txt` e ZIP renomeado para `.docx/.xlsx` com checagem fraca.
 
 ## Notas para o frontend
 

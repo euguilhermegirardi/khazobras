@@ -7,6 +7,8 @@ cliente final.
 
 > Reconstrução completa (backend real, banco de dados, storage de arquivos) de um
 > protótipo funcional em HTML/JS, feito em parceria com um engenheiro civil.
+> 
+> **Status:** Backend completo (fases 1–8 + review de segurança). Frontend em React + Vite será a próxima fase.
 
 ---
 
@@ -28,7 +30,18 @@ cliente final.
 - Hospedagem: Render
 - PDF: QuestPDF
 
-Detalhes completos de arquitetura, convenções e decisões em [`docs/SPEC.md`](docs/SPEC.md).
+Detalhes completos de arquitetura, convenções e decisões em [`docs/SPEC.md`](docs/SPEC.md) e [`CLAUDE.md`](CLAUDE.md).
+
+---
+
+## Decisões Arquiteturais
+
+- **Dapper + SQL Puro** (sem EF Core): controle fino sobre queries complexas, melhor performance em relatórios, e clareza sobre o que está acontecendo no banco
+- **Minimal APIs**: abordagem moderna e enxuta do ASP.NET Core, sem ceremony desnecessária
+- **Clean Architecture**: separação clara entre Api, Application, Domain e Infrastructure, facilitando testes e manutenção
+- **JWT + ASP.NET Identity**: autenticação stateless, escalável, com controle granular de permissões por role
+- **Repository Pattern**: abstração de dados, facilitando testes e troca de banco de dados no futuro
+- **Cloudflare R2** para storage: compatibilidade S3, menor custo que AWS, uptime SLA 99.9%
 
 ---
 
@@ -107,10 +120,29 @@ Teste com `curl http://localhost:5285/healthcheck` — deve responder
 
 ---
 
+## Segurança
+
+Implementado desde o início:
+- ✅ Isolamento de dados por obra e por role (IDOR prevention)
+- ✅ Validação de uploads (extensão, MIME type, magic bytes)
+- ✅ Controle de acesso granular (Master / Admin / Client)
+- ✅ JWT + refresh token strategy
+- ✅ Audit logging para ações sensíveis
+- ✅ Testes de segurança automatizados em `tests/KhazObras.Security.Tests`
+
+Ver [`CLAUDE.md`](CLAUDE.md) para detalhes das regras de segurança.
+
 ## Status do projeto
 
 Em desenvolvimento ativo. Acompanhamento das fases em
 [`docs/PLAN-00-roadmap.md`](docs/PLAN-00-roadmap.md).
 
-Fase atual: **Fundação** (ambiente, schema e primeira conexão de ponta a ponta) —
-praticamente concluída.
+**Concluído:**
+- ✅ Backend .NET 10 (fases 1–8)
+- ✅ 22 tabelas PostgreSQL com schema versionado
+- ✅ Repositórios + Services + Validators
+- ✅ Upload/download de arquivos via R2
+- ✅ Testes de segurança
+
+**Próximo:**
+- ⏳ Frontend React + Vite (visão cliente e admin)
