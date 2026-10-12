@@ -1,0 +1,1020 @@
+{
+  "info": {
+    "name": "KhazObras API",
+    "description": "Coleção completa da API KhazObras — 48 endpoints\n\nStack: .NET 10 | PostgreSQL 16 | Cloudflare R2\n\nVer: API.md para documentação completa",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Autenticação e obtenção de token JWT",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {\n    pm.environment.set('jwt_token', pm.response.json().token);\n    console.log('Token salvo: ' + pm.response.json().token.substring(0, 20) + '...');\n}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Usuários",
+      "description": "Gerenciamento de usuários do sistema",
+      "item": [
+        {
+          "name": "GetMe — Dados do Usuário Autenticado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            }
+          }
+        },
+        {
+          "name": "CreateUser — Criar Novo Usuário (Master)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Silva\",\n  \"email\": \"maria@example.com\",\n  \"password\": \"senha_segura_123\",\n  \"role\": \"Admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "ListUsers — Listar Usuários (Master)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
+          }
+        },
+        {
+          "name": "LinkUserToObra — Vincular Usuário a Obra (Master)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/users/{{user_id}}/obras/{{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["users", "{{user_id}}", "obras", "{{obra_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Obras",
+      "description": "Gerenciamento de obras de construção",
+      "item": [
+        {
+          "name": "CreateObra — Criar Obra",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Residência João Silva\",\n  \"endereco\": \"Rua das Flores, 123, São Paulo, SP\",\n  \"dataInicio\": \"2026-10-15\",\n  \"previsaoConclusao\": \"2027-06-30\",\n  \"valorTotal\": 500000.00,\n  \"descricao\": \"Construção de residência unifamiliar\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/obras",
+              "host": ["{{base_url}}"],
+              "path": ["obras"]
+            }
+          }
+        },
+        {
+          "name": "ListObras — Listar Obras (Paginado)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/obras?pageIndex=0&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["obras"],
+              "query": [
+                {
+                  "key": "pageIndex",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetObraById — Obter Obra por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/obras/{{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["obras", "{{obra_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Etapas",
+      "description": "Gerenciamento de etapas (fases) de obra",
+      "item": [
+        {
+          "name": "CreateEtapa — Criar Etapa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obraId\": \"{{obra_id}}\",\n  \"name\": \"Fundação e Estrutura\",\n  \"dataInicio\": \"2026-10-15\",\n  \"dataTermino\": \"2026-12-30\",\n  \"orcado\": 100000.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/etapas",
+              "host": ["{{base_url}}"],
+              "path": ["etapas"]
+            }
+          }
+        },
+        {
+          "name": "ListEtapasByObra — Listar Etapas da Obra",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/etapas?obraId={{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["etapas"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetEtapaById — Obter Etapa por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/etapas/{{etapa_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["etapas", "{{etapa_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medições",
+      "description": "Gerenciamento de medições (máquina de estados: pending → approved → invoiced)",
+      "item": [
+        {
+          "name": "CreateMedicao — Criar Medição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obraId\": \"{{obra_id}}\",\n  \"etapaId\": \"{{etapa_id}}\",\n  \"mesReferencia\": \"2026-10\",\n  \"valor\": 50000.00,\n  \"descricao\": \"Medição de 50% da fundação\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/medicoes",
+              "host": ["{{base_url}}"],
+              "path": ["medicoes"]
+            }
+          }
+        },
+        {
+          "name": "ListMedicoesByObra — Listar Medições da Obra",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/medicoes?obraId={{obra_id}}&pageIndex=0&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["medicoes"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                },
+                {
+                  "key": "pageIndex",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetMedicaoById — Obter Medição por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/medicoes/{{medicao_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["medicoes", "{{medicao_id}}"]
+            }
+          }
+        },
+        {
+          "name": "ApproveMedicao — Aprovar Medição (Client)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/medicoes/{{medicao_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["medicoes", "{{medicao_id}}", "approve"]
+            }
+          }
+        },
+        {
+          "name": "IssueMedicaoInvoice — Emitir Nota Fiscal (Admin/Master)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroNota\": \"NF-2026-001\",\n  \"dataEmissao\": \"2026-10-12\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/medicoes/{{medicao_id}}/invoice",
+              "host": ["{{base_url}}"],
+              "path": ["medicoes", "{{medicao_id}}", "invoice"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financeiro",
+      "description": "Gerenciamento de lançamentos financeiros e anexos",
+      "item": [
+        {
+          "name": "CreateFinanceiroLancamento — Criar Lançamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obraId\": \"{{obra_id}}\",\n  \"tipo\": \"despesa\",\n  \"descricao\": \"Compra de materiais de construção\",\n  \"valor\": 25000.00,\n  \"data\": \"2026-10-12\",\n  \"categoria\": \"materiais\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/financeiro/lancamentos",
+              "host": ["{{base_url}}"],
+              "path": ["financeiro", "lancamentos"]
+            }
+          }
+        },
+        {
+          "name": "ListFinanceiroLancamentosByObra — Listar Lançamentos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/financeiro/lancamentos?obraId={{obra_id}}&pageIndex=0&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["financeiro", "lancamentos"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                },
+                {
+                  "key": "pageIndex",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetFinanceiroLancamentoById — Obter Lançamento",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/financeiro/lancamentos/{{lancamento_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["financeiro", "lancamentos", "{{lancamento_id}}"]
+            }
+          }
+        },
+        {
+          "name": "UploadFinanceiroAnexo — Anexar Arquivo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "<arquivo.pdf>"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/financeiro/lancamentos/{{lancamento_id}}/anexo",
+              "host": ["{{base_url}}"],
+              "path": ["financeiro", "lancamentos", "{{lancamento_id}}", "anexo"]
+            }
+          }
+        },
+        {
+          "name": "DownloadFinanceiroAnexo — Baixar Arquivo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/financeiro/lancamentos/{{lancamento_id}}/anexo",
+              "host": ["{{base_url}}"],
+              "path": ["financeiro", "lancamentos", "{{lancamento_id}}", "anexo"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Relatórios Fotográficos",
+      "description": "Gerenciamento de relatórios fotográficos e fotos",
+      "item": [
+        {
+          "name": "CreateRelatorioFotografico — Criar Relatório",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obraId\": \"{{obra_id}}\",\n  \"data\": \"2026-10-12\",\n  \"descricao\": \"Progresso da fundação - 50% concluído\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/relatorios-fotograficos",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-fotograficos"]
+            }
+          }
+        },
+        {
+          "name": "ListRelatoriosFotograficosByObra — Listar Relatórios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/relatorios-fotograficos?obraId={{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-fotograficos"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetRelatorioFotograficoById — Obter Relatório",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/relatorios-fotograficos/{{relatorio_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-fotograficos", "{{relatorio_id}}"]
+            }
+          }
+        },
+        {
+          "name": "UploadFoto — Adicionar Foto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "<foto.png>"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/relatorios-fotograficos/{{relatorio_id}}/fotos",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-fotograficos", "{{relatorio_id}}", "fotos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Relatórios Mensais",
+      "description": "Gerenciamento de relatórios consolidados (draft → published)",
+      "item": [
+        {
+          "name": "CreateRelatorioMensal — Criar Relatório",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obraId\": \"{{obra_id}}\",\n  \"mesReferencia\": \"2026-10\",\n  \"resumo\": \"Progresso de 50% na fundação\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/relatorios-mensais",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-mensais"]
+            }
+          }
+        },
+        {
+          "name": "ListRelatoriosMensaisByObra — Listar Relatórios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/relatorios-mensais?obraId={{obra_id}}&published=false",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-mensais"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                },
+                {
+                  "key": "published",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetRelatorioMensalById — Obter Relatório",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/relatorios-mensais/{{relatorio_mensal_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-mensais", "{{relatorio_mensal_id}}"]
+            }
+          }
+        },
+        {
+          "name": "PublishRelatorioMensal — Publicar Relatório",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/relatorios-mensais/{{relatorio_mensal_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["relatorios-mensais", "{{relatorio_mensal_id}}", "publish"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projetos/Documentos",
+      "description": "Gerenciamento de documentos e projetos de obra",
+      "item": [
+        {
+          "name": "UploadProjetoDocumento — Anexar Documento",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "<planta.pdf>"
+                },
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                },
+                {
+                  "key": "tipo",
+                  "value": "planta_arquitetura"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/projetos/documentos",
+              "host": ["{{base_url}}"],
+              "path": ["projetos", "documentos"]
+            }
+          }
+        },
+        {
+          "name": "ListProjetosByObra — Listar Documentos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/projetos/documentos?obraId={{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projetos", "documentos"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "DownloadProjetoDocumento — Baixar Documento",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/projetos/documentos/{{documento_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["projetos", "documentos", "{{documento_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fornecedores",
+      "description": "Gerenciamento de fornecedores (módulo interno)",
+      "item": [
+        {
+          "name": "CreateFornecedor — Criar Fornecedor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Areia e Agregados LTDA\",\n  \"email\": \"contato@areiaagg.com.br\",\n  \"telefone\": \"11 3456-7890\",\n  \"endereco\": \"Rua Industrial, 500, São Paulo, SP\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fornecedores",
+              "host": ["{{base_url}}"],
+              "path": ["fornecedores"]
+            }
+          }
+        },
+        {
+          "name": "ListFornecedores — Listar Fornecedores",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/fornecedores",
+              "host": ["{{base_url}}"],
+              "path": ["fornecedores"]
+            }
+          }
+        },
+        {
+          "name": "GetFornecedorById — Obter Fornecedor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/fornecedores/{{fornecedor_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["fornecedores", "{{fornecedor_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prestadores",
+      "description": "Gerenciamento de prestadores de serviço",
+      "item": [
+        {
+          "name": "CreatePrestador — Criar Prestador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Eng. João Pereira\",\n  \"especialidade\": \"estrutura\",\n  \"email\": \"joao.pereira@email.com\",\n  \"telefone\": \"11 98765-4321\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/prestadores",
+              "host": ["{{base_url}}"],
+              "path": ["prestadores"]
+            }
+          }
+        },
+        {
+          "name": "ListPrestadores — Listar Prestadores",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prestadores?obraId={{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["prestadores"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GetPrestadorById — Obter Prestador",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/prestadores/{{prestador_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["prestadores", "{{prestador_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estoque",
+      "description": "Gerenciamento de itens e movimentações de estoque",
+      "item": [
+        {
+          "name": "CreateEstoqueItem — Criar Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"obraId\": \"{{obra_id}}\",\n  \"descricao\": \"Cimento Portland 50kg\",\n  \"quantidade\": 100,\n  \"unidade\": \"sacos\",\n  \"valorUnitario\": 45.50\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/estoque",
+              "host": ["{{base_url}}"],
+              "path": ["estoque"]
+            }
+          }
+        },
+        {
+          "name": "ListEstoqueItensByObra — Listar Itens",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/estoque?obraId={{obra_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["estoque"],
+              "query": [
+                {
+                  "key": "obraId",
+                  "value": "{{obra_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "AddEstoqueMovimentacao — Registrar Movimentação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"saida\",\n  \"quantidade\": 25,\n  \"observacao\": \"Saída para fundação\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/estoque/{{estoque_id}}/movimentacao",
+              "host": ["{{base_url}}"],
+              "path": ["estoque", "{{estoque_id}}", "movimentacao"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pipeline",
+      "description": "Gerenciamento de pipeline interno",
+      "item": [
+        {
+          "name": "CreatePipeline — Criar Etapa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Análise de Propostas\",\n  \"descricao\": \"Análise de propostas recebidas\",\n  \"ordem\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pipeline",
+              "host": ["{{base_url}}"],
+              "path": ["pipeline"]
+            }
+          }
+        },
+        {
+          "name": "ListPipeline — Listar Etapas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/pipeline",
+              "host": ["{{base_url}}"],
+              "path": ["pipeline"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notificações",
+      "description": "Gerenciamento de notificações de usuário",
+      "item": [
+        {
+          "name": "CreateNotificacao — Criar Notificação",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"obraId\": \"{{obra_id}}\",\n  \"modulos\": [\"medicoes\", \"financeiro\"],\n  \"canal\": \"email\",\n  \"assunto\": \"Medição aprovada\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/notificacoes",
+              "host": ["{{base_url}}"],
+              "path": ["notificacoes"]
+            }
+          }
+        },
+        {
+          "name": "ListMinhasNotificacoes — Minhas Notificações",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notificacoes/minhas?pageIndex=0&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["notificacoes", "minhas"],
+              "query": [
+                {
+                  "key": "pageIndex",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "MarkNotificacaoAsRead — Marcar como Lida",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/notificacoes/{{notificacao_id}}/read",
+              "host": ["{{base_url}}"],
+              "path": ["notificacoes", "{{notificacao_id}}", "read"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auditoria",
+      "description": "Consulta de logs de auditoria (Master only)",
+      "item": [
+        {
+          "name": "GetAuditoriaByEntidade — Consultar Auditoria",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auditoria?entidade=obra&pageIndex=0&pageSize=10",
+              "host": ["{{base_url}}"],
+              "path": ["auditoria"],
+              "query": [
+                {
+                  "key": "entidade",
+                  "value": "obra"
+                },
+                {
+                  "key": "pageIndex",
+                  "value": "0"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "description": "Verificação de saúde da API",
+      "item": [
+        {
+          "name": "HealthCheck — Status da API",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/healthcheck",
+              "host": ["{{base_url}}"],
+              "path": ["healthcheck"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5285",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "obra_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "etapa_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "medicao_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "lancamento_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "relatorio_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "relatorio_mensal_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "documento_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fornecedor_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prestador_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "estoque_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificacao_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
