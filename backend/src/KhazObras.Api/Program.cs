@@ -107,10 +107,7 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.MapOpenApi();
 
 app.UseHttpsRedirection();
 
@@ -134,14 +131,16 @@ app.MapGet("/healthcheck", async (IDbConnectionFactory dbFactory, ILogger<Progra
             title: "Servico indisponivel");
     }
 })
-.WithName("HealthCheck");
+.WithName("HealthCheck")
+.WithDescription("Verifica a saúde da API e conectividade com o banco de dados");
 
 app.MapPost("/auth/login", async (LoginRequest request, AuthService authService) =>
 {
     var result = await authService.LoginAsync(request);
     return result is null ? Results.Unauthorized() : Results.Ok(result);
 })
-.WithName("Login");
+.WithName("Login")
+.WithDescription("Autentica usuário e retorna JWT token com 8h de expiração");
 
 app.MapPost("/users", async (CreateUserRequest request, IValidator<CreateUserRequest> validator, UserService userService, ClaimsPrincipal principal) =>
 {
@@ -156,7 +155,8 @@ app.MapPost("/users", async (CreateUserRequest request, IValidator<CreateUserReq
     return Results.Created($"/users/{result.Id}", result);
 })
 .RequireAuthorization("MasterOnly")
-.WithName("CreateUser");
+.WithName("CreateUser")
+.WithDescription("Cria novo usuário (somente Master). Roles: Master, Admin, Client");
 
 app.MapGet("/users/me", async (ClaimsPrincipal principal, IUserRepository userRepository) =>
 {
@@ -168,7 +168,8 @@ app.MapGet("/users/me", async (ClaimsPrincipal principal, IUserRepository userRe
         : Results.Ok(new UserResponse(user.Id, user.Name, user.Email, user.Role.ToString(), user.IsActive, user.CreatedAt));
 })
 .RequireAuthorization()
-.WithName("GetMe");
+.WithName("GetMe")
+.WithDescription("Retorna dados do usuário autenticado");
 
 app.MapPost("/obras", async (CreateObraRequest request, IValidator<CreateObraRequest> validator, ObraService obraService) =>
 {
@@ -182,7 +183,8 @@ app.MapPost("/obras", async (CreateObraRequest request, IValidator<CreateObraReq
     return Results.Created($"/obras/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateObra");
+.WithName("CreateObra")
+.WithDescription("Cria nova obra. Cliente vê apenas obras vinculadas ao seu login");
 
 app.MapGet("/obras/{id:guid}", async (Guid id, ObraService obraService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -199,7 +201,8 @@ app.MapGet("/obras/{id:guid}", async (Guid id, ObraService obraService, ObraAcce
     return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetObraById");
+.WithName("GetObraById")
+.WithDescription("Retorna detalhes de uma obra específica (acesso restrito por obra)");
 
 app.MapGet("/obras", async (ObraService obraService, ObraAccessService accessService, IUserObraRepository userObraRepository, ClaimsPrincipal principal, int pageIndex = 0, int pageSize = 20) =>
 {
@@ -225,7 +228,8 @@ app.MapGet("/obras", async (ObraService obraService, ObraAccessService accessSer
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetObras");
+.WithName("GetObras")
+.WithDescription("Lista todas as obras (paginado). Clientes veem apenas suas obras");
 
 app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapaRequest> validator, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -248,7 +252,8 @@ app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapa
     return Results.Created($"/etapas/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateEtapa");
+.WithName("CreateEtapa")
+.WithDescription("Cria etapa (fase) em uma obra");
 
 app.MapGet("/etapas/{id:guid}", async (Guid id, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -270,7 +275,8 @@ app.MapGet("/etapas/{id:guid}", async (Guid id, EtapaService etapaService, ObraA
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetEtapaById");
+.WithName("GetEtapaById")
+.WithDescription("Retorna detalhes de uma etapa específica");
 
 app.MapGet("/obras/{obraId:guid}/etapas", async (Guid obraId, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -287,7 +293,8 @@ app.MapGet("/obras/{obraId:guid}/etapas", async (Guid obraId, EtapaService etapa
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetEtapasByObra");
+.WithName("GetEtapasByObra")
+.WithDescription("Lista todas as etapas de uma obra");
 
 app.MapPost("/medicoes", async (CreateMedicaoRequest request, IValidator<CreateMedicaoRequest> validator, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -310,7 +317,8 @@ app.MapPost("/medicoes", async (CreateMedicaoRequest request, IValidator<CreateM
     return Results.Created($"/medicoes/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateMedicao");
+.WithName("CreateMedicao")
+.WithDescription("Cria medição para uma obra. Estados: pending_approval → approved → invoice_issued");
 
 app.MapGet("/medicoes/{id:guid}", async (Guid id, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -332,7 +340,8 @@ app.MapGet("/medicoes/{id:guid}", async (Guid id, MedicaoService medicaoService,
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetMedicaoById");
+.WithName("GetMedicaoById")
+.WithDescription("Retorna detalhes de uma medição específica");
 
 app.MapGet("/obras/{obraId:guid}/medicoes", async (Guid obraId, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -349,7 +358,8 @@ app.MapGet("/obras/{obraId:guid}/medicoes", async (Guid obraId, MedicaoService m
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetMedicoesByObra");
+.WithName("GetMedicoesByObra")
+.WithDescription("Lista todas as medições de uma obra");
 
 app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal principal, MedicaoService medicaoService, ObraAccessService accessService) =>
 {
@@ -381,7 +391,8 @@ app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal princ
     }
 })
 .RequireAuthorization()
-.WithName("ApproveMedicao");
+.WithName("ApproveMedicao")
+.WithDescription("Aprova medição (transição: pending_approval → approved). Realizado pelo cliente");
 
 app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceRequest request, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -407,7 +418,8 @@ app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceReq
     }
 })
 .RequireAuthorization()
-.WithName("IssueMedicaoInvoice");
+.WithName("IssueMedicaoInvoice")
+.WithDescription("Emite nota fiscal para medição (transição: approved → invoice_issued). Somente Admin/Master");
 
 app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest request, IValidator<CreateFinanceiroLancamentoRequest> validator, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -431,7 +443,8 @@ app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest 
     return Results.Created($"/financeiro/lancamentos/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateFinanceiroLancamento");
+.WithName("CreateFinanceiroLancamento")
+.WithDescription("Cria lançamento financeiro (receita/despesa) em uma obra");
 
 app.MapGet("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -453,7 +466,8 @@ app.MapGet("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroServic
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetFinanceiroLancamentoById");
+.WithName("GetFinanceiroLancamentoById")
+.WithDescription("Retorna detalhes de um lançamento financeiro");
 
 app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, int pageIndex = 0, int pageSize = 20) =>
 {
@@ -470,7 +484,8 @@ app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, Fi
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetFinanceiroLancamentosByObra");
+.WithName("GetFinanceiroLancamentosByObra")
+.WithDescription("Lista lançamentos financeiros de uma obra (paginado)");
 
 app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFile file, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -500,7 +515,8 @@ app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFil
 })
 .DisableAntiforgery()
 .RequireAuthorization()
-.WithName("UploadFinanceiroAnexo");
+.WithName("UploadFinanceiroAnexo")
+.WithDescription("Anexa arquivo a um lançamento financeiro (máx 10MB, validado por magic bytes)");
 
 app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -521,7 +537,8 @@ app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, Fi
     return Results.File(content, contentType ?? "application/octet-stream", fileName);
 })
 .RequireAuthorization()
-.WithName("DownloadFinanceiroAnexo");
+.WithName("DownloadFinanceiroAnexo")
+.WithDescription("Baixa anexo de um lançamento financeiro (somente Admin/Master)");
 
 app.MapGet("/relatorios-fotograficos/{id:guid}", async (Guid id, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -543,7 +560,8 @@ app.MapGet("/relatorios-fotograficos/{id:guid}", async (Guid id, RelatorioFotogr
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetRelatorioFotograficoById");
+.WithName("GetRelatorioFotograficoById")
+.WithDescription("Retorna detalhes de um relatório fotográfico");
 
 app.MapPost("/relatorios-fotograficos", async (CreateRelatorioFotograficoRequest request, IValidator<CreateRelatorioFotograficoRequest> validator, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -566,7 +584,8 @@ app.MapPost("/relatorios-fotograficos", async (CreateRelatorioFotograficoRequest
     return Results.Created($"/relatorios-fotograficos/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateRelatorioFotografico");
+.WithName("CreateRelatorioFotografico")
+.WithDescription("Cria novo relatório fotográfico para uma obra");
 
 app.MapGet("/obras/{obraId:guid}/relatorios-fotograficos", async (Guid obraId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -583,7 +602,8 @@ app.MapGet("/obras/{obraId:guid}/relatorios-fotograficos", async (Guid obraId, R
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetRelatoriosFotograficosByObra");
+.WithName("GetRelatoriosFotograficosByObra")
+.WithDescription("Lista relatórios fotográficos de uma obra");
 
 app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFile file, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal, DateOnly? dataFoto, string? descricao, int ordem = 0) =>
 {
@@ -609,7 +629,8 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
 })
 .DisableAntiforgery()
 .RequireAuthorization()
-.WithName("UploadFoto");
+.WithName("UploadFoto")
+.WithDescription("Adiciona foto a um relatório fotográfico (máx 10MB, validado por magic bytes)");
 
 app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, IValidator<CreateRelatorioMensalRequest> validator, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -633,7 +654,8 @@ app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, 
     return Results.Created($"/relatorios-mensais/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateRelatorioMensal");
+.WithName("CreateRelatorioMensal")
+.WithDescription("Cria relatório mensal para uma obra. Estados: draft → published");
 
 app.MapGet("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -655,7 +677,8 @@ app.MapGet("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalServi
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetRelatorioMensalById");
+.WithName("GetRelatorioMensalById")
+.WithDescription("Retorna detalhes de um relatório mensal");
 
 app.MapGet("/obras/{obraId:guid}/relatorios-mensais", async (Guid obraId, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal, bool onlyPublished = false) =>
 {
@@ -672,7 +695,8 @@ app.MapGet("/obras/{obraId:guid}/relatorios-mensais", async (Guid obraId, Relato
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetRelatoriosMensaisByObra");
+.WithName("GetRelatoriosMensaisByObra")
+.WithDescription("Lista relatórios mensais de uma obra (filtrável por status published)");
 
 app.MapPost("/relatorios-mensais/{id:guid}/publish", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -698,7 +722,8 @@ app.MapPost("/relatorios-mensais/{id:guid}/publish", async (Guid id, RelatorioMe
     }
 })
 .RequireAuthorization()
-.WithName("PublishRelatorioMensal");
+.WithName("PublishRelatorioMensal")
+.WithDescription("Publica relatório mensal (transição: draft → published). Somente Admin/Master");
 
 app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal, Guid? etapaId, string? tipoDocumento) =>
 {
@@ -722,7 +747,8 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
 })
 .DisableAntiforgery()
 .RequireAuthorization()
-.WithName("UploadProjetoDocumento");
+.WithName("UploadProjetoDocumento")
+.WithDescription("Anexa documento/projeto a uma obra (máx 10MB, validado por magic bytes)");
 
 app.MapGet("/projetos/{id:guid}/download", async (Guid id, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -742,7 +768,8 @@ app.MapGet("/projetos/{id:guid}/download", async (Guid id, ProjetoDocumentoServi
     return Results.File(content, contentType ?? "application/octet-stream", fileName);
 })
 .RequireAuthorization()
-.WithName("DownloadProjetoDocumento");
+.WithName("DownloadProjetoDocumento")
+.WithDescription("Baixa documento/projeto (somente Admin/Master)");
 
 app.MapGet("/obras/{obraId:guid}/projetos", async (Guid obraId, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -759,7 +786,8 @@ app.MapGet("/obras/{obraId:guid}/projetos", async (Guid obraId, ProjetoDocumento
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetProjetosByObra");
+.WithName("GetProjetosByObra")
+.WithDescription("Lista documentos/projetos de uma obra");
 
 app.MapPost("/fornecedores", async (CreateFornecedorRequest request, FornecedorService service) =>
 {
@@ -767,7 +795,8 @@ app.MapPost("/fornecedores", async (CreateFornecedorRequest request, FornecedorS
     return Results.Created($"/fornecedores/{result.Id}", result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("CreateFornecedor");
+.WithName("CreateFornecedor")
+.WithDescription("Cria fornecedor (módulo interno, sem escopo de obra)");
 
 app.MapGet("/fornecedores/{id:guid}", async (Guid id, FornecedorService service) =>
 {
@@ -775,7 +804,8 @@ app.MapGet("/fornecedores/{id:guid}", async (Guid id, FornecedorService service)
     return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("GetFornecedorById");
+.WithName("GetFornecedorById")
+.WithDescription("Retorna detalhes de um fornecedor");
 
 app.MapGet("/fornecedores", async (FornecedorService service) =>
 {
@@ -783,7 +813,8 @@ app.MapGet("/fornecedores", async (FornecedorService service) =>
     return Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("GetFornecedores");
+.WithName("GetFornecedores")
+.WithDescription("Lista todos os fornecedores");
 
 app.MapPost("/prestadores", async (CreatePrestadorRequest request, PrestadorService service) =>
 {
@@ -791,7 +822,8 @@ app.MapPost("/prestadores", async (CreatePrestadorRequest request, PrestadorServ
     return Results.Created($"/prestadores/{result.Id}", result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("CreatePrestador");
+.WithName("CreatePrestador")
+.WithDescription("Cria prestador de serviço (módulo interno, sem escopo de obra)");
 
 app.MapGet("/prestadores/{id:guid}", async (Guid id, PrestadorService service) =>
 {
@@ -799,7 +831,8 @@ app.MapGet("/prestadores/{id:guid}", async (Guid id, PrestadorService service) =
     return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("GetPrestadorById");
+.WithName("GetPrestadorById")
+.WithDescription("Retorna detalhes de um prestador");
 
 app.MapGet("/obras/{obraId:guid}/prestadores", async (Guid obraId, PrestadorService service) =>
 {
@@ -807,7 +840,8 @@ app.MapGet("/obras/{obraId:guid}/prestadores", async (Guid obraId, PrestadorServ
     return Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("GetPrestadoresByObra");
+.WithName("GetPrestadoresByObra")
+.WithDescription("Lista prestadores vinculados a uma obra");
 
 app.MapPost("/estoque/itens", async (CreateEstoqueItemRequest request, EstoqueService service) =>
 {
@@ -815,7 +849,8 @@ app.MapPost("/estoque/itens", async (CreateEstoqueItemRequest request, EstoqueSe
     return Results.Created($"/estoque/itens/{result.Id}", result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("CreateEstoqueItem");
+.WithName("CreateEstoqueItem")
+.WithDescription("Cria item de estoque para uma obra");
 
 app.MapGet("/obras/{obraId:guid}/estoque/itens", async (Guid obraId, EstoqueService service) =>
 {
@@ -823,7 +858,8 @@ app.MapGet("/obras/{obraId:guid}/estoque/itens", async (Guid obraId, EstoqueServ
     return Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("GetEstoqueItensByObra");
+.WithName("GetEstoqueItensByObra")
+.WithDescription("Lista itens de estoque de uma obra");
 
 app.MapPost("/estoque/itens/{itemId:guid}/movimentacoes", async (Guid itemId, CreateMovimentacaoRequest request, EstoqueService service) =>
 {
@@ -842,7 +878,8 @@ app.MapPost("/estoque/itens/{itemId:guid}/movimentacoes", async (Guid itemId, Cr
     }
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("AddEstoqueMovimentacao");
+.WithName("AddEstoqueMovimentacao")
+.WithDescription("Registra movimentação (entrada/saída) de estoque");
 
 app.MapPost("/pipeline", async (CreatePipelineRequest request, PipelineService service) =>
 {
@@ -850,7 +887,8 @@ app.MapPost("/pipeline", async (CreatePipelineRequest request, PipelineService s
     return Results.Created($"/pipeline/{result.Id}", result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("CreatePipeline");
+.WithName("CreatePipeline")
+.WithDescription("Cria etapa de pipeline para gestão de processos internos");
 
 app.MapGet("/pipeline", async (PipelineService service) =>
 {
@@ -858,7 +896,8 @@ app.MapGet("/pipeline", async (PipelineService service) =>
     return Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
-.WithName("GetPipeline");
+.WithName("GetPipeline")
+.WithDescription("Lista todos os itens de pipeline");
 
 app.MapPost("/notificacoes", async (CreateNotificacaoRequest request, NotificacaoService service) =>
 {
@@ -866,7 +905,8 @@ app.MapPost("/notificacoes", async (CreateNotificacaoRequest request, Notificaca
     return Results.Created($"/notificacoes/{result.Id}", result);
 })
 .RequireAuthorization()
-.WithName("CreateNotificacao");
+.WithName("CreateNotificacao")
+.WithDescription("Cria notificação para módulo específico (email/WhatsApp - apenas base criada)");
 
 app.MapGet("/notificacoes/minhas", async (ClaimsPrincipal principal, NotificacaoService service) =>
 {
@@ -875,7 +915,8 @@ app.MapGet("/notificacoes/minhas", async (ClaimsPrincipal principal, Notificacao
     return Results.Ok(result);
 })
 .RequireAuthorization()
-.WithName("GetMinhasNotificacoes");
+.WithName("GetMinhasNotificacoes")
+.WithDescription("Lista notificações do usuário autenticado");
 
 app.MapPost("/notificacoes/{id:guid}/marcar-lida", async (Guid id, ClaimsPrincipal principal, NotificacaoService service) =>
 {
@@ -896,7 +937,8 @@ app.MapPost("/notificacoes/{id:guid}/marcar-lida", async (Guid id, ClaimsPrincip
     }
 })
 .RequireAuthorization()
-.WithName("MarkNotificacaoAsRead");
+.WithName("MarkNotificacaoAsRead")
+.WithDescription("Marca notificação como lida (IDOR prevention)");
 
 app.MapGet("/auditoria/{entidade}/{entidadeId:guid}", async (string entidade, Guid entidadeId, LogAuditoriaService service) =>
 {
@@ -904,7 +946,8 @@ app.MapGet("/auditoria/{entidade}/{entidadeId:guid}", async (string entidade, Gu
     return Results.Ok(result);
 })
 .RequireAuthorization("MasterOnly")
-.WithName("GetAuditoriaByEntidade");
+.WithName("GetAuditoriaByEntidade")
+.WithDescription("Consulta log de auditoria por entidade (somente Master)");
 
 app.MapPost("/users/{userId:guid}/obras/{obraId:guid}", async (Guid userId, Guid obraId, IUserObraRepository userObraRepository) =>
 {
@@ -912,7 +955,8 @@ app.MapPost("/users/{userId:guid}/obras/{obraId:guid}", async (Guid userId, Guid
     return Results.NoContent();
 })
 .RequireAuthorization("MasterOnly")
-.WithName("LinkUserToObra");
+.WithName("LinkUserToObra")
+.WithDescription("Vincula usuário a uma obra (somente Master)");
 
 app.MapGet("/users", async (IUserRepository userRepository) =>
 {
@@ -921,6 +965,7 @@ app.MapGet("/users", async (IUserRepository userRepository) =>
     return Results.Ok(result);
 })
 .RequireAuthorization("MasterOnly")
-.WithName("GetUsers");
+.WithName("GetUsers")
+.WithDescription("Lista todos os usuários (somente Master)");
 
 app.Run();
