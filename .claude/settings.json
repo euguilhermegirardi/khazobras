@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./backend/src/KhazObras.Api/appsettings.Development.json)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./database/seed/**)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git commit --no-verify:*)"
+    ]
+  }
+}

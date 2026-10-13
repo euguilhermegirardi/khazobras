@@ -9,9 +9,23 @@ Referências obrigatórias antes de mexer em algo grande:
 
 ## Estado atual
 
-- Backend fases 1–8 concluídas, revisão de segurança concluída, 5 testes passando.
+- Backend fases 1–8 concluídas, revisão de segurança concluída, 47 testes passando (`KhazObras.Security.Tests`).
 - **Backend NÃO cobre todo o SPEC** — ver "Lacunas do backend" abaixo.
 - Próxima fase: 9 (frontend React + Vite), começando pela visão do cliente.
+
+## Agentes e skills do projeto (`.claude/`)
+
+Subagentes (`.claude/agents/`):
+- `backend-gap-filler` — implementa lacuna do backend (endpoint, módulo, script 007+) com teste.
+- `frontend-builder` — constrói uma tela por vez a partir do SPEC; para se faltar endpoint.
+- `frontend-tester` — testes Vitest/MSW/Playwright em contexto separado de quem escreveu o código.
+- `security-reviewer` — revisão somente-leitura (acesso, IDOR, vazamento de custo ao cliente, segredos).
+
+Skills (`.claude/skills/`): `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
+
+Fluxo por tela: lacuna? → `backend-gap-filler` → `frontend-builder` → `frontend-tester` →
+`security-reviewer` (telas com escrita/restrição) → `checagem-pre-commit` → commit.
+Regras do frontend: `frontend/CLAUDE.md`.
 
 ## Estrutura
 
