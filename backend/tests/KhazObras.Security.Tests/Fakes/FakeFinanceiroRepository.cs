@@ -31,7 +31,7 @@ public sealed class FakeFinanceiroRepository : IFinanceiroLancamentoRepository
             .ToList()
             .AsReadOnly();
 
-        return Task.FromResult((items, totalItems));
+        return Task.FromResult(new(Items: items, TotalItems: totalItems));
     }
 
     public Task<FinanceiroLancamentoAnexo> AddAnexoAsync(FinanceiroLancamentoAnexo anexo)
