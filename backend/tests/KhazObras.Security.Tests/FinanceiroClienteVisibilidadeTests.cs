@@ -4,6 +4,7 @@ using KhazObras.Application.Services;
 using KhazObras.Domain.Entities;
 using KhazObras.Domain.Enums;
 using KhazObras.Security.Tests.Fakes;
+using Xunit;
 
 namespace KhazObras.Security.Tests;
 
