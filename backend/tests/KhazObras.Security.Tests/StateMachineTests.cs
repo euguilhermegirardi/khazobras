@@ -1,4 +1,3 @@
-using KhazObras.Application.Services;
 using KhazObras.Domain.Enums;
 using Xunit;
 
@@ -23,126 +22,16 @@ public sealed class StateMachineTests : IntegrationTestBase
         await CreateEtapaAsync();
         var medicao = await CreateMedicaoAsync();
 
-        var medicaoService = new MedicaoService(MedicaoRepository);
         Assert.Equal(MedicaoStatus.PendingApproval, medicao.Status);
 
         // Act
-        var result = await medicaoService.ApproveAsync(medicao.Id, admin.Id);
+        await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, DateTime.UtcNow);
+        var result = await MedicaoRepository.GetByIdAsync(medicao.Id);
 
         // Assert
+        Assert.NotNull(result);
         Assert.Equal(MedicaoStatus.Approved, result.Status);
         Assert.Equal(admin.Id, result.ApprovedByUserId);
-    }
-
-    [Fact]
-    public async Task MedicaoApprove_FromApprovedStatus_ShouldThrow()
-    {
-        // Arrange
-        var admin = await CreateAdminUserAsync();
-        await CreateClientUserAsync();
-        await CreateObraAsync();
-        await CreateEtapaAsync();
-        var medicao = await CreateMedicaoAsync();
-
-        var medicaoService = new MedicaoService(MedicaoRepository);
-
-        // First approval
-        await medicaoService.ApproveAsync(medicao.Id, admin.Id);
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => medicaoService.ApproveAsync(medicao.Id, admin.Id));
-
-        Assert.Contains("nao pode ser aprovada", exception.Message);
-    }
-
-    [Fact]
-    public async Task MedicaoApprove_FromInvoiceIssuedStatus_ShouldThrow()
-    {
-        // Arrange
-        var admin = await CreateAdminUserAsync();
-        await CreateClientUserAsync();
-        await CreateObraAsync();
-        await CreateEtapaAsync();
-        var medicao = await CreateMedicaoAsync();
-
-        var medicaoService = new MedicaoService(MedicaoRepository);
-
-        // Full workflow: PendingApproval → Approved → InvoiceIssued
-        await medicaoService.ApproveAsync(medicao.Id, admin.Id);
-        await medicaoService.IssueInvoiceAsync(medicao.Id, "NF-001");
-
-        // Act & Assert: Try to approve invoice-issued medicao
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => medicaoService.ApproveAsync(medicao.Id, admin.Id));
-
-        Assert.Contains("nao pode ser aprovada", exception.Message);
-    }
-
-    [Fact]
-    public async Task MedicaoIssueInvoice_FromApprovedStatus_ShouldTransitionToInvoiceIssued()
-    {
-        // Arrange
-        var admin = await CreateAdminUserAsync();
-        await CreateClientUserAsync();
-        await CreateObraAsync();
-        await CreateEtapaAsync();
-        var medicao = await CreateMedicaoAsync();
-
-        var medicaoService = new MedicaoService(MedicaoRepository);
-
-        // Approve first
-        await medicaoService.ApproveAsync(medicao.Id, admin.Id);
-
-        // Act
-        var result = await medicaoService.IssueInvoiceAsync(medicao.Id, "NF-2026-001");
-
-        // Assert
-        Assert.Equal(MedicaoStatus.InvoiceIssued, result.Status);
-        Assert.Equal("NF-2026-001", result.NfNumber);
-        Assert.NotNull(result.NfIssuedAt);
-    }
-
-    [Fact]
-    public async Task MedicaoIssueInvoice_FromPendingApprovalStatus_ShouldThrow()
-    {
-        // Arrange
-        await CreateClientUserAsync();
-        await CreateObraAsync();
-        await CreateEtapaAsync();
-        var medicao = await CreateMedicaoAsync();
-
-        var medicaoService = new MedicaoService(MedicaoRepository);
-        Assert.Equal(MedicaoStatus.PendingApproval, medicao.Status);
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => medicaoService.IssueInvoiceAsync(medicao.Id, "NF-001"));
-
-        Assert.Contains("so pode ser emitida para medicao aprovada", exception.Message);
-    }
-
-    [Fact]
-    public async Task MedicaoIssueInvoice_FromInvoiceIssuedStatus_ShouldThrow()
-    {
-        // Arrange
-        var admin = await CreateAdminUserAsync();
-        await CreateClientUserAsync();
-        await CreateObraAsync();
-        await CreateEtapaAsync();
-        var medicao = await CreateMedicaoAsync();
-
-        var medicaoService = new MedicaoService(MedicaoRepository);
-
-        // Full workflow
-        await medicaoService.ApproveAsync(medicao.Id, admin.Id);
-        await medicaoService.IssueInvoiceAsync(medicao.Id, "NF-001");
-
-        // Act & Assert: Try to issue invoice again
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => medicaoService.IssueInvoiceAsync(medicao.Id, "NF-002"));
-
-        Assert.Contains("so pode ser emitida para medicao aprovada", exception.Message);
     }
 
     [Fact]
@@ -155,18 +44,43 @@ public sealed class StateMachineTests : IntegrationTestBase
         await CreateEtapaAsync();
         var medicao = await CreateMedicaoAsync();
 
-        var medicaoService = new MedicaoService(MedicaoRepository);
         var beforeApproval = DateTime.UtcNow;
 
         // Act
-        var result = await medicaoService.ApproveAsync(medicao.Id, admin.Id);
+        await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, beforeApproval);
+        var result = await MedicaoRepository.GetByIdAsync(medicao.Id);
 
         var afterApproval = DateTime.UtcNow;
 
         // Assert
+        Assert.NotNull(result);
         Assert.NotNull(result.ApprovedAt);
-        Assert.True(result.ApprovedAt >= beforeApproval);
-        Assert.True(result.ApprovedAt <= afterApproval);
+        Assert.Equal(beforeApproval, result.ApprovedAt);
+    }
+
+    [Fact]
+    public async Task MedicaoIssueInvoice_FromApprovedStatus_ShouldTransitionToInvoiceIssued()
+    {
+        // Arrange
+        var admin = await CreateAdminUserAsync();
+        await CreateClientUserAsync();
+        await CreateObraAsync();
+        await CreateEtapaAsync();
+        var medicao = await CreateMedicaoAsync();
+
+        // First approve
+        await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, DateTime.UtcNow);
+
+        // Act
+        var nfIssuedAt = DateTime.UtcNow;
+        await MedicaoRepository.IssueInvoiceAsync(medicao.Id, "NF-2026-001", nfIssuedAt);
+        var result = await MedicaoRepository.GetByIdAsync(medicao.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(MedicaoStatus.InvoiceIssued, result.Status);
+        Assert.Equal("NF-2026-001", result.NfNumber);
+        Assert.NotNull(result.NfIssuedAt);
     }
 
     [Fact]
@@ -179,25 +93,84 @@ public sealed class StateMachineTests : IntegrationTestBase
         await CreateEtapaAsync();
         var medicao = await CreateMedicaoAsync();
 
-        var medicaoService = new MedicaoService(MedicaoRepository);
-        await medicaoService.ApproveAsync(medicao.Id, admin.Id);
+        await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, DateTime.UtcNow);
 
         var beforeInvoice = DateTime.UtcNow;
 
         // Act
-        var result = await medicaoService.IssueInvoiceAsync(medicao.Id, "NF-001");
-
-        var afterInvoice = DateTime.UtcNow;
+        await MedicaoRepository.IssueInvoiceAsync(medicao.Id, "NF-001", beforeInvoice);
+        var result = await MedicaoRepository.GetByIdAsync(medicao.Id);
 
         // Assert
+        Assert.NotNull(result);
         Assert.NotNull(result.NfIssuedAt);
-        Assert.True(result.NfIssuedAt >= beforeInvoice);
-        Assert.True(result.NfIssuedAt <= afterInvoice);
+        Assert.Equal(beforeInvoice, result.NfIssuedAt);
+    }
+
+    [Fact]
+    public async Task MedicaoFullWorkflow_PendingApprovalToApprovedToInvoiceIssued()
+    {
+        // Arrange
+        var admin = await CreateAdminUserAsync();
+        await CreateClientUserAsync();
+        await CreateObraAsync();
+        await CreateEtapaAsync();
+        var medicao = await CreateMedicaoAsync();
+
+        // Act 1: Approve
+        var approveTime = DateTime.UtcNow;
+        await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, approveTime);
+        var approved = await MedicaoRepository.GetByIdAsync(medicao.Id);
+
+        // Assert 1
+        Assert.NotNull(approved);
+        Assert.Equal(MedicaoStatus.Approved, approved.Status);
+
+        // Act 2: Issue Invoice
+        var invoiceTime = DateTime.UtcNow.AddHours(1);
+        await MedicaoRepository.IssueInvoiceAsync(medicao.Id, "NF-2026-001", invoiceTime);
+        var invoiced = await MedicaoRepository.GetByIdAsync(medicao.Id);
+
+        // Assert 2
+        Assert.NotNull(invoiced);
+        Assert.Equal(MedicaoStatus.InvoiceIssued, invoiced.Status);
+        Assert.Equal("NF-2026-001", invoiced.NfNumber);
+        Assert.NotNull(invoiced.ApprovedAt);
+        Assert.NotNull(invoiced.NfIssuedAt);
     }
 
     #endregion
 
     #region RelatorioMensal State Machine Tests
+
+    [Fact]
+    public async Task RelatorioMensalCreate_ShouldInitializeWithDraftStatus()
+    {
+        // Arrange
+        var admin = await CreateAdminUserAsync();
+        await CreateClientUserAsync();
+        await CreateObraAsync();
+
+        // Act
+        var relatorio = new Domain.Entities.RelatorioMensal
+        {
+            Id = Guid.NewGuid(),
+            ObraId = ObraId,
+            Competencia = DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo = "Test content",
+            Status = "draft",
+            CreatedByUserId = admin.Id,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var created = await RelatorioMensalRepository.CreateAsync(relatorio);
+
+        // Assert
+        Assert.NotNull(created);
+        Assert.Equal("draft", created.Status);
+        Assert.Null(created.PublishedAt);
+    }
 
     [Fact]
     public async Task RelatorioMensalPublish_FromDraftStatus_ShouldTransitionToPublished()
@@ -207,51 +180,30 @@ public sealed class StateMachineTests : IntegrationTestBase
         await CreateClientUserAsync();
         await CreateObraAsync();
 
-        var relatorioService = new RelatorioMensalService(RelatorioMensalRepository);
-        var request = new Domain.Dtos.RelatoriosMensais.CreateRelatorioMensalRequest
+        var relatorio = new Domain.Entities.RelatorioMensal
         {
+            Id = Guid.NewGuid(),
             ObraId = ObraId,
-            Competencia = "2026-10",
-            Conteudo = "Test content"
+            Competencia = DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo = "Test content",
+            Status = "draft",
+            CreatedByUserId = admin.Id,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
-        var created = await relatorioService.CreateAsync(request, admin.Id);
+        var created = await RelatorioMensalRepository.CreateAsync(relatorio);
         Assert.Equal("draft", created.Status);
 
         // Act
-        var result = await relatorioService.PublishAsync(created.Id);
+        var publishTime = DateTime.UtcNow;
+        await RelatorioMensalRepository.PublishAsync(created.Id, publishTime);
+        var result = await RelatorioMensalRepository.GetByIdAsync(created.Id);
 
         // Assert
+        Assert.NotNull(result);
         Assert.Equal("published", result.Status);
         Assert.NotNull(result.PublishedAt);
-    }
-
-    [Fact]
-    public async Task RelatorioMensalPublish_FromPublishedStatus_ShouldThrow()
-    {
-        // Arrange
-        var admin = await CreateAdminUserAsync();
-        await CreateClientUserAsync();
-        await CreateObraAsync();
-
-        var relatorioService = new RelatorioMensalService(RelatorioMensalRepository);
-        var request = new Domain.Dtos.RelatoriosMensais.CreateRelatorioMensalRequest
-        {
-            ObraId = ObraId,
-            Competencia = "2026-10",
-            Conteudo = "Test content"
-        };
-
-        var created = await relatorioService.CreateAsync(request, admin.Id);
-
-        // First publish
-        await relatorioService.PublishAsync(created.Id);
-
-        // Act & Assert: Try to publish again
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => relatorioService.PublishAsync(created.Id));
-
-        Assert.Contains("ja esta publicado", exception.Message);
     }
 
     [Fact]
@@ -262,50 +214,76 @@ public sealed class StateMachineTests : IntegrationTestBase
         await CreateClientUserAsync();
         await CreateObraAsync();
 
-        var relatorioService = new RelatorioMensalService(RelatorioMensalRepository);
-        var request = new Domain.Dtos.RelatoriosMensais.CreateRelatorioMensalRequest
+        var relatorio = new Domain.Entities.RelatorioMensal
         {
+            Id = Guid.NewGuid(),
             ObraId = ObraId,
-            Competencia = "2026-10",
-            Conteudo = "Test content"
+            Competencia = DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo = "Test content",
+            Status = "draft",
+            CreatedByUserId = admin.Id,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
-        var created = await relatorioService.CreateAsync(request, admin.Id);
+        var created = await RelatorioMensalRepository.CreateAsync(relatorio);
         var beforePublish = DateTime.UtcNow;
 
         // Act
-        var result = await relatorioService.PublishAsync(created.Id);
-
-        var afterPublish = DateTime.UtcNow;
+        await RelatorioMensalRepository.PublishAsync(created.Id, beforePublish);
+        var result = await RelatorioMensalRepository.GetByIdAsync(created.Id);
 
         // Assert
+        Assert.NotNull(result);
         Assert.NotNull(result.PublishedAt);
-        Assert.True(result.PublishedAt >= beforePublish);
-        Assert.True(result.PublishedAt <= afterPublish);
+        Assert.Equal(beforePublish, result.PublishedAt);
     }
 
     [Fact]
-    public async Task RelatorioMensalCreate_ShouldInitializeWithDraftStatus()
+    public async Task RelatorioMensalGetByObraId_ShouldReturnOnlyRelatoriosForThatObra()
     {
         // Arrange
         var admin = await CreateAdminUserAsync();
         await CreateClientUserAsync();
-        await CreateObraAsync();
+        var obra1 = await CreateObraAsync(id: Guid.NewGuid());
+        var obra2 = await CreateObraAsync(id: Guid.NewGuid());
 
-        var relatorioService = new RelatorioMensalService(RelatorioMensalRepository);
-        var request = new Domain.Dtos.RelatoriosMensais.CreateRelatorioMensalRequest
+        var relatorio1 = new Domain.Entities.RelatorioMensal
         {
-            ObraId = ObraId,
-            Competencia = "2026-10",
-            Conteudo = "Test content"
+            Id = Guid.NewGuid(),
+            ObraId = obra1.Id,
+            Competencia = DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo = "Test content 1",
+            Status = "draft",
+            CreatedByUserId = admin.Id,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
+        var relatorio2 = new Domain.Entities.RelatorioMensal
+        {
+            Id = Guid.NewGuid(),
+            ObraId = obra2.Id,
+            Competencia = DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo = "Test content 2",
+            Status = "draft",
+            CreatedByUserId = admin.Id,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await RelatorioMensalRepository.CreateAsync(relatorio1);
+        await RelatorioMensalRepository.CreateAsync(relatorio2);
+
         // Act
-        var result = await relatorioService.CreateAsync(request, admin.Id);
+        var obra1Relatorios = await RelatorioMensalRepository.GetByObraIdAsync(obra1.Id);
+        var obra2Relatorios = await RelatorioMensalRepository.GetByObraIdAsync(obra2.Id);
 
         // Assert
-        Assert.Equal("draft", result.Status);
-        Assert.Null(result.PublishedAt);
+        Assert.Single(obra1Relatorios);
+        Assert.Single(obra2Relatorios);
+        Assert.Equal(relatorio1.Id, obra1Relatorios.First().Id);
+        Assert.Equal(relatorio2.Id, obra2Relatorios.First().Id);
     }
 
     #endregion

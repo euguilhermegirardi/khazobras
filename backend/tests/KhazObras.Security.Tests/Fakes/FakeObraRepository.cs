@@ -30,17 +30,4 @@ public sealed class FakeObraRepository : IObraRepository
 
         return Task.FromResult((items, totalItems));
     }
-
-    /// <summary>
-    /// Get obras by user ID for testing access control.
-    /// </summary>
-    public Task<IReadOnlyList<Obra>> GetByUserIdAsync(Guid userId)
-    {
-        var obras = _obras
-            .Where(o => o.UserId == userId)
-            .ToList()
-            .AsReadOnly();
-
-        return Task.FromResult<IReadOnlyList<Obra>>(obras);
-    }
 }

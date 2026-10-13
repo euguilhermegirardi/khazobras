@@ -17,6 +17,7 @@ public abstract class IntegrationTestBase
     protected FakeMedicaoRepository MedicaoRepository { get; }
     protected FakeFinanceiroRepository FinanceiroRepository { get; }
     protected FakeRelatorioMensalRepository RelatorioMensalRepository { get; }
+    protected FakeUserObraRepository UserObraRepository { get; }
     protected FakeObraAccessService ObraAccessService { get; }
 
     // Test IDs
@@ -35,7 +36,8 @@ public abstract class IntegrationTestBase
         MedicaoRepository = new FakeMedicaoRepository();
         FinanceiroRepository = new FakeFinanceiroRepository();
         RelatorioMensalRepository = new FakeRelatorioMensalRepository();
-        ObraAccessService = new FakeObraAccessService(ObraRepository);
+        UserObraRepository = new FakeUserObraRepository();
+        ObraAccessService = new FakeObraAccessService(UserObraRepository);
     }
 
     /// <summary>
@@ -80,21 +82,18 @@ public abstract class IntegrationTestBase
     /// <summary>
     /// Create a test obra.
     /// </summary>
-    protected virtual async Task<Obra> CreateObraAsync(Guid? userId = null, Guid? id = null)
+    protected virtual async Task<Obra> CreateObraAsync(Guid? id = null)
     {
         var obraId = id ?? ObraId;
-        var ownerId = userId ?? ClientUserId;
 
         var obra = new Obra
         {
             Id = obraId,
-            UserId = ownerId,
             Nome = "Test Obra",
             Endereco = "Rua Teste, 123",
             ValorContratado = 100000m,
             DataInicio = DateOnly.FromDateTime(DateTime.UtcNow),
-            DataFim = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)),
-            Status = "Em Progresso",
+            DataPrevisaoTermino = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -116,8 +115,10 @@ public abstract class IntegrationTestBase
             Id = etapaId,
             ObraId = obra_Id,
             Nome = "Test Etapa",
-            DataInicio = DateOnly.FromDateTime(DateTime.UtcNow),
-            DataFim = DateOnly.FromDateTime(DateTime.UtcNow.AddWeeks(4)),
+            Ordem = 1,
+            PercentualPeso = 25m,
+            DataInicioPrevista = DateOnly.FromDateTime(DateTime.UtcNow),
+            DataFimPrevista = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(28)),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -133,15 +134,14 @@ public abstract class IntegrationTestBase
     {
         var medicaoId = id ?? MedicaoId;
         var obra_Id = obraId ?? ObraId;
-        var etapa_Id = etapaId ?? EtapaId;
 
         var medicao = new Medicao
         {
             Id = medicaoId,
             ObraId = obra_Id,
-            EtapaId = etapa_Id,
+            EtapaId = etapaId,
             Numero = 1,
-            Competencia = "2026-10",
+            Competencia = DateOnly.FromDateTime(DateTime.UtcNow),
             ValorTotal = 5000m,
             Status = MedicaoStatus.PendingApproval,
             CreatedAt = DateTime.UtcNow,
@@ -151,7 +151,8 @@ public abstract class IntegrationTestBase
                 new()
                 {
                     Id = Guid.NewGuid(),
-                    Tipo = "MaoDeObra",
+                    MedicaoId = medicaoId,
+                    Tipo = ItemTipo.MaoDeObra,
                     Descricao = "Test Item",
                     Quantidade = 10,
                     ValorUnitario = 500m,

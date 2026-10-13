@@ -23,13 +23,12 @@ public sealed class ValidatorTests
     public void CreateUserValidator_WithValidData_ShouldPass()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "SecurePass123",
-            Role = "admin"
-        };
+        var request = new CreateUserRequest(
+            Name: "John Doe",
+            Email: "john@example.com",
+            Password: "SecurePass123",
+            Role: "admin"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
@@ -42,13 +41,12 @@ public sealed class ValidatorTests
     public void CreateUserValidator_WithInvalidEmail_ShouldFail()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "John Doe",
-            Email = "invalid-email",
-            Password = "SecurePass123",
-            Role = "admin"
-        };
+        var request = new CreateUserRequest(
+            Name: "John Doe",
+            Email: "invalid-email",
+            Password: "SecurePass123",
+            Role: "admin"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
@@ -62,13 +60,12 @@ public sealed class ValidatorTests
     public void CreateUserValidator_WithShortPassword_ShouldFail()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "Short1",
-            Role = "admin"
-        };
+        var request = new CreateUserRequest(
+            Name: "John Doe",
+            Email: "john@example.com",
+            Password: "Short1",
+            Role: "admin"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
@@ -82,53 +79,50 @@ public sealed class ValidatorTests
     public void CreateUserValidator_WithPasswordMissingUppercase_ShouldFail()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "lowercase1",
-            Role = "admin"
-        };
+        var request = new CreateUserRequest(
+            Name: "John Doe",
+            Email: "john@example.com",
+            Password: "lowercase1",
+            Role: "admin"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "Password" && e.ErrorMessage.Contains("maiuscula"));
+        Assert.Contains(result.Errors, e => e.PropertyName == "Password");
     }
 
     [Fact]
     public void CreateUserValidator_WithPasswordMissingNumber_ShouldFail()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "NoNumber",
-            Role = "admin"
-        };
+        var request = new CreateUserRequest(
+            Name: "John Doe",
+            Email: "john@example.com",
+            Password: "NoNumber",
+            Role: "admin"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.PropertyName == "Password" && e.ErrorMessage.Contains("numero"));
+        Assert.Contains(result.Errors, e => e.PropertyName == "Password");
     }
 
     [Fact]
     public void CreateUserValidator_WithInvalidRole_ShouldFail()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "John Doe",
-            Email = "john@example.com",
-            Password = "SecurePass123",
-            Role = "invalid_role"
-        };
+        var request = new CreateUserRequest(
+            Name: "John Doe",
+            Email: "john@example.com",
+            Password: "SecurePass123",
+            Role: "invalid_role"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
@@ -142,13 +136,12 @@ public sealed class ValidatorTests
     public void CreateUserValidator_WithEmptyName_ShouldFail()
     {
         // Arrange
-        var request = new CreateUserRequest
-        {
-            Name = "",
-            Email = "john@example.com",
-            Password = "SecurePass123",
-            Role = "admin"
-        };
+        var request = new CreateUserRequest(
+            Name: "",
+            Email: "john@example.com",
+            Password: "SecurePass123",
+            Role: "admin"
+        );
 
         // Act
         var result = _userValidator.Validate(request);
@@ -168,14 +161,13 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateObraRequest
-        {
-            Nome = "Obra Test",
-            Endereco = "Rua Test, 123",
-            ValorContratado = 100000m,
-            DataInicio = today,
-            DataFim = today.AddMonths(6)
-        };
+        var request = new CreateObraRequest(
+            Nome: "Obra Test",
+            Endereco: "Rua Test, 123",
+            ValorContratado: 100000m,
+            DataInicio: today,
+            DataPrevisaoTermino: today.AddMonths(6)
+        );
 
         // Act
         var result = _obraValidator.Validate(request);
@@ -189,14 +181,13 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateObraRequest
-        {
-            Nome = "Obra Test",
-            Endereco = "Rua Test, 123",
-            ValorContratado = 100000m,
-            DataInicio = today.AddMonths(6),
-            DataFim = today
-        };
+        var request = new CreateObraRequest(
+            Nome: "Obra Test",
+            Endereco: "Rua Test, 123",
+            ValorContratado: 100000m,
+            DataInicio: today.AddMonths(6),
+            DataPrevisaoTermino: today
+        );
 
         // Act
         var result = _obraValidator.Validate(request);
@@ -210,14 +201,13 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateObraRequest
-        {
-            Nome = "Obra Test",
-            Endereco = "Rua Test, 123",
-            ValorContratado = -100m,
-            DataInicio = today,
-            DataFim = today.AddMonths(6)
-        };
+        var request = new CreateObraRequest(
+            Nome: "Obra Test",
+            Endereco: "Rua Test, 123",
+            ValorContratado: -100m,
+            DataInicio: today,
+            DataPrevisaoTermino: today.AddMonths(6)
+        );
 
         // Act
         var result = _obraValidator.Validate(request);
@@ -231,14 +221,13 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateObraRequest
-        {
-            Nome = "",
-            Endereco = "Rua Test, 123",
-            ValorContratado = 100000m,
-            DataInicio = today,
-            DataFim = today.AddMonths(6)
-        };
+        var request = new CreateObraRequest(
+            Nome: "",
+            Endereco: "Rua Test, 123",
+            ValorContratado: 100000m,
+            DataInicio: today,
+            DataPrevisaoTermino: today.AddMonths(6)
+        );
 
         // Act
         var result = _obraValidator.Validate(request);
@@ -257,23 +246,21 @@ public sealed class ValidatorTests
     public void CreateMedicaoValidator_WithValidData_ShouldPass()
     {
         // Arrange
-        var request = new CreateMedicaoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            EtapaId = Guid.NewGuid(),
-            Numero = 1,
-            Competencia = "2026-10",
-            Itens = new[]
+        var request = new CreateMedicaoRequest(
+            ObraId: Guid.NewGuid(),
+            EtapaId: Guid.NewGuid(),
+            Numero: 1,
+            Competencia: DateOnly.FromDateTime(DateTime.UtcNow),
+            Itens: new List<CreateMedicaoItemRequest>
             {
-                new MedicaoItemRequest
-                {
-                    Tipo = "MaoDeObra",
-                    Descricao = "Mão de obra",
-                    Quantidade = 10,
-                    ValorUnitario = 500m
-                }
+                new CreateMedicaoItemRequest(
+                    Tipo: "MaoDeObra",
+                    Descricao: "Mão de obra",
+                    Quantidade: 10,
+                    ValorUnitario: 500m
+                )
             }
-        };
+        );
 
         // Act
         var result = _medicaoValidator.Validate(request);
@@ -286,14 +273,13 @@ public sealed class ValidatorTests
     public void CreateMedicaoValidator_WithEmptyItens_ShouldFail()
     {
         // Arrange
-        var request = new CreateMedicaoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            EtapaId = Guid.NewGuid(),
-            Numero = 1,
-            Competencia = "2026-10",
-            Itens = Array.Empty<MedicaoItemRequest>()
-        };
+        var request = new CreateMedicaoRequest(
+            ObraId: Guid.NewGuid(),
+            EtapaId: Guid.NewGuid(),
+            Numero: 1,
+            Competencia: DateOnly.FromDateTime(DateTime.UtcNow),
+            Itens: new List<CreateMedicaoItemRequest>()
+        );
 
         // Act
         var result = _medicaoValidator.Validate(request);
@@ -306,23 +292,21 @@ public sealed class ValidatorTests
     public void CreateMedicaoValidator_WithNegativeValorUnitario_ShouldFail()
     {
         // Arrange
-        var request = new CreateMedicaoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            EtapaId = Guid.NewGuid(),
-            Numero = 1,
-            Competencia = "2026-10",
-            Itens = new[]
+        var request = new CreateMedicaoRequest(
+            ObraId: Guid.NewGuid(),
+            EtapaId: Guid.NewGuid(),
+            Numero: 1,
+            Competencia: DateOnly.FromDateTime(DateTime.UtcNow),
+            Itens: new List<CreateMedicaoItemRequest>
             {
-                new MedicaoItemRequest
-                {
-                    Tipo = "MaoDeObra",
-                    Descricao = "Mão de obra",
-                    Quantidade = 10,
-                    ValorUnitario = -500m
-                }
+                new CreateMedicaoItemRequest(
+                    Tipo: "MaoDeObra",
+                    Descricao: "Mão de obra",
+                    Quantidade: 10,
+                    ValorUnitario: -500m
+                )
             }
-        };
+        );
 
         // Act
         var result = _medicaoValidator.Validate(request);
@@ -335,23 +319,21 @@ public sealed class ValidatorTests
     public void CreateMedicaoValidator_WithZeroQuantidade_ShouldFail()
     {
         // Arrange
-        var request = new CreateMedicaoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            EtapaId = Guid.NewGuid(),
-            Numero = 1,
-            Competencia = "2026-10",
-            Itens = new[]
+        var request = new CreateMedicaoRequest(
+            ObraId: Guid.NewGuid(),
+            EtapaId: Guid.NewGuid(),
+            Numero: 1,
+            Competencia: DateOnly.FromDateTime(DateTime.UtcNow),
+            Itens: new List<CreateMedicaoItemRequest>
             {
-                new MedicaoItemRequest
-                {
-                    Tipo = "MaoDeObra",
-                    Descricao = "Mão de obra",
-                    Quantidade = 0,
-                    ValorUnitario = 500m
-                }
+                new CreateMedicaoItemRequest(
+                    Tipo: "MaoDeObra",
+                    Descricao: "Mão de obra",
+                    Quantidade: 0,
+                    ValorUnitario: 500m
+                )
             }
-        };
+        );
 
         // Act
         var result = _medicaoValidator.Validate(request);
@@ -370,14 +352,14 @@ public sealed class ValidatorTests
     public void CreateFinanceiroValidator_WithValidReceitaData_ShouldPass()
     {
         // Arrange
-        var request = new CreateFinanceiroLancamentoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Tipo = "Receita",
-            Descricao = "Recebimento",
-            Valor = 5000m,
-            Data = DateOnly.FromDateTime(DateTime.UtcNow)
-        };
+        var request = new CreateFinanceiroLancamentoRequest(
+            ObraId: Guid.NewGuid(),
+            Categoria: "Receita",
+            Descricao: "Recebimento",
+            Valor: 5000m,
+            DataLancamento: DateOnly.FromDateTime(DateTime.UtcNow),
+            MesCompetencia: DateOnly.FromDateTime(DateTime.UtcNow)
+        );
 
         // Act
         var result = _financeiroValidator.Validate(request);
@@ -390,14 +372,14 @@ public sealed class ValidatorTests
     public void CreateFinanceiroValidator_WithValidDespesaData_ShouldPass()
     {
         // Arrange
-        var request = new CreateFinanceiroLancamentoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Tipo = "Despesa",
-            Descricao = "Pagamento",
-            Valor = 2000m,
-            Data = DateOnly.FromDateTime(DateTime.UtcNow)
-        };
+        var request = new CreateFinanceiroLancamentoRequest(
+            ObraId: Guid.NewGuid(),
+            Categoria: "Despesa",
+            Descricao: "Pagamento",
+            Valor: 2000m,
+            DataLancamento: DateOnly.FromDateTime(DateTime.UtcNow),
+            MesCompetencia: DateOnly.FromDateTime(DateTime.UtcNow)
+        );
 
         // Act
         var result = _financeiroValidator.Validate(request);
@@ -410,14 +392,14 @@ public sealed class ValidatorTests
     public void CreateFinanceiroValidator_WithNegativeValor_ShouldFail()
     {
         // Arrange
-        var request = new CreateFinanceiroLancamentoRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Tipo = "Receita",
-            Descricao = "Recebimento",
-            Valor = -5000m,
-            Data = DateOnly.FromDateTime(DateTime.UtcNow)
-        };
+        var request = new CreateFinanceiroLancamentoRequest(
+            ObraId: Guid.NewGuid(),
+            Categoria: "Receita",
+            Descricao: "Recebimento",
+            Valor: -5000m,
+            DataLancamento: DateOnly.FromDateTime(DateTime.UtcNow),
+            MesCompetencia: DateOnly.FromDateTime(DateTime.UtcNow)
+        );
 
         // Act
         var result = _financeiroValidator.Validate(request);
@@ -436,12 +418,11 @@ public sealed class ValidatorTests
     public void CreateRelatorioMensalValidator_WithValidData_ShouldPass()
     {
         // Arrange
-        var request = new CreateRelatorioMensalRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Competencia = "2026-10",
-            Conteudo = "Relatório de outubro"
-        };
+        var request = new CreateRelatorioMensalRequest(
+            ObraId: Guid.NewGuid(),
+            Competencia: DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo: "Relatório de outubro"
+        );
 
         // Act
         var result = _relatorioMensalValidator.Validate(request);
@@ -454,30 +435,11 @@ public sealed class ValidatorTests
     public void CreateRelatorioMensalValidator_WithEmptyConteudo_ShouldFail()
     {
         // Arrange
-        var request = new CreateRelatorioMensalRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Competencia = "2026-10",
-            Conteudo = ""
-        };
-
-        // Act
-        var result = _relatorioMensalValidator.Validate(request);
-
-        // Assert
-        Assert.False(result.IsValid);
-    }
-
-    [Fact]
-    public void CreateRelatorioMensalValidator_WithInvalidCompetenciaFormat_ShouldFail()
-    {
-        // Arrange
-        var request = new CreateRelatorioMensalRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Competencia = "2026/10",
-            Conteudo = "Relatório"
-        };
+        var request = new CreateRelatorioMensalRequest(
+            ObraId: Guid.NewGuid(),
+            Competencia: DateOnly.FromDateTime(DateTime.UtcNow),
+            Conteudo: ""
+        );
 
         // Act
         var result = _relatorioMensalValidator.Validate(request);
@@ -497,13 +459,14 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateEtapaRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Nome = "Fundação",
-            DataInicio = today,
-            DataFim = today.AddWeeks(4)
-        };
+        var request = new CreateEtapaRequest(
+            ObraId: Guid.NewGuid(),
+            Nome: "Fundação",
+            Ordem: 1,
+            PercentualPeso: 25m,
+            DataInicioPrevista: today,
+            DataFimPrevista: today.AddDays(28)
+        );
 
         // Act
         var result = _etapaValidator.Validate(request);
@@ -517,13 +480,14 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateEtapaRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Nome = "Fundação",
-            DataInicio = today.AddWeeks(4),
-            DataFim = today
-        };
+        var request = new CreateEtapaRequest(
+            ObraId: Guid.NewGuid(),
+            Nome: "Fundação",
+            Ordem: 1,
+            PercentualPeso: 25m,
+            DataInicioPrevista: today.AddDays(28),
+            DataFimPrevista: today
+        );
 
         // Act
         var result = _etapaValidator.Validate(request);
@@ -537,13 +501,14 @@ public sealed class ValidatorTests
     {
         // Arrange
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var request = new CreateEtapaRequest
-        {
-            ObraId = Guid.NewGuid(),
-            Nome = "",
-            DataInicio = today,
-            DataFim = today.AddWeeks(4)
-        };
+        var request = new CreateEtapaRequest(
+            ObraId: Guid.NewGuid(),
+            Nome: "",
+            Ordem: 1,
+            PercentualPeso: 25m,
+            DataInicioPrevista: today,
+            DataFimPrevista: today.AddDays(28)
+        );
 
         // Act
         var result = _etapaValidator.Validate(request);

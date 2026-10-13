@@ -1,34 +1,44 @@
+using System.Security.Claims;
 using KhazObras.Application.Abstractions;
 
 namespace KhazObras.Security.Tests.Fakes;
 
 public sealed class FakeObraAccessService
 {
-    private readonly FakeObraRepository _obraRepository;
+    private readonly FakeUserObraRepository _userObraRepository;
 
-    public FakeObraAccessService(FakeObraRepository obraRepository)
+    public FakeObraAccessService(FakeUserObraRepository userObraRepository)
     {
-        _obraRepository = obraRepository;
+        _userObraRepository = userObraRepository;
     }
 
-    public async Task EnsureAccessAsync(Guid obraId, Guid userId)
+    /// <summary>
+    /// Verify access to an obra based on role and user-obra link.
+    /// Throws UnauthorizedAccessException if access is denied.
+    /// </summary>
+    public async Task EnsureAccessAsync(ClaimsPrincipal principal, Guid obraId)
     {
-        var obra = await _obraRepository.GetByIdAsync(obraId);
-
-        if (obra == null)
+        var role = principal.FindFirst(ClaimTypes.Role)?.Value;
+        if (role is "Master" or "Admin")
         {
-            throw new InvalidOperationException("Obra not found.");
+            return;
         }
 
-        if (obra.UserId != userId)
+        var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var hasAccess = await _userObraRepository.HasAccessAsync(userId, obraId);
+
+        if (!hasAccess)
         {
-            throw new UnauthorizedAccessException("Access denied to this obra.");
+            throw new UnauthorizedAccessException("Usuario nao tem acesso a esta obra.");
         }
     }
 
-    public async Task<bool> HasAccessAsync(Guid obraId, Guid userId)
+    /// <summary>
+    /// Check if user is admin or master.
+    /// </summary>
+    public bool IsAdminOrMaster(ClaimsPrincipal principal)
     {
-        var obra = await _obraRepository.GetByIdAsync(obraId);
-        return obra?.UserId == userId;
+        var role = principal.FindFirst(ClaimTypes.Role)?.Value;
+        return role is "Master" or "Admin";
     }
 }
