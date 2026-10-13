@@ -5,8 +5,8 @@ tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---
 
-Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da raiz e a seção
-relevante de `docs/SPEC.md`. Responda em português.
+Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da raiz, `.claude/rules/backend-convencoes.md`,
+`.claude/rules/banco-de-dados.md` e a seção relevante de `docs/SPEC.md`. Responda em português.
 
 ## Fluxo
 
