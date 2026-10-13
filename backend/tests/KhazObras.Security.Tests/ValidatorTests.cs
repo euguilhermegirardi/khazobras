@@ -254,7 +254,7 @@ public sealed class ValidatorTests
             Itens: new List<CreateMedicaoItemRequest>
             {
                 new CreateMedicaoItemRequest(
-                    Tipo: "MaoDeObra",
+                    Tipo: "mao_de_obra",
                     Descricao: "Mão de obra",
                     Quantidade: 10,
                     ValorUnitario: 500m
@@ -300,7 +300,7 @@ public sealed class ValidatorTests
             Itens: new List<CreateMedicaoItemRequest>
             {
                 new CreateMedicaoItemRequest(
-                    Tipo: "MaoDeObra",
+                    Tipo: "mao_de_obra",
                     Descricao: "Mão de obra",
                     Quantidade: 10,
                     ValorUnitario: -500m
@@ -327,7 +327,7 @@ public sealed class ValidatorTests
             Itens: new List<CreateMedicaoItemRequest>
             {
                 new CreateMedicaoItemRequest(
-                    Tipo: "MaoDeObra",
+                    Tipo: "mao_de_obra",
                     Descricao: "Mão de obra",
                     Quantidade: 0,
                     ValorUnitario: 500m
@@ -354,7 +354,7 @@ public sealed class ValidatorTests
         // Arrange
         var request = new CreateFinanceiroLancamentoRequest(
             ObraId: Guid.NewGuid(),
-            Categoria: "Receita",
+            Categoria: "material",
             Descricao: "Recebimento",
             Valor: 5000m,
             DataLancamento: DateOnly.FromDateTime(DateTime.UtcNow),
@@ -374,7 +374,7 @@ public sealed class ValidatorTests
         // Arrange
         var request = new CreateFinanceiroLancamentoRequest(
             ObraId: Guid.NewGuid(),
-            Categoria: "Despesa",
+            Categoria: "mao_de_obra",
             Descricao: "Pagamento",
             Valor: 2000m,
             DataLancamento: DateOnly.FromDateTime(DateTime.UtcNow),
@@ -394,7 +394,7 @@ public sealed class ValidatorTests
         // Arrange
         var request = new CreateFinanceiroLancamentoRequest(
             ObraId: Guid.NewGuid(),
-            Categoria: "Receita",
+            Categoria: "material",
             Descricao: "Recebimento",
             Valor: -5000m,
             DataLancamento: DateOnly.FromDateTime(DateTime.UtcNow),

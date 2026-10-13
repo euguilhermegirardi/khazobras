@@ -11,5 +11,9 @@ public sealed class CreateEtapaRequestValidator : AbstractValidator<CreateEtapaR
         RuleFor(x => x.Nome).NotEmpty().MaximumLength(150);
         RuleFor(x => x.Ordem).GreaterThanOrEqualTo(0);
         RuleFor(x => x.PercentualPeso).InclusiveBetween(0, 100);
+        RuleFor(x => x.DataFimPrevista)
+            .GreaterThanOrEqualTo(x => x.DataInicioPrevista!.Value)
+            .When(x => x.DataInicioPrevista.HasValue && x.DataFimPrevista.HasValue)
+            .WithMessage("DataFimPrevista nao pode ser anterior a DataInicioPrevista.");
     }
 }
