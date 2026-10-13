@@ -182,7 +182,7 @@ app.MapPost("/obras", async (CreateObraRequest request, IValidator<CreateObraReq
     var result = await obraService.CreateAsync(request);
     return Results.Created($"/obras/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateObra")
 .WithDescription("Cria nova obra. Cliente vê apenas obras vinculadas ao seu login");
 
@@ -251,7 +251,7 @@ app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapa
     var result = await etapaService.CreateAsync(request);
     return Results.Created($"/etapas/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateEtapa")
 .WithDescription("Cria etapa (fase) em uma obra");
 
@@ -316,7 +316,7 @@ app.MapPost("/medicoes", async (CreateMedicaoRequest request, IValidator<CreateM
     var result = await medicaoService.CreateAsync(request);
     return Results.Created($"/medicoes/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateMedicao")
 .WithDescription("Cria medição para uma obra. Estados: pending_approval → approved → invoice_issued");
 
@@ -442,7 +442,7 @@ app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest 
     var result = await financeiroService.CreateAsync(request, userId);
     return Results.Created($"/financeiro/lancamentos/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateFinanceiroLancamento")
 .WithDescription("Cria lançamento financeiro (receita/despesa) em uma obra");
 
@@ -514,7 +514,7 @@ app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFil
     return Results.Created($"/financeiro/anexos/{result.Id}", result);
 })
 .DisableAntiforgery()
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("UploadFinanceiroAnexo")
 .WithDescription("Anexa arquivo a um lançamento financeiro (máx 10MB, validado por magic bytes)");
 
@@ -583,7 +583,7 @@ app.MapPost("/relatorios-fotograficos", async (CreateRelatorioFotograficoRequest
     var result = await service.CreateAsync(request);
     return Results.Created($"/relatorios-fotograficos/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateRelatorioFotografico")
 .WithDescription("Cria novo relatório fotográfico para uma obra");
 
@@ -628,7 +628,7 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
     return Results.Created($"/fotos/{result.Id}", result);
 })
 .DisableAntiforgery()
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("UploadFoto")
 .WithDescription("Adiciona foto a um relatório fotográfico (máx 10MB, validado por magic bytes)");
 
@@ -653,7 +653,7 @@ app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, 
     var result = await service.CreateAsync(request, userId);
     return Results.Created($"/relatorios-mensais/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateRelatorioMensal")
 .WithDescription("Cria relatório mensal para uma obra. Estados: draft → published");
 
@@ -746,7 +746,7 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
     return Results.Created($"/projetos/{result.Id}", result);
 })
 .DisableAntiforgery()
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("UploadProjetoDocumento")
 .WithDescription("Anexa documento/projeto a uma obra (máx 10MB, validado por magic bytes)");
 
@@ -904,7 +904,7 @@ app.MapPost("/notificacoes", async (CreateNotificacaoRequest request, Notificaca
     var result = await service.CreateAsync(request);
     return Results.Created($"/notificacoes/{result.Id}", result);
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("CreateNotificacao")
 .WithDescription("Cria notificação para módulo específico (email/WhatsApp - apenas base criada)");
 
