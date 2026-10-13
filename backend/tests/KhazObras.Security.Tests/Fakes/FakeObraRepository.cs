@@ -28,6 +28,6 @@ public sealed class FakeObraRepository : IObraRepository
             .ToList()
             .AsReadOnly();
 
-        return Task.FromResult(new(Items: items, TotalItems: totalItems));
+        return Task.FromResult<(IReadOnlyList<Obra> Items, int TotalItems)>((items, totalItems));
     }
 }
