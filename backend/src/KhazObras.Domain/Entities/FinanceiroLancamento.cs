@@ -12,6 +12,7 @@ public sealed class FinanceiroLancamento
     public DateOnly DataLancamento { get; set; }
     public DateOnly MesCompetencia { get; set; }
     public Guid CreatedByUserId { get; set; }
+    public bool VisivelCliente { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<FinanceiroLancamentoAnexo> Anexos { get; set; } = [];
 }

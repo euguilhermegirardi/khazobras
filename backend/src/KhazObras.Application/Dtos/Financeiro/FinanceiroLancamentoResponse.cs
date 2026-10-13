@@ -9,5 +9,6 @@ public sealed record FinanceiroLancamentoResponse(
     DateOnly DataLancamento,
     DateOnly MesCompetencia,
     Guid CreatedByUserId,
+    bool VisivelCliente,
     DateTime CreatedAt,
     List<FinanceiroAnexoResponse> Anexos);

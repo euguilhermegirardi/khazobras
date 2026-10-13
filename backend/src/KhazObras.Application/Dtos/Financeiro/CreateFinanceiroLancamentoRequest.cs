@@ -6,4 +6,5 @@ public sealed record CreateFinanceiroLancamentoRequest(
     string Descricao,
     decimal Valor,
     DateOnly DataLancamento,
-    DateOnly MesCompetencia);
+    DateOnly MesCompetencia,
+    bool VisivelCliente = false);

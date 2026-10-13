@@ -37,7 +37,7 @@ backend/
   src/KhazObras.Domain         # Entidades, enums
   src/KhazObras.Infrastructure # Repositories (Dapper), Storage (R2), Persistence
   tests/KhazObras.Security.Tests
-database/schema/001..006_*.sql # 22 tabelas, scripts versionados
+database/schema/001..007_*.sql # scripts versionados (007 = visivel_cliente no financeiro)
 docs/                          # SPEC, PLAN-*
 frontend/                      # a criar
 ```
@@ -95,7 +95,8 @@ O SPEC não está 100% coberto. Faltam, e provavelmente exigem script `007_*.sql
 - Empresa / equipe (Administração)
 - PUT/PATCH/DELETE na maioria dos módulos
 - `GET /users/{id}`, desativar usuário
-- Download de anexos financeiros e projetos pelo **cliente** da obra (hoje só AdminOrMaster)
+- Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster; o de anexos financeiros já é liberado ao cliente para lançamentos `visivel_cliente`)
+- Financeiro do cliente: parcelas/pagamentos do contrato (depende do módulo Contratos); o resto da entrega 007 já existe
 - Envio real de e-mail / WhatsApp nas notificações
 - PDF consolidado (Fase 10)
 - Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta, não plugada)

@@ -29,6 +29,7 @@ public sealed class FinanceiroService
             DataLancamento = request.DataLancamento,
             MesCompetencia = request.MesCompetencia,
             CreatedByUserId = createdByUserId,
+            VisivelCliente = request.VisivelCliente,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -47,6 +48,54 @@ public sealed class FinanceiroService
         var (items, totalItems) = await _lancamentoRepository.GetPagedByObraIdAsync(obraId, pageIndex, pageSize);
         var responses = items.Select(l => ToResponse(l, l.Anexos)).ToList();
         return new PagedResult<FinanceiroLancamentoResponse>(totalItems, pageIndex, pageSize, responses);
+    }
+
+    /// <summary>
+    /// Visao do CLIENTE a partir da visao completa. Devolve null se o admin nao liberou
+    /// o lancamento (o endpoint responde 404, sem revelar que o registro existe).
+    /// </summary>
+    public FinanceiroLancamentoClienteResponse? ToClienteView(FinanceiroLancamentoResponse lancamento) =>
+        lancamento.VisivelCliente
+            ? new FinanceiroLancamentoClienteResponse(
+                lancamento.Id, lancamento.ObraId, lancamento.Categoria, lancamento.Descricao, lancamento.Valor,
+                lancamento.DataLancamento, lancamento.MesCompetencia, lancamento.Anexos)
+            : null;
+
+    /// <summary>Lista para o CLIENTE: o filtro por visibilidade e aplicado no SQL (contagem e itens).</summary>
+    public async Task<PagedResult<FinanceiroLancamentoClienteResponse>> GetPagedParaClienteByObraIdAsync(Guid obraId, int pageIndex, int pageSize)
+    {
+        var (items, totalItems) = await _lancamentoRepository.GetPagedByObraIdAsync(obraId, pageIndex, pageSize, somenteVisiveisCliente: true);
+        var responses = items
+            .Select(l => ToClienteView(ToResponse(l, l.Anexos)))
+            .OfType<FinanceiroLancamentoClienteResponse>()
+            .ToList();
+        return new PagedResult<FinanceiroLancamentoClienteResponse>(totalItems, pageIndex, pageSize, responses);
+    }
+
+    public async Task<FinanceiroLancamentoResponse?> SetVisibilidadeClienteAsync(Guid id, bool visivelCliente)
+    {
+        var lancamento = await _lancamentoRepository.GetByIdAsync(id);
+        if (lancamento is null)
+        {
+            return null;
+        }
+
+        await _lancamentoRepository.SetVisibilidadeClienteAsync(id, visivelCliente);
+        lancamento.VisivelCliente = visivelCliente;
+        return ToResponse(lancamento, lancamento.Anexos);
+    }
+
+    /// <summary>Resolve a obra e a visibilidade do lancamento dono do anexo, para o controle de acesso no endpoint.</summary>
+    public async Task<(Guid ObraId, bool VisivelCliente)?> ResolveAnexoAsync(Guid anexoId)
+    {
+        var anexo = await _lancamentoRepository.GetAnexoByIdAsync(anexoId);
+        if (anexo is null)
+        {
+            return null;
+        }
+
+        var lancamento = await _lancamentoRepository.GetByIdAsync(anexo.LancamentoId);
+        return lancamento is null ? null : (lancamento.ObraId, lancamento.VisivelCliente);
     }
 
     public async Task<FinanceiroAnexoResponse> UploadAnexoAsync(Guid lancamentoId, Stream content, string fileName, string contentType, long tamanhoBytes)
@@ -94,6 +143,6 @@ public sealed class FinanceiroService
 
     private static FinanceiroLancamentoResponse ToResponse(FinanceiroLancamento l, List<FinanceiroLancamentoAnexo> anexos) => new(
         l.Id, l.ObraId, l.Categoria.ToString(), l.Descricao, l.Valor, l.DataLancamento, l.MesCompetencia,
-        l.CreatedByUserId, l.CreatedAt,
+        l.CreatedByUserId, l.VisivelCliente, l.CreatedAt,
         anexos.Select(a => new FinanceiroAnexoResponse(a.Id, a.NomeArquivo, a.ContentType, a.TamanhoBytes, a.UploadedAt)).ToList());
 }

@@ -463,11 +463,18 @@ app.MapGet("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroServic
         return Results.Forbid();
     }
 
-    return Results.Ok(result);
+    if (accessService.IsAdminOrMaster(principal))
+    {
+        return Results.Ok(result);
+    }
+
+    // Cliente: so enxerga lancamentos liberados pelo admin, em DTO sem campos internos.
+    var clienteView = financeiroService.ToClienteView(result);
+    return clienteView is null ? Results.NotFound() : Results.Ok(clienteView);
 })
 .RequireAuthorization()
 .WithName("GetFinanceiroLancamentoById")
-.WithDescription("Retorna detalhes de um lançamento financeiro");
+.WithDescription("Retorna um lançamento financeiro (cliente: somente os liberados, em visão reduzida)");
 
 app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, int pageIndex = 0, int pageSize = 20) =>
 {
@@ -480,12 +487,28 @@ app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, Fi
         return Results.Forbid();
     }
 
-    var result = await financeiroService.GetPagedByObraIdAsync(obraId, pageIndex, pageSize);
-    return Results.Ok(result);
+    if (accessService.IsAdminOrMaster(principal))
+    {
+        var adminResult = await financeiroService.GetPagedByObraIdAsync(obraId, pageIndex, pageSize);
+        return Results.Ok(adminResult);
+    }
+
+    // Cliente: filtro por visibilidade aplicado no SQL; DTO sem campos internos.
+    var clienteResult = await financeiroService.GetPagedParaClienteByObraIdAsync(obraId, pageIndex, pageSize);
+    return Results.Ok(clienteResult);
 })
 .RequireAuthorization()
 .WithName("GetFinanceiroLancamentosByObra")
-.WithDescription("Lista lançamentos financeiros de uma obra (paginado)");
+.WithDescription("Lista lançamentos financeiros de uma obra (paginado). Cliente: somente os liberados, em visão reduzida");
+
+app.MapPatch("/financeiro/lancamentos/{id:guid}/visibilidade", async (Guid id, UpdateVisibilidadeLancamentoRequest request, FinanceiroService financeiroService) =>
+{
+    var result = await financeiroService.SetVisibilidadeClienteAsync(id, request.VisivelCliente);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateFinanceiroLancamentoVisibilidade")
+.WithDescription("Libera ou oculta um lançamento financeiro para o cliente da obra (Admin/Master)");
 
 app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFile file, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -520,17 +543,31 @@ app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFil
 
 app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var result = await financeiroService.DownloadAnexoAsync(anexoId);
-    if (result is null)
+    var owner = await financeiroService.ResolveAnexoAsync(anexoId);
+    if (owner is null)
     {
         return Results.NotFound();
     }
 
-    // O anexo nao carrega o ObraId diretamente; usamos MasterOnly como salvaguarda
-    // simples ate existir um metodo dedicado de resolucao de obra por anexo.
-    if (!accessService.IsAdminOrMaster(principal))
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, owner.Value.ObraId);
+    }
+    catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
+    }
+
+    // Cliente so baixa comprovante de lancamento que o admin liberou.
+    if (!accessService.IsAdminOrMaster(principal) && !owner.Value.VisivelCliente)
+    {
+        return Results.NotFound();
+    }
+
+    var result = await financeiroService.DownloadAnexoAsync(anexoId);
+    if (result is null)
+    {
+        return Results.NotFound();
     }
 
     var (content, fileName, contentType) = result.Value;
@@ -538,7 +575,7 @@ app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, Fi
 })
 .RequireAuthorization()
 .WithName("DownloadFinanceiroAnexo")
-.WithDescription("Baixa anexo de um lançamento financeiro (somente Admin/Master)");
+.WithDescription("Baixa anexo de um lançamento financeiro (cliente: somente de lançamentos liberados da própria obra)");
 
 app.MapGet("/relatorios-fotograficos/{id:guid}", async (Guid id, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

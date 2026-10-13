@@ -20,8 +20,8 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = @"
-            INSERT INTO financeiro_lancamentos (id, obra_id, categoria, descricao, valor, data_lancamento, mes_competencia, created_by_user_id, created_at)
-            VALUES (@Id, @ObraId, @Categoria::item_tipo, @Descricao, @Valor, @DataLancamento, @MesCompetencia, @CreatedByUserId, @CreatedAt)";
+            INSERT INTO financeiro_lancamentos (id, obra_id, categoria, descricao, valor, data_lancamento, mes_competencia, created_by_user_id, visivel_cliente, created_at)
+            VALUES (@Id, @ObraId, @Categoria::item_tipo, @Descricao, @Valor, @DataLancamento, @MesCompetencia, @CreatedByUserId, @VisivelCliente, @CreatedAt)";
 
         await connection.ExecuteAsync(sql, new
         {
@@ -33,6 +33,7 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
             DataLancamento = lancamento.DataLancamento.ToDateTime(TimeOnly.MinValue),
             MesCompetencia = lancamento.MesCompetencia.ToDateTime(TimeOnly.MinValue),
             lancamento.CreatedByUserId,
+            lancamento.VisivelCliente,
             lancamento.CreatedAt
         });
 
@@ -46,7 +47,7 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         const string sql = @"
             SELECT id, obra_id AS ObraId, categoria, descricao, valor,
                    data_lancamento AS DataLancamento, mes_competencia AS MesCompetencia,
-                   created_by_user_id AS CreatedByUserId, created_at AS CreatedAt
+                   created_by_user_id AS CreatedByUserId, visivel_cliente AS VisivelCliente, created_at AS CreatedAt
             FROM financeiro_lancamentos
             WHERE id = @Id";
 
@@ -61,25 +62,28 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         return lancamento;
     }
 
-    public async Task<(IReadOnlyList<FinanceiroLancamento> Items, int TotalItems)> GetPagedByObraIdAsync(Guid obraId, int pageIndex, int pageSize)
+    public async Task<(IReadOnlyList<FinanceiroLancamento> Items, int TotalItems)> GetPagedByObraIdAsync(Guid obraId, int pageIndex, int pageSize, bool somenteVisiveisCliente = false)
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string countSql = "SELECT COUNT(*) FROM financeiro_lancamentos WHERE obra_id = @ObraId";
-        var totalItems = await connection.ExecuteScalarAsync<int>(countSql, new { ObraId = obraId });
+        const string countSql = @"
+            SELECT COUNT(*) FROM financeiro_lancamentos
+            WHERE obra_id = @ObraId AND (@SomenteVisiveisCliente = FALSE OR visivel_cliente = TRUE)";
+        var totalItems = await connection.ExecuteScalarAsync<int>(countSql, new { ObraId = obraId, SomenteVisiveisCliente = somenteVisiveisCliente });
 
         const string pagedSql = @"
             SELECT id, obra_id AS ObraId, categoria, descricao, valor,
                    data_lancamento AS DataLancamento, mes_competencia AS MesCompetencia,
-                   created_by_user_id AS CreatedByUserId, created_at AS CreatedAt
+                   created_by_user_id AS CreatedByUserId, visivel_cliente AS VisivelCliente, created_at AS CreatedAt
             FROM financeiro_lancamentos
-            WHERE obra_id = @ObraId
+            WHERE obra_id = @ObraId AND (@SomenteVisiveisCliente = FALSE OR visivel_cliente = TRUE)
             ORDER BY data_lancamento DESC
             OFFSET @Offset LIMIT @PageSize";
 
         var rows = await connection.QueryAsync<LancamentoRow>(pagedSql, new
         {
             ObraId = obraId,
+            SomenteVisiveisCliente = somenteVisiveisCliente,
             Offset = pageIndex * pageSize,
             PageSize = pageSize
         });
@@ -93,6 +97,14 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         }
 
         return (lancamentos, totalItems);
+    }
+
+    public async Task SetVisibilidadeClienteAsync(Guid id, bool visivelCliente)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = "UPDATE financeiro_lancamentos SET visivel_cliente = @VisivelCliente WHERE id = @Id";
+        await connection.ExecuteAsync(sql, new { Id = id, VisivelCliente = visivelCliente });
     }
 
     public async Task<FinanceiroLancamentoAnexo> AddAnexoAsync(FinanceiroLancamentoAnexo anexo)
@@ -151,6 +163,7 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         public DateTime DataLancamento { get; set; }
         public DateTime MesCompetencia { get; set; }
         public Guid CreatedByUserId { get; set; }
+        public bool VisivelCliente { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public FinanceiroLancamento ToEntity() => new()
@@ -169,6 +182,7 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
             DataLancamento = DateOnly.FromDateTime(DataLancamento),
             MesCompetencia = DateOnly.FromDateTime(MesCompetencia),
             CreatedByUserId = CreatedByUserId,
+            VisivelCliente = VisivelCliente,
             CreatedAt = CreatedAt
         };
     }

@@ -108,6 +108,12 @@ Ordem do navbar:
    aprovação**. Aprovação do cliente precede a emissão da NF
 5. **Financeiro** — igual ao protótipo, porém somente leitura. Tab "Lançamentos"
    sem edição. Ícone de anexo por linha para baixar comprovantes
+   - **Decisão (out/2026):** o cliente só vê lançamentos que o admin liberou explicitamente
+     (`visivel_cliente`, padrão `false`, script `007`). A resposta ao cliente é um DTO reduzido
+     (sem `CreatedByUserId` e outros campos internos); o filtro é feito no backend (SQL), nunca no
+     front. Comprovantes só são baixáveis nos lançamentos liberados da própria obra. Parcelas e
+     pagamentos do contrato entram junto com a tela Contratos. Modelo de contrato da Khaz (preço
+     fechado × administração) ainda a confirmar com o cliente; isso só muda como o admin usa a flag.
 6. **Contratos** — absorve o item "Pagamentos"
 7. **Relatório fotográfico mensal** — 2 tabs: **Mensal** e **Etapa**
 8. **Relatório mensal** — versão publicada do "Relatório ao cliente", sem edição
