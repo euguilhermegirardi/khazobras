@@ -12,7 +12,7 @@ Referências obrigatórias antes de mexer em algo grande:
 
 - Backend fases 1–8 concluídas, revisão de segurança concluída, 105 testes passando (inclui testes HTTP de 403/401 e CORS) (`KhazObras.Security.Tests`).
 - **Backend NÃO cobre todo o SPEC** — ver "Lacunas do backend" abaixo.
-- Fase 9 (frontend) em andamento: esqueleto pronto; próxima tela = Hub do cliente.
+- Fase 9 (frontend) em andamento: esqueleto e Hub do cliente prontos; próxima tela = Fechamento (ver `docs/PLAN-09-frontend.md`).
 
 ## Agentes e skills do projeto (`.claude/`)
 
