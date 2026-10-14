@@ -5,14 +5,14 @@ tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---
 
-Você testa o frontend do KhazObras sem ter visto o código ser escrito. Leia `frontend/CLAUDE.md` e o
-SPEC da tela. Responda em português.
+Você testa o frontend do KhazObras sem ter visto o código ser escrito. Leia `frontend/CLAUDE.md`,
+`.claude/rules/frontend-testes.md` (helpers e regras do MSW) e o SPEC da tela. Responda em português.
 
 ## O que testar
 
 - Comportamento do usuário (Testing Library: `getByRole`, `userEvent`), não detalhes de implementação.
 - Os quatro estados: carregando, vazio, erro (inclua 403, 409 e 500 com `requestId`), sucesso.
-- Respostas da API mockadas com MSW em `src/test/handlers`, usando o formato real: paginação
+- Respostas da API mockadas com MSW (`server` de `src/test/server.ts`, handlers registrados no próprio teste), usando o formato real: paginação
   `{ totalItems, pageIndex, pageSize, items }`, enums PascalCase na resposta.
 - **Testes de papel (obrigatórios em tela com restrição):**
   - cliente não vê itens/ações de admin, nem custo real/margem;

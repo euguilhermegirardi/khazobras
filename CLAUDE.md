@@ -6,6 +6,7 @@ O usuário (Guilherme) responde em português — responda em português.
 Referências obrigatórias antes de mexer em algo grande:
 - `docs/SPEC.md` — o quê (funcionalidades, perfis, modelo de dados)
 - `docs/PLAN-00-roadmap.md` — fases e status
+- `docs/PLAN-09-frontend.md` — plano vivo do frontend (status por tela, lacunas, decisões); atualizar a cada tela
 
 ## Estado atual
 
@@ -54,6 +55,16 @@ psql -d khazobras_db
 ```
 
 Postgres local via Homebrew: `brew services start postgresql@16`.
+
+Ambiente local completo (um terminal cada; Node 20.19+ ou 22.12+ para o front):
+
+```bash
+brew services start postgresql@16
+cd backend && dotnet run --project src/KhazObras.Api          # API em :5285
+cd frontend && npm run dev                                     # front em :5173
+cd backend && dotnet run --project tools/ResetMasterPassword   # redefine a senha do master (pede no terminal)
+cd frontend && npm run lint && npm run typecheck && npm test   # checagem do front
+```
 
 ## Regras por área (`.claude/rules/`)
 

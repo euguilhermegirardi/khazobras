@@ -7,12 +7,12 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 ## Stack (decisões V1 — registrar mudanças no decision log)
 
 - React 19 + Vite + TypeScript **strict** (`noUncheckedIndexedAccess` ligado)
-- React Router (rotas com guarda por role)
+- React Router 7 (rotas com guarda por role) — pacote `react-router-dom`
 - TanStack Query (dados do servidor) — sem Redux; estado local com `useState`/`useReducer`
 - React Hook Form + Zod (formulários)
-- Tailwind CSS + shadcn/ui (componentes acessíveis, código no repositório)
+- Tailwind CSS (puro por enquanto; shadcn/ui só se uma tela exigir componente complexo, e então registrar em `docs/PLAN-09-frontend.md`)
 - Vitest + Testing Library + MSW (unit/integração); Playwright (e2e dos fluxos críticos)
-- Gráficos (Dashboard/Curva S): Recharts
+- Gráficos (Dashboard/Curva S): Recharts, ainda não instalado — adicionar ao construir o Dashboard
 
 ## Estrutura
 
@@ -69,6 +69,21 @@ Uma feature nunca importa de outra feature; o que for comum sobe para `shared/`.
   teste e2e: login, aprovar medição (cliente), criar medição (admin), acesso negado entre obras.
 - Antes de concluir: `npm run lint && npm run typecheck && npm test` verdes.
 
+## Padrões já estabelecidos (siga-os)
+
+- **Feature de referência:** `src/features/obras/` (`types.ts` → `api.ts` → `hooks.ts` → `pages/`).
+- Página reutilizável entre visões recebe o destino por prop (`ObraHubPage obraPath={...}`), em vez de
+  duplicar a tela para cliente e admin.
+- Erros de API: `ApiError` (`kind`, `requestId`); mostre `requestId` nos 500 e ofereça "Tentar novamente".
+- Rotas novas entram em `src/app/AppRoutes.tsx` dentro da guarda do papel certo.
+- Testes: ver `.claude/rules/frontend-testes.md`.
+- Atualizou uma tela? Atualize `docs/PLAN-09-frontend.md` (tabela + registro).
+
+## Git
+
+Uma branch por tela (`feat/<tela>`); nunca commitar na `main`; nunca commitar `dist/`, `.env`,
+`node_modules/`. Antes do commit: skill `checagem-pre-commit`.
+
 ## Comandos (após o scaffold)
 
 ```bash
@@ -78,5 +93,8 @@ npm run build
 npm run lint
 npm run typecheck
 npm test
-npx playwright test
+npx playwright test   # quando existir
 ```
+
+Requer Node 20.19+ (ou 22.12+). Primeira vez: `cp .env.example .env && npm install`.
+Para logar de verdade a API precisa estar rodando (`cd backend && dotnet run --project src/KhazObras.Api`).

@@ -24,7 +24,7 @@ serem executáveis em blocos pequenos, sem precisar de sessões longas.
 | 8 | Notificações e auditoria | ✅ Concluída |
 | — | Reunião de revisão do backend (SPEC) | ✅ Concluída |
 | — | Revisão de segurança (interna + auditoria externa) | ✅ Concluída |
-| 9 | Frontend React | ⬜ Próximo passo |
+| 9 | Frontend React | 🟨 Em andamento (ver `PLAN-09-frontend.md`) |
 | 10 | PDF consolidado | ⬜ Não iniciada |
 | 11 | Deploy no Render | ⬜ Não iniciada |
 
@@ -173,7 +173,9 @@ Endpoint de consulta restrito a `MasterOnly`.
 
 ---
 
-## Fase 9 — Frontend React ⬜ (próximo passo)
+## Fase 9 — Frontend React 🟨 (em andamento)
+
+**Plano vivo e status por tela:** `PLAN-09-frontend.md`.
 
 Projeto Vite, roteamento com guarda por role, layout com navbar diferenciada
 por perfil, telas — começando pelas do cliente (menor escopo, somente

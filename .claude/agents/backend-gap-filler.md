@@ -37,4 +37,5 @@ Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da ra
 
 Liste: arquivos criados/alterados, script SQL novo (se houver), contrato final do endpoint
 (rota, método, request, response, códigos) para o front consumir, e o resultado de build/test.
+Atualize `docs/PLAN-09-frontend.md` (tela que fica desbloqueada) e remova a lacuna do `CLAUDE.md` raiz.
 Não faça commit; o usuário decide.
