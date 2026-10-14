@@ -1,6 +1,6 @@
 # CLAUDE.md — KhazObras
 
-Sistema de gerenciamento de obras (Khaz Engenharia). Backend .NET 10 + Postgres + Cloudflare R2 pronto para uso; frontend React ainda não iniciado.
+Sistema de gerenciamento de obras (Khaz Engenharia). Backend .NET 10 + Postgres + Cloudflare R2 pronto para uso; frontend React com esqueleto pronto (login, guardas de rota, cliente de API), telas por fazer.
 O usuário (Guilherme) responde em português — responda em português.
 
 Referências obrigatórias antes de mexer em algo grande:
@@ -11,7 +11,7 @@ Referências obrigatórias antes de mexer em algo grande:
 
 - Backend fases 1–8 concluídas, revisão de segurança concluída, 47 testes passando (`KhazObras.Security.Tests`).
 - **Backend NÃO cobre todo o SPEC** — ver "Lacunas do backend" abaixo.
-- Próxima fase: 9 (frontend React + Vite), começando pela visão do cliente.
+- Fase 9 (frontend) em andamento: esqueleto pronto; próxima tela = Hub do cliente.
 
 ## Agentes e skills do projeto (`.claude/`)
 
@@ -39,7 +39,7 @@ backend/
   tests/KhazObras.Security.Tests
 database/schema/001..007_*.sql # scripts versionados (007 = visivel_cliente no financeiro)
 docs/                          # SPEC, PLAN-*
-frontend/                      # a criar
+frontend/                      # React + Vite + TS (esqueleto); ver frontend/CLAUDE.md
 ```
 
 ## Comandos
