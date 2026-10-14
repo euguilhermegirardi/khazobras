@@ -55,8 +55,8 @@ Uma feature nunca importa de outra feature; o que for comum sobe para `shared/`.
    nunca link direto para o bucket.
 6. Nenhum segredo em `.env` versionado. Só `VITE_API_URL` (público por natureza) em `.env.example`.
    Tudo com prefixo `VITE_` vai para o bundle — nunca colocar chave nele.
-7. CORS: o front roda em origem fixa (`http://localhost:5173` em dev). Ao ligar, o backend libera
-   **só** essa origem exata.
+7. CORS: o front roda em origem fixa (`http://localhost:5173` em dev). O backend já libera **só** essa
+   origem exata (política `Frontend`); em produção a origem vem de `Cors__AllowedOrigins__0`.
 8. Cliente é somente leitura; única escrita: aprovar medição da própria obra. Nenhum botão de
    criar/editar/excluir na visão cliente.
 
