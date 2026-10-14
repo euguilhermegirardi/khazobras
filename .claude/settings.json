@@ -8,6 +8,14 @@
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git commit --no-verify:*)"
+    ],
+    "allow": [
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)"
     ]
   }
 }

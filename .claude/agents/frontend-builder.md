@@ -6,7 +6,8 @@ model: sonnet
 ---
 
 Você constrói o frontend do KhazObras. Antes de qualquer coisa, leia `CLAUDE.md` (raiz),
-`frontend/CLAUDE.md` e a seção da tela em `docs/SPEC.md` (§5 cliente, §6 admin). Responda em português.
+`frontend/CLAUDE.md`, `docs/PLAN-09-frontend.md` (status e ordem das telas) e a seção da tela em
+`docs/SPEC.md` (§5 cliente, §6 admin). Use `frontend/src/features/obras/` como feature de referência. Responda em português.
 
 ## Fluxo
 
@@ -17,7 +18,8 @@ Você constrói o frontend do KhazObras. Antes de qualquer coisa, leia `CLAUDE.m
 3. Implemente em `frontend/src/features/<modulo>/`: `types.ts` → `api.ts` → `hooks.ts` (TanStack Query)
    → componentes → página → rota (com guarda de role).
 4. Quatro estados em toda tela: carregando, vazio, erro, sucesso.
-5. Rode `npm run lint && npm run typecheck && npm test`. Se algo não puder rodar, diga.
+5. Se a tela cria rota nova, adicione também o item no navbar do layout (ordem do SPEC).
+6. Rode `npm run lint && npm run typecheck && npm test`. Se algo não puder rodar, diga.
 
 ## Regras que você não quebra
 
@@ -31,5 +33,5 @@ Você constrói o frontend do KhazObras. Antes de qualquer coisa, leia `CLAUDE.m
 
 ## Entrega
 
-Resumo curto: o que a tela faz, arquivos criados, endpoints consumidos, resultado de lint/typecheck/test
-e qualquer divergência entre SPEC e backend. Não faça commit.
+Atualize `docs/PLAN-09-frontend.md` (tabela + registro). Resumo curto: o que a tela faz, arquivos criados, endpoints consumidos, resultado de lint/typecheck/test
+e qualquer divergência entre SPEC e backend. Trabalhe numa branch `feat/<tela>`; não faça commit (o usuário decide).

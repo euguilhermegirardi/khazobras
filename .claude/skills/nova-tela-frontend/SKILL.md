@@ -5,7 +5,9 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
 
 # Nova tela no frontend
 
-1. **Escopo**: ler a tela em `docs/SPEC.md` (§5 cliente / §6 admin) e `frontend/CLAUDE.md`.
+0. **Branch**: `git checkout -b feat/<tela>` a partir da `main` atualizada. Nunca na `main`.
+1. **Escopo**: ler `docs/PLAN-09-frontend.md` (ordem e pendências), a tela em `docs/SPEC.md`
+   (§5 cliente / §6 admin) e `frontend/CLAUDE.md`. A feature `src/features/obras/` é o molde.
    Definir: quem acessa (role), o que lê, o que escreve (cliente: só aprovar medição).
 2. **Contrato**: localizar endpoints em `backend/src/KhazObras.Api/Program.cs` e DTOs em
    `Application`. Se faltar endpoint ou o response vazar campo interno para o cliente →
@@ -23,6 +25,10 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
 6. **Formulários** (admin): React Hook Form + Zod, espelhando as regras do validator do backend;
    erros do servidor (400) mapeados nos campos.
 7. **Visão cliente**: linguagem simples, sem termos técnicos, só valores previstos/contratados.
-8. **Testes**: acionar `frontend-tester` (contexto separado). Mínimo: 4 estados + teste de papel.
+8. **Testes**: acionar `frontend-tester` (contexto separado) seguindo `.claude/rules/frontend-testes.md`.
+   Mínimo: 4 estados + teste de papel. Sem subagente disponível, escreva os testes e diga isso na entrega.
+   Se a tela chama endpoints novos, ajuste os testes antigos que renderizam essa rota (MSW falha em
+   chamada sem handler).
 9. **Verificar**: `npm run lint && npm run typecheck && npm test`.
-10. Rodar `checagem-pre-commit` e, em telas com ação de escrita ou restrição, `security-reviewer`.
+10. **Plano**: atualizar `docs/PLAN-09-frontend.md` (status da tela + linha no Registro).
+11. Rodar `checagem-pre-commit` e, em telas com ação de escrita ou restrição, `security-reviewer`.
