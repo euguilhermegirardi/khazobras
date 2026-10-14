@@ -23,9 +23,9 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
 
         RuleFor(x => x.Role)
             .Must(r =>
-                r.Equals("master", StringComparison.OrdinalIgnoreCase) ||
-                r.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-                r.Equals("client", StringComparison.OrdinalIgnoreCase))
+                string.Equals(r, "master", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(r, "admin", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(r, "client", StringComparison.OrdinalIgnoreCase))
             .WithMessage("Role deve ser master, admin ou client.");
     }
 }

@@ -9,9 +9,9 @@ public sealed class CreateFinanceiroLancamentoRequestValidator : AbstractValidat
     {
         RuleFor(x => x.ObraId).NotEmpty();
         RuleFor(x => x.Categoria).Must(c =>
-            c.Equals("mao_de_obra", StringComparison.OrdinalIgnoreCase) ||
-            c.Equals("material", StringComparison.OrdinalIgnoreCase) ||
-            c.Equals("equipamento", StringComparison.OrdinalIgnoreCase))
+            string.Equals(c, "mao_de_obra", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(c, "material", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(c, "equipamento", StringComparison.OrdinalIgnoreCase))
             .WithMessage("Categoria deve ser mao_de_obra, material ou equipamento.");
         RuleFor(x => x.Descricao).NotEmpty().MaximumLength(255);
         RuleFor(x => x.Valor).GreaterThan(0);

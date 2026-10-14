@@ -23,7 +23,9 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         var request = new HttpRequestMessage(new HttpMethod(method), route);
         if (method != "GET")
         {
-            request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+            request.Content = IsUpload(route)
+                ? MultipartBody()
+                : new StringContent("{}", Encoding.UTF8, "application/json");
         }
 
         if (role is not null)
@@ -33,6 +35,17 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
 
         using var response = await _client.SendAsync(request);
         return response.StatusCode;
+    }
+
+    // Rotas com IFormFile so casam no roteamento com multipart (senao 415 antes da autorizacao).
+    private static bool IsUpload(string route) =>
+        route.EndsWith("/anexos") || route.EndsWith("/fotos") || route.EndsWith("/projetos");
+
+    private static MultipartFormDataContent MultipartBody()
+    {
+        var content = new MultipartFormDataContent();
+        content.Add(new ByteArrayContent([1, 2, 3]), "file", "teste.pdf");
+        return content;
     }
 
     /// <summary>Rotas que exigem Admin ou Master (escrita de obra + modulos internos).</summary>
@@ -135,8 +148,7 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         {
             var status = await SendAsync(method, route, role);
 
-            Assert.NotEqual(HttpStatusCode.Unauthorized, status);
-            Assert.NotEqual(HttpStatusCode.Forbidden, status);
+            Assert.Equal(HttpStatusCode.BadRequest, status);
         }
     }
 }

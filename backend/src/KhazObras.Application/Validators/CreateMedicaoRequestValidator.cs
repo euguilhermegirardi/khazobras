@@ -14,9 +14,9 @@ public sealed class CreateMedicaoRequestValidator : AbstractValidator<CreateMedi
         RuleForEach(x => x.Itens).ChildRules(item =>
         {
             item.RuleFor(i => i.Tipo).Must(t =>
-                t.Equals("mao_de_obra", StringComparison.OrdinalIgnoreCase) ||
-                t.Equals("material", StringComparison.OrdinalIgnoreCase) ||
-                t.Equals("equipamento", StringComparison.OrdinalIgnoreCase))
+                string.Equals(t, "mao_de_obra", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(t, "material", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(t, "equipamento", StringComparison.OrdinalIgnoreCase))
                 .WithMessage("Tipo deve ser mao_de_obra, material ou equipamento.");
             item.RuleFor(i => i.Descricao).NotEmpty();
             item.RuleFor(i => i.Quantidade).GreaterThan(0);
