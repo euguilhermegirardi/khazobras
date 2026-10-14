@@ -9,8 +9,8 @@ public sealed class CreateRelatorioFotograficoRequestValidator : AbstractValidat
     {
         RuleFor(x => x.ObraId).NotEmpty();
         RuleFor(x => x.Tipo).Must(t =>
-            t.Equals("mensal", StringComparison.OrdinalIgnoreCase) ||
-            t.Equals("etapa", StringComparison.OrdinalIgnoreCase))
+            string.Equals(t, "mensal", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(t, "etapa", StringComparison.OrdinalIgnoreCase))
             .WithMessage("Tipo deve ser mensal ou etapa.");
         RuleFor(x => x.Titulo).NotEmpty().MaximumLength(150);
     }

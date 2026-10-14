@@ -103,6 +103,23 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOrMaster", policy => policy.RequireRole("Admin", "Master"));
 });
 
+// CORS: libera SOMENTE a(s) origem(ns) exata(s) do frontend. Nunca AllowAnyOrigin.
+// Producao: Cors__AllowedOrigins__0=https://app.exemplo.com.br (variavel de ambiente).
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+if (allowedOrigins.Length == 0 && builder.Environment.IsDevelopment())
+{
+    allowedOrigins = ["http://localhost:5173"];
+}
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins(allowedOrigins)
+        .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE")
+        .WithHeaders("Authorization", "Content-Type")
+        .WithExposedHeaders("Content-Disposition"));
+});
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -110,6 +127,8 @@ app.UseExceptionHandler();
 app.MapOpenApi();
 
 app.UseHttpsRedirection();
+
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -1006,3 +1025,6 @@ app.MapGet("/users", async (IUserRepository userRepository) =>
 .WithDescription("Lista todos os usuários (somente Master)");
 
 app.Run();
+
+// Necessario para WebApplicationFactory<Program> nos testes de integracao HTTP.
+public partial class Program { }

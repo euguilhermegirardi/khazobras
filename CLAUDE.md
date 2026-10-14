@@ -72,8 +72,8 @@ Carregadas só ao mexer nos caminhos indicados:
 6. Cliente é somente leitura; única escrita permitida: aprovar medição da própria obra.
 7. Todo upload passa por `FileUploadValidator` (10 MB, extensão + MIME + magic bytes). Downloads sempre pela API autenticada, nunca URL pública do bucket.
 8. Filtrar também por dono no SQL (defense in depth), ex.: `WHERE id = @Id AND user_id = @UserId`.
-9. CORS ainda não configurado: ao ligar o frontend, liberar só a origem exata do front. Nunca `AllowAnyOrigin`.
-10. Mudou regra de acesso → adicionar teste em `KhazObras.Security.Tests`.
+9. CORS configurado (política `Frontend` no `Program.cs`): só a origem exata do front. Dev: `http://localhost:5173` por padrão; produção: `Cors__AllowedOrigins__0` (variável de ambiente). Nunca `AllowAnyOrigin`.
+10. Mudou regra de acesso → adicionar teste em `KhazObras.Security.Tests`. Testes que passam pelo pipeline HTTP real (403/401, CORS) ficam em `tests/KhazObras.Security.Tests/Http/` (`WebApplicationFactory`, config por variáveis de ambiente com valores falsos; não tocam no banco nem no R2).
 
 Lacunas de segurança aceitas no V1: sem rate limit em `/auth/login`; JWT sem revogação/refresh (8h); `.txt` e ZIP renomeado para `.docx/.xlsx` com checagem fraca.
 
