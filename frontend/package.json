@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "plano:registro": "node ../scripts/plano-registro.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",

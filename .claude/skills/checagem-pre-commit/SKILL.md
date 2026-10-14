@@ -18,4 +18,6 @@ description: Checagem obrigatória antes de qualquer commit no KhazObras — rev
 5. Se algo suspeito aparecer: **parar**, não commitar, avisar o usuário com arquivo e linha.
 6. Se mudou regra de acesso: confirmar teste novo/atualizado em `KhazObras.Security.Tests`.
 7. Build e testes verdes (`dotnet test` e/ou `npm test`) antes do commit.
-8. Mensagem de commit curta, no estilo do histórico (`git log --oneline -10`). Nunca `--no-verify`.
+8. Se o commit mexe em tela/rota/endpoint/schema, `docs/PLAN-09-frontend.md` entra junto (o hook
+   `.githooks/pre-commit` bloqueia sem ele; ative com `bash scripts/instalar-hooks.sh`).
+9. Mensagem de commit curta, no estilo do histórico (`git log --oneline -10`). Nunca `--no-verify`.

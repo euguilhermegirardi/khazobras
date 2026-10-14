@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Trava de commit: mudança que altera o estado do produto precisa levar o PLAN-09 junto.
+# Dispara quando entram no commit: telas (frontend/src/features, exceto testes), rotas do front
+# (AppRoutes.tsx), endpoints (Program.cs) ou scripts de banco (database/schema).
+# Liberado: merge commits, branches wip/*, e SKIP_PLAN_CHECK=1 (uso consciente).
+set -euo pipefail
+
+PLAN="docs/PLAN-09-frontend.md"
+
+[ "${SKIP_PLAN_CHECK:-0}" = "1" ] && exit 0
+[ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ] && exit 0
+
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+case "$branch" in wip/*) exit 0 ;; esac
+
+staged="$(git diff --cached --name-only --diff-filter=ACMRD)"
+
+gatilhos="$(printf '%s\n' "$staged" | grep -E \
+  '^(frontend/src/features/|frontend/src/app/AppRoutes\.tsx$|backend/src/KhazObras\.Api/Program\.cs$|database/schema/)' \
+  | grep -vE '\.test\.tsx?$' || true)"
+
+[ -z "$gatilhos" ] && exit 0
+
+if printf '%s\n' "$staged" | grep -qx "$PLAN"; then
+  exit 0
+fi
+
+{
+  echo "✋ Commit bloqueado: mudou estado do produto, mas $PLAN não está neste commit."
+  echo
+  echo "Arquivos que dispararam a trava:"
+  printf '%s\n' "$gatilhos" | sed 's/^/  - /'
+  echo
+  echo "O que fazer:"
+  echo "  1. Atualize o status da tela / lacunas / decisões no $PLAN."
+  echo "  2. Gere a linha do Registro:  cd frontend && npm run plano:registro -- --escrever"
+  echo "  3. git add $PLAN  e commite de novo."
+  echo
+  echo "Não se aplica (ex.: só refactor)? Use SKIP_PLAN_CHECK=1 git commit ...  ou uma branch wip/*."
+} >&2
+exit 1
