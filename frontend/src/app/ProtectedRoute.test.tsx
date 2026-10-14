@@ -1,8 +1,14 @@
 import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/helpers'
+import { API, server } from '@/test/server'
 
 describe('guarda de rotas por papel', () => {
+  beforeEach(() => {
+    server.use(http.get(`${API}/obras`, () => HttpResponse.json({ totalItems: 0, pageIndex: 0, pageSize: 50, items: [] })))
+  })
+
   it('sem sessao, redireciona para o login', () => {
     renderApp('/cliente')
     expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
@@ -10,7 +16,7 @@ describe('guarda de rotas por papel', () => {
 
   it('cliente acessa a visao cliente', () => {
     renderApp('/cliente', 'Client')
-    expect(screen.getByRole('heading', { name: /Hub/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Suas obras' })).toBeInTheDocument()
   })
 
   it('cliente NAO acessa a area admin', () => {
@@ -31,6 +37,6 @@ describe('guarda de rotas por papel', () => {
 
   it('a raiz leva cada papel para a sua home', () => {
     renderApp('/', 'Client')
-    expect(screen.getByRole('heading', { name: /Hub/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Suas obras' })).toBeInTheDocument()
   })
 })

@@ -3,8 +3,9 @@ import { homePathFor } from '@/features/auth/homePath'
 import { useAuth } from '@/features/auth/useAuth'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ADMIN_ROLES, CLIENT_ROLES } from '@/features/auth/types'
+import { ObraHubPage } from '@/features/obras/pages/ObraHubPage'
 import { AdminLayout, ClientLayout } from './layouts'
-import { AdminDashboardPage, ClientHubPage, ForbiddenPage, NotFoundPage } from './pages'
+import { AdminDashboardPage, ClientObraPage, ForbiddenPage, NotFoundPage } from './pages'
 import { ProtectedRoute } from './ProtectedRoute'
 
 function RootRedirect() {
@@ -22,7 +23,8 @@ export function AppRoutes() {
       {/* Visao CLIENTE (SPEC §5) */}
       <Route element={<ProtectedRoute allow={CLIENT_ROLES} />}>
         <Route element={<ClientLayout />}>
-          <Route path="/cliente" element={<ClientHubPage />} />
+          <Route path="/cliente" element={<ObraHubPage obraPath={(id) => `/cliente/obras/${id}`} />} />
+          <Route path="/cliente/obras/:obraId" element={<ClientObraPage />} />
         </Route>
       </Route>
 

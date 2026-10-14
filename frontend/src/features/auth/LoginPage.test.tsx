@@ -42,12 +42,13 @@ describe('LoginPage', () => {
           role: 'Client',
         }),
       ),
+      http.get(`${API}/obras`, () => HttpResponse.json({ totalItems: 0, pageIndex: 0, pageSize: 50, items: [] })),
     )
     renderApp('/login')
 
     await fillAndSubmit('c@example.com', 'qualquer')
 
-    expect(await screen.findByRole('heading', { name: /Hub/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Suas obras' })).toBeInTheDocument()
     expect(sessionStorage.getItem('khazobras.session')).toContain('"role":"Client"')
   })
 

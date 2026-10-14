@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom'
 
-export const ClientHubPage = () => <h1 className="text-xl font-semibold">Hub (em construção)</h1>
+export const ClientObraPage = () => (
+  <div>
+    <Link to="/cliente" className="text-sm underline">
+      ← Suas obras
+    </Link>
+    <h1 className="mt-2 text-xl font-semibold">Dashboard (em construção)</h1>
+  </div>
+)
 export const AdminDashboardPage = () => <h1 className="text-xl font-semibold">Dashboard (em construção)</h1>
 
 export const ForbiddenPage = () => (
