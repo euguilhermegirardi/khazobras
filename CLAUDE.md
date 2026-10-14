@@ -14,6 +14,15 @@ Referências obrigatórias antes de mexer em algo grande:
 - **Backend NÃO cobre todo o SPEC** — ver "Lacunas do backend" abaixo.
 - Fase 9 (frontend) em andamento: esqueleto e Hub do cliente prontos; próxima tela = Fechamento (ver `docs/PLAN-09-frontend.md`).
 
+## Plano vivo e trava de commit
+
+Commit que mexe em telas (`frontend/src/features/**`, exceto testes), `AppRoutes.tsx`, `Program.cs` ou
+`database/schema/**` é **bloqueado** se `docs/PLAN-09-frontend.md` não estiver no mesmo commit
+(hook `.githooks/pre-commit`). Ativar uma vez por clone: `bash scripts/instalar-hooks.sh`.
+Gerar a linha do Registro: `cd frontend && npm run plano:registro -- --escrever` (monta a partir do git).
+Status das telas, lacunas e decisões o agente atualiza à mão, olhando o `git diff --cached`.
+Liberado: branches `wip/*`, merge commits, ou `SKIP_PLAN_CHECK=1 git commit ...` (só quando não se aplica).
+
 ## Agentes e skills do projeto (`.claude/`)
 
 Subagentes (`.claude/agents/`):

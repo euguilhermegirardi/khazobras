@@ -83,6 +83,9 @@ Uma feature nunca importa de outra feature; o que for comum sobe para `shared/`.
 
 Uma branch por tela (`feat/<tela>`); nunca commitar na `main`; nunca commitar `dist/`, `.env`,
 `node_modules/`. Antes do commit: skill `checagem-pre-commit`.
+O hook `.githooks/pre-commit` bloqueia commit de tela/rota/endpoint sem `docs/PLAN-09-frontend.md` junto
+(ative com `bash scripts/instalar-hooks.sh`); se bloquear, atualize o plano e rode
+`npm run plano:registro -- --escrever` — não contorne com `SKIP_PLAN_CHECK=1` sem motivo.
 
 ## Comandos (após o scaffold)
 

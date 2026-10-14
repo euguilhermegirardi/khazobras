@@ -5,8 +5,12 @@
 
 ## Como atualizar (obrigatório ao fechar uma tela)
 
+> O hook `.githooks/pre-commit` bloqueia o commit de tela/rota/endpoint/script de banco sem este arquivo
+> staged. Ativar: `bash scripts/instalar-hooks.sh`. O agente atualiza; você só revisa o diff.
+
 1. Mudar o status da tela na tabela abaixo (⬜ → 🟨 em andamento → ✅ feita).
-2. Acrescentar uma linha no **Registro** (data, branch, o que mudou, o que ficou pendente).
+2. Acrescentar uma linha no **Registro**: `cd frontend && npm run plano:registro -- --escrever` gera a linha
+   a partir do git; complete com "Pendente: ..." se houver.
 3. Se descobriu lacuna de backend, acrescentar na tabela de lacunas.
 4. Se tomou decisão técnica, acrescentar em **Decisões**.
 
@@ -41,10 +45,12 @@ Ver "Lacunas do backend" no `CLAUDE.md` raiz. Ao implementar uma, remover de lá
 - Estilo: Tailwind puro por enquanto; shadcn/ui e Recharts só quando uma tela exigir (Dashboard).
 - Node 20.19+ (ou 22.12+) por causa do Vite 8.
 - Uma branch por tela (`feat/<tela>`); nunca commitar direto na `main`.
+- Atualização do plano é travada no commit (hook versionado) e o Registro é gerado do git (`plano:registro`).
 - Testes de rota passam pelo `renderApp` (helper) com MSW; endpoint não stubado derruba o teste.
 
 ## Registro
 
+- 2026-10-14 — `chore/plano-automatico`: trava de commit (`.githooks/pre-commit`) exige este plano em mudanças de tela/rota/endpoint/schema; `npm run plano:registro` gera a linha do Registro a partir do git. Arquivos: infra (6), outros (1), front (2).
 - 2026-10-14 — `feat/hub-cliente`: Hub do cliente (lista de obras, 4 estados), 27 testes. Navbar ainda
   não existe (layout só tem o cabeçalho).
 - 2026-10-13 — Esqueleto: login, sessão, guardas de rota por papel, cliente de API, 22 testes.

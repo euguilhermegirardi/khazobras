@@ -15,7 +15,8 @@
       "Bash(npm test:*)",
       "Bash(npm run build:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(npm run plano:registro:*)"
     ]
   }
 }
