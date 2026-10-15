@@ -29,7 +29,7 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
 
 ## Componentes (shadcn/ui)
 
-- Componentes base em `src/shared/ui/` (`button`, `card`, `badge`...). Sempre usar antes de criar HTML
+- Componentes base em `src/shared/ui/` (`button`, `card`, `badge`, `skeleton`). Sempre usar antes de criar HTML
   estilizado à mão. Feature de referência: `features/obras` (Hub).
 - Componente novo: `npx shadcn@latest add <nome>` (config em `components.json`). Não editar os componentes
   base sem motivo; variação de uso vai por `className`/`variant`.

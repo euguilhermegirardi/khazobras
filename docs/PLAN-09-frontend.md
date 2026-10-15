@@ -61,7 +61,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 - Token em `sessionStorage` (V1). Sem refresh; sessão expira em 8h.
 - Componentes: **shadcn/ui** (Tailwind 4, tema por variáveis CSS em `src/index.css`), código em `src/shared/ui/`.
-  Button, Card e Badge já instalados; Hub e Login usam. Recharts entra com o Dashboard.
+  Button, Card, Badge e Skeleton já instalados; Hub e Login usam. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright (WebKit/Safari, paralelismo grátis); instalar no primeiro fluxo crítico (aprovar medição).
 - Sessão/auth em `src/shared/auth/` (usada por várias telas); `features/auth/` só tem a tela de login.
