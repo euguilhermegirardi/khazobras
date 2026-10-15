@@ -13,7 +13,8 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
    `Application`. Se faltar endpoint ou o response vazar campo interno para o cliente →
    parar e acionar `backend-gap-filler`.
 3. **Feature** em `src/features/<modulo>/`:
-   - `types.ts`: espelha o DTO (enums PascalCase na resposta; snake_case no request).
+   - Tipos: `src/shared/interfaces/<dominio>.ts` espelha o DTO (enums PascalCase na resposta; snake_case no request).
+   - Componentes: um por arquivo, só a própria interface de props, ordem da regra `.claude/rules/frontend-componentes.md`.
    - `api.ts`: funções sobre `apiClient`; sem `fetch` solto.
    - `hooks.ts`: `useQuery`/`useMutation` com chaves estáveis (`['obra', obraId, 'medicoes', page]`);
      mutação invalida as chaves afetadas.

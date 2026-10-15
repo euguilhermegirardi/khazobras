@@ -1,8 +1,62 @@
+// Lint do frontend KhazObras (oxlint). Cada regra tem o porquê ao lado.
+// Rodar: npm run lint. Mudou uma regra? Registrar em docs/PLAN-09-frontend.md (Decisões).
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "plugins": ["react", "typescript", "oxc", "jsx-a11y", "import"],
   "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    // --- React ---
+    "react/rules-of-hooks": "error",            // hooks sempre na mesma ordem (nada de hook depois de return/if)
+    "react/exhaustive-deps": "warn",             // dependências corretas no useEffect/useMemo/useCallback
+    "react/only-export-components": ["warn", { "allowConstantExport": true }], // fast refresh do Vite
+
+    // --- Segurança (frontend/CLAUDE.md, seção Segurança) ---
+    "react/no-danger": "error",                  // proíbe dangerouslySetInnerHTML (XSS)
+    "no-restricted-globals": ["error",
+      { "name": "localStorage", "message": "Token/sessão só em sessionStorage (shared/lib/session.ts)." }],
+
+    // --- TypeScript ---
+    "typescript/no-explicit-any": "error",       // use unknown + validação, nunca any
+    "typescript/consistent-type-imports": "error", // `import type` para tipos/interfaces
+
+    // --- Qualidade ---
+    "eqeqeq": "error",                           // sempre === / !==
+    "no-console": "warn",                        // nada de console.log esquecido (nunca logar token)
+
+    // --- Acessibilidade ---
+    "jsx-a11y/alt-text": "error",                // toda imagem com alt
+    "jsx-a11y/label-has-associated-control": "error", // todo input com label
+    "jsx-a11y/prefer-tag-over-role": "off"       // <div role="status"> é o padrão ARIA para carregando; <output> não serve aqui
+  },
+  "overrides": [
+    {
+      // Componentes e telas: tudo como const + arrow function (componente, handlers, helpers internos).
+      "files": ["src/app/**/*.tsx", "src/features/**/*.tsx", "src/shared/components/**/*.tsx"],
+      "rules": { "func-style": ["error", "expression"] }
+    },
+    {
+      // Funções utilitárias puras: `function` nomeada.
+      "files": ["src/shared/lib/**/*.ts"],
+      "rules": { "func-style": ["error", "declaration", { "allowArrowFunctions": false }] }
+    },
+    {
+      // Uma feature nunca importa de outra; o comum vive em shared/. (Arquivos da própria feature: import relativo.)
+      "files": ["src/features/**"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [
+        { "group": ["@/features/*", "@/features/**"], "message": "Feature não importa de outra feature: suba o código para src/shared/." },
+        { "group": ["@/app/*", "@/app/**"], "message": "features não dependem de app/ (direção: app → features → shared)." }
+      ] }] }
+    },
+    {
+      // shared/ é a base: não conhece features nem app.
+      "files": ["src/shared/**"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [
+        { "group": ["@/features/*", "@/features/**", "@/app/*", "@/app/**"], "message": "shared/ não importa de features/ nem de app/." }
+      ] }] }
+    },
+    {
+      // Testes: helpers podem ser function; console liberado para depuração local.
+      "files": ["**/*.test.ts", "**/*.test.tsx", "src/test/**"],
+      "rules": { "func-style": "off", "no-restricted-imports": "off", "no-console": "off" }
+    }
+  ]
 }

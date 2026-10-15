@@ -2,18 +2,18 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { homePathFor } from '@/shared/auth/homePath'
 import { useAuth } from '@/shared/auth/useAuth'
 import { LoginPage } from '@/features/auth/LoginPage'
-import { ADMIN_ROLES, CLIENT_ROLES } from '@/shared/auth/types'
+import { ADMIN_ROLES, CLIENT_ROLES } from '@/shared/auth/roles'
 import { ObraHubPage } from '@/features/obras/pages/ObraHubPage'
 import { AdminLayout, ClientLayout } from './layouts'
 import { AdminDashboardPage, ClientObraPage, ForbiddenPage, NotFoundPage } from './pages'
 import { ProtectedRoute } from './ProtectedRoute'
 
-function RootRedirect() {
+const RootRedirect = () => {
   const { session } = useAuth()
   return <Navigate to={session ? homePathFor(session.role) : '/login'} replace />
 }
 
-export function AppRoutes() {
+export const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />

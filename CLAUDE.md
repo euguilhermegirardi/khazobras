@@ -10,7 +10,7 @@ frontend React em construção. O usuário (Guilherme) fala português — respo
   (consultar só para entender o porquê de uma decisão).
 - `docs/PLAN-09-frontend.md` — **plano vivo**: status por tela, lacunas do backend, decisões, registro.
 - `frontend/CLAUDE.md` — regras do front (carrega ao mexer em `frontend/`).
-- `.claude/rules/` — convenções por caminho (backend, banco, testes do front), carregadas sob demanda.
+- `.claude/rules/` — convenções por caminho (backend, banco, componentes e testes do front), sob demanda.
 - `.claude/agents/` — `backend-gap-filler`, `frontend-builder`, `frontend-tester`, `security-reviewer`.
 - `.claude/skills/` — `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
 

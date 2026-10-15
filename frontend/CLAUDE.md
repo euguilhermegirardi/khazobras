@@ -19,8 +19,9 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 ```
 frontend/src/
   app/            # providers, router, layouts (ClientLayout, AdminLayout)
-  features/<mod>/ # um diretório por módulo: api.ts, types.ts, hooks.ts, components/, pages/
-  shared/         # ui/ (shadcn), auth/ (sessão, useAuth), lib/ (apiClient, formatters, utils), hooks/
+  features/<mod>/ # um diretório por módulo: api.ts, hooks.ts, constants.ts, components/, pages/
+  shared/         # interfaces/ (tipos da API), ui/ (shadcn), components/ (ErrorState, PageSection),
+                  # auth/ (sessão, useAuth), lib/ (apiClient, formatters, utils), hooks/
   test/           # setup, server MSW, helpers (handlers ficam dentro de cada teste)
 ```
 
@@ -51,7 +52,7 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
   Nunca fazer aritmética de dinheiro com `number` para decidir regra de negócio — o backend calcula.
 - Datas `DATE` chegam como `yyyy-MM-dd`: tratar como data local, **não** passar por `new Date(str)` sem
   cuidado (fuso de São Paulo vira dia anterior). Usar helper em `shared/lib/dates.ts`.
-- Tipos da API ficam em `features/<mod>/types.ts`, espelhando os `sealed record` do backend. Ao mudar
+- Tipos da API ficam em `src/shared/interfaces/<dominio>.ts`, espelhando os `sealed record` do backend. Ao mudar
   um DTO no backend, atualizar o tipo no mesmo PR.
 
 ## Segurança (inegociável — dados extremamente sensíveis)
@@ -83,7 +84,9 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
 
 ## Padrões já estabelecidos (siga-os)
 
-- **Feature de referência:** `src/features/obras/` (`types.ts` → `api.ts` → `hooks.ts` → `pages/`).
+- **Feature de referência:** `src/features/obras/` (`shared/interfaces/obra.ts` → `api.ts` → `hooks.ts` →
+  `components/` → `pages/`). Organização e ordem dentro do componente: `.claude/rules/frontend-componentes.md`.
+- **Lint explícito:** `frontend/.oxlintrc.json` lista cada regra com o porquê. Mudou regra? Registrar no PLAN-09.
 - Página reutilizável entre visões recebe o destino por prop (`ObraHubPage obraPath={...}`), em vez de
   duplicar a tela para cliente e admin.
 - Erros de API: `ApiError` (`kind`, `requestId`); mostre `requestId` nos 500 e ofereça "Tentar novamente".

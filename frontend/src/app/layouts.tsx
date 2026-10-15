@@ -2,8 +2,13 @@ import { Outlet } from 'react-router-dom'
 import { useAuth } from '@/shared/auth/useAuth'
 import { Button } from '@/shared/ui/button'
 
-function Shell({ title }: { title: string }) {
+interface ShellProps {
+  title: string
+}
+
+const Shell = ({ title }: ShellProps) => {
   const { session, signOut } = useAuth()
+
   return (
     <div className="min-h-screen bg-muted/40">
       <header className="flex items-center justify-between border-b bg-background px-6 py-3">

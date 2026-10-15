@@ -1,12 +1,16 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/shared/auth/useAuth'
-import type { Role } from '@/shared/auth/types'
+import type { Role } from '@/shared/interfaces/auth'
 
 /**
  * Guarda de rota por papel. Atencao: isto e conveniencia de navegacao, NAO controle de acesso.
  * Quem decide e o backend (403). O cliente nunca monta componentes de admin.
  */
-export function ProtectedRoute({ allow }: { allow: readonly Role[] }) {
+interface ProtectedRouteProps {
+  allow: readonly Role[]
+}
+
+export const ProtectedRoute = ({ allow }: ProtectedRouteProps) => {
   const { session } = useAuth()
   const location = useLocation()
 

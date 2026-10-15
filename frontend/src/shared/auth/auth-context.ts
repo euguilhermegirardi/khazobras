@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { AuthSession } from './types'
+import type { AuthSession } from '@/shared/interfaces/auth'
 
 export interface AuthContextValue {
   session: AuthSession | null

@@ -64,6 +64,11 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Button, Card, Badge e Skeleton já instalados; Hub e Login usam. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright (WebKit/Safari, paralelismo grátis); instalar no primeiro fluxo crítico (aprovar medição).
+- Interfaces/tipos da API em `src/shared/interfaces/`; componente só tem a interface das próprias props; um
+  componente por arquivo; ordem fixa dentro do componente (`.claude/rules/frontend-componentes.md`).
+- Componentes e funções internas como `const` + arrow; utilitários em `shared/lib` como `function` (lint cobra).
+- Lint explícito em `frontend/.oxlintrc.json` (oxlint), com segurança (`no-danger`, sem `localStorage`), a11y e
+  fronteiras de import (feature ↛ feature, shared ↛ features/app).
 - Sessão/auth em `src/shared/auth/` (usada por várias telas); `features/auth/` só tem a tela de login.
 - Node 20.19+ (ou 22.12+) por causa do Vite 8.
 - Uma branch por tela (`feat/<tela>`); nunca commitar direto na `main`.
