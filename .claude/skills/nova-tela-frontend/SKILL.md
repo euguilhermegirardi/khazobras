@@ -18,7 +18,10 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
    - `hooks.ts`: `useQuery`/`useMutation` com chaves estáveis (`['obra', obraId, 'medicoes', page]`);
      mutação invalida as chaves afetadas.
    - `components/` e `pages/`: página fina, lógica em hooks.
-4. **Estados**: carregando (skeleton), vazio (mensagem útil), erro (com `requestId` em 500;
+   - UI: componentes de `src/shared/ui/` (shadcn/ui) primeiro; faltou um → `npx shadcn@latest add <nome>`
+     (nunca recriar à mão). Cores só por tokens do tema (`text-muted-foreground`, `bg-destructive`...),
+     nunca cor fixa. O Hub (`features/obras`) é o exemplo.
+4. **Estados**: carregando (`Skeleton` de `shared/ui`, dentro de `role="status"` com texto `sr-only`), vazio (mensagem útil), erro (com `requestId` em 500;
    403 → sem permissão; 409 → mensagem da transição), sucesso.
 5. **Rota**: registrar com guarda de role dentro do layout certo (`ClientLayout` / `AdminLayout`) e
    o item no navbar na ordem do SPEC.

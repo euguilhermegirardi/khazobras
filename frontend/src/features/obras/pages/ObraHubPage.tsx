@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ApiError } from '@/shared/lib/apiClient'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { formatCurrency } from '@/shared/lib/format'
 import { formatDateOnly } from '@/shared/lib/dates'
@@ -79,9 +80,11 @@ export function ObraHubPage({ obraPath }: Props) {
       </h1>
       <div className="mt-4">
         {isPending && (
-          <p role="status" className="text-muted-foreground">
-            Carregando obras…
-          </p>
+          <div role="status" className="grid gap-4 md:grid-cols-2">
+            <span className="sr-only">Carregando obras…</span>
+            <Skeleton className="h-36 rounded-xl" />
+            <Skeleton className="h-36 rounded-xl" />
+          </div>
         )}
         {isError && <ErrorMessage error={error} onRetry={() => void refetch()} />}
         {data && data.items.length === 0 && (
