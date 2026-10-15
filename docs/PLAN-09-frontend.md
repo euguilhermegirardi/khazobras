@@ -17,6 +17,11 @@
 3. Se descobriu lacuna de backend, acrescentar na tabela de lacunas.
 4. Se tomou decisão técnica, acrescentar em **Decisões**.
 
+## Pendências antes da próxima tela
+
+- [ ] **Conversar com o Guilherme sobre biblioteca de componentes com Tailwind** (shadcn/ui ou outra) antes de
+  seguir com as telas. Qualquer sessão (VS Code ou chat) deve lembrar disso antes de começar uma tela nova.
+
 ## Telas do cliente (SPEC §5) — ordem sugerida
 
 | # | Tela | Backend pronto? | Status | Branch / observação |
