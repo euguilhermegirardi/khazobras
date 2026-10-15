@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { AppRoutes } from '@/app/AppRoutes'
 import { AuthProvider } from '@/shared/auth/AuthContext'
-import type { AuthSession, Role } from '@/shared/auth/types'
+import type { AuthSession, Role } from '@/shared/interfaces/auth'
 import { saveSession } from '@/shared/lib/session'
 
 export function fakeSession(role: Role): AuthSession {

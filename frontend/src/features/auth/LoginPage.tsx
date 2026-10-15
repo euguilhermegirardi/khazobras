@@ -14,7 +14,7 @@ const schema = z.object({
 })
 type FormValues = z.infer<typeof schema>
 
-function messageFor(error: unknown): string {
+const messageFor = (error: unknown): string => {
   if (error instanceof ApiError) {
     if (error.kind === 'unauthorized') return 'E-mail ou senha incorretos.'
     if (error.kind === 'network') return error.message
@@ -25,18 +25,20 @@ function messageFor(error: unknown): string {
   return 'Não foi possível entrar. Tente novamente.'
 }
 
-export function LoginPage() {
+export const LoginPage = () => {
+  // Estados
+  const [formError, setFormError] = useState<string | null>(null)
+
+  // Hooks
   const { session, signIn } = useAuth()
   const navigate = useNavigate()
-  const [formError, setFormError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
-  if (session) return <Navigate to={homePathFor(session.role)} replace />
-
+  // Functions
   const onSubmit = handleSubmit(async ({ email, password }) => {
     setFormError(null)
     try {
@@ -46,6 +48,11 @@ export function LoginPage() {
       setFormError(messageFor(error))
     }
   })
+
+  // Retorno breve: já logado vai direto para a home do papel
+  if (session) return <Navigate to={homePathFor(session.role)} replace />
+
+  // Return
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">

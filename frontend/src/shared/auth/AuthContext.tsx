@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { clearSession, loadSession, onSessionCleared, saveSession } from '@/shared/lib/session'
 import { login as loginRequest } from './api'
 import { AuthContext } from './auth-context'
-import type { AuthSession } from './types'
+import type { AuthSession } from '@/shared/interfaces/auth'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => loadSession())

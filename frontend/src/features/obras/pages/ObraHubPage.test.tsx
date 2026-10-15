@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { renderApp } from '@/test/helpers'
 import { API, server } from '@/test/server'
-import type { Obra } from '../types'
+import type { Obra } from '@/shared/interfaces/obra'
 
 const obra: Obra = {
   id: '22222222-2222-2222-2222-222222222222',

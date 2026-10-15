@@ -1,105 +1,63 @@
-import { Link } from 'react-router-dom'
-import { ApiError } from '@/shared/lib/apiClient'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
+import { ErrorState } from '@/shared/components/ErrorState'
+import { PageSection } from '@/shared/components/PageSection'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { formatCurrency } from '@/shared/lib/format'
-import { formatDateOnly } from '@/shared/lib/dates'
+import { ObraCard } from '../components/ObraCard'
 import { useObras } from '../hooks'
-import { OBRA_STATUS_LABEL, type Obra } from '../types'
 
-interface Props {
-  /** Monta o destino da obra escolhida (cada visao tem o seu prefixo). */
+interface ObraHubPageProps {
+  /** Monta o destino da obra escolhida (cada visão tem o seu prefixo). */
   obraPath: (obraId: string) => string
 }
 
-function ErrorMessage({ error, onRetry }: { error: unknown; onRetry: () => void }) {
-  const apiError = error instanceof ApiError ? error : null
-  return (
-    <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-      <p>{apiError?.message ?? 'Não foi possível carregar as obras.'}</p>
-      {apiError?.requestId && (
-        <p className="mt-1 text-sm text-muted-foreground">Código para o suporte: {apiError.requestId}</p>
-      )}
-      <Button variant="outline" size="sm" className="mt-3" onClick={onRetry}>
-        Tentar novamente
-      </Button>
-    </div>
-  )
-}
+// Constants (não dependem de props/estado: ficam fora do componente)
+const TITULO = 'Suas obras'
+const MENSAGEM_ERRO = 'Não foi possível carregar as obras.'
+const MENSAGEM_VAZIO = 'Nenhuma obra vinculada à sua conta ainda. Fale com a Khaz Engenharia.'
 
-function ObraCard({ obra, to }: { obra: Obra; to: string }) {
-  return (
-    <li>
-      <Link
-        to={to}
-        className="block rounded-xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        <Card className="transition-colors hover:border-ring">
-          <CardHeader>
-            <CardTitle>
-              <h2 className="text-lg font-semibold">{obra.nome}</h2>
-            </CardTitle>
-            {obra.endereco && <CardDescription>{obra.endereco}</CardDescription>}
-            <CardAction>
-              <Badge variant="secondary">{OBRA_STATUS_LABEL[obra.status]}</Badge>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid grid-cols-3 gap-3 text-sm">
-              <div>
-                <dt className="text-muted-foreground">Valor contratado</dt>
-                <dd className="font-medium">{formatCurrency(obra.valorContratado)}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Início</dt>
-                <dd className="font-medium">{obra.dataInicio ? formatDateOnly(obra.dataInicio) : '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Previsão de término</dt>
-                <dd className="font-medium">
-                  {obra.dataPrevisaoTermino ? formatDateOnly(obra.dataPrevisaoTermino) : '—'}
-                </dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
-      </Link>
-    </li>
-  )
-}
-
-export function ObraHubPage({ obraPath }: Props) {
+export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
+  // Hooks
   const { data, isPending, isError, error, refetch } = useObras()
 
+  // Functions
+  const handleRetry = () => void refetch()
+
+  // Retornos breves (carregando / erro / vazio) — sempre depois de todos os hooks
+  if (isPending) {
+    return (
+      <PageSection title={TITULO}>
+        <div role="status" className="grid gap-4 md:grid-cols-2">
+          <span className="sr-only">Carregando obras…</span>
+          <Skeleton className="h-36 rounded-xl" />
+          <Skeleton className="h-36 rounded-xl" />
+        </div>
+      </PageSection>
+    )
+  }
+
+  if (isError) {
+    return (
+      <PageSection title={TITULO}>
+        <ErrorState error={error} fallbackMessage={MENSAGEM_ERRO} onRetry={handleRetry} />
+      </PageSection>
+    )
+  }
+
+  if (data.items.length === 0) {
+    return (
+      <PageSection title={TITULO}>
+        <p className="rounded-lg border border-dashed p-6 text-muted-foreground">{MENSAGEM_VAZIO}</p>
+      </PageSection>
+    )
+  }
+
+  // Return
   return (
-    <section aria-labelledby="hub-title">
-      <h1 id="hub-title" className="text-xl font-semibold">
-        Suas obras
-      </h1>
-      <div className="mt-4">
-        {isPending && (
-          <div role="status" className="grid gap-4 md:grid-cols-2">
-            <span className="sr-only">Carregando obras…</span>
-            <Skeleton className="h-36 rounded-xl" />
-            <Skeleton className="h-36 rounded-xl" />
-          </div>
-        )}
-        {isError && <ErrorMessage error={error} onRetry={() => void refetch()} />}
-        {data && data.items.length === 0 && (
-          <p className="rounded-lg border border-dashed p-6 text-muted-foreground">
-            Nenhuma obra vinculada à sua conta ainda. Fale com a Khaz Engenharia.
-          </p>
-        )}
-        {data && data.items.length > 0 && (
-          <ul className="grid gap-4 md:grid-cols-2">
-            {data.items.map((obra) => (
-              <ObraCard key={obra.id} obra={obra} to={obraPath(obra.id)} />
-            ))}
-          </ul>
-        )}
-      </div>
-    </section>
+    <PageSection title={TITULO}>
+      <ul className="grid gap-4 md:grid-cols-2">
+        {data.items.map((obra) => (
+          <ObraCard key={obra.id} obra={obra} to={obraPath(obra.id)} />
+        ))}
+      </ul>
+    </PageSection>
   )
 }

@@ -1,4 +1,4 @@
-import type { AuthSession } from '@/shared/auth/types'
+import type { AuthSession } from '@/shared/interfaces/auth'
 
 // Decisao V1: sessionStorage (nao localStorage). O JWT dura 8h e nao ha refresh.
 // Trade-off: sobrevive ao recarregar a pagina, mas nao ao fechar a aba.

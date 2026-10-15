@@ -4,7 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/shared/auth/AuthContext'
 import { ApiError } from '@/shared/lib/apiClient'
 
-export function AppProviders({ children }: { children: ReactNode }) {
+interface AppProvidersProps {
+  children: ReactNode
+}
+
+export const AppProviders = ({ children }: AppProvidersProps) => {
   const [queryClient] = useState(
     () =>
       new QueryClient({
