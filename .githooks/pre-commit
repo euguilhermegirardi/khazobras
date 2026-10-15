@@ -31,11 +31,11 @@ fi
   echo "Arquivos que dispararam a trava:"
   printf '%s\n' "$gatilhos" | sed 's/^/  - /'
   echo
-  echo "O que fazer:"
+  echo "O que fazer (agente: faça sozinho, sem esperar o usuário):"
   echo "  1. Atualize o status da tela / lacunas / decisões no $PLAN."
   echo "  2. Gere a linha do Registro:  cd frontend && npm run plano:registro -- --escrever"
   echo "  3. git add $PLAN  e commite de novo."
   echo
-  echo "Não se aplica (ex.: só refactor)? Use SKIP_PLAN_CHECK=1 git commit ...  ou uma branch wip/*."
+  echo "Não se aplica (ex.: só refactor)? Só o usuário decide usar SKIP_PLAN_CHECK=1 ou uma branch wip/*."
 } >&2
 exit 1

@@ -23,6 +23,13 @@ Gerar a linha do Registro: `cd frontend && npm run plano:registro -- --escrever`
 Status das telas, lacunas e decisões o agente atualiza à mão, olhando o `git diff --cached`.
 Liberado: branches `wip/*`, merge commits, ou `SKIP_PLAN_CHECK=1 git commit ...` (só quando não se aplica).
 
+**Se o hook bloquear, o agente resolve sozinho, sem esperar o usuário** (ele pode não estar no computador):
+atualiza status/lacunas/decisões no PLAN-09 a partir do `git diff --cached`, roda
+`cd frontend && npm run plano:registro -- --escrever`, faz `git add docs/PLAN-09-frontend.md` e commita de novo.
+Nunca usar `SKIP_PLAN_CHECK=1` nem branch `wip/*` por conta própria — só se o usuário pedir.
+O Registro tem **uma linha por branch**: rodar de novo substitui a anterior (preserva "Pendente: ...").
+Último passo antes do merge: rodar o `plano:registro -- --escrever` com tudo commitado e commitar `docs: registro`.
+
 ## Agentes e skills do projeto (`.claude/`)
 
 Subagentes (`.claude/agents/`):

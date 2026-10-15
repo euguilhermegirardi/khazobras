@@ -10,7 +10,10 @@
 
 1. Mudar o status da tela na tabela abaixo (⬜ → 🟨 em andamento → ✅ feita).
 2. Acrescentar uma linha no **Registro**: `cd frontend && npm run plano:registro -- --escrever` gera a linha
-   a partir do git; complete com "Pendente: ..." se houver.
+   a partir do git; complete com "Pendente: ..." se houver. É **uma linha por branch**: rodar de novo
+   substitui a anterior e preserva o "Pendente:". Antes do merge, rode de novo com tudo commitado
+   (commit `docs: registro`).
+5. Hook bloqueou? O agente resolve sozinho (itens 1–4 + `git add` + commit), sem esperar o usuário.
 3. Se descobriu lacuna de backend, acrescentar na tabela de lacunas.
 4. Se tomou decisão técnica, acrescentar em **Decisões**.
 
@@ -50,6 +53,7 @@ Ver "Lacunas do backend" no `CLAUDE.md` raiz. Ao implementar uma, remover de lá
 
 ## Registro
 
+- 2026-10-14 — `chore/registro-upsert`: Registro: one line per branch (upsert); agents resolve hook blocks on their own. Arquivos: infra (6), outros (1), front (1).
 - 2026-10-14 — `chore/plano-automatico`: trava de commit (`.githooks/pre-commit`) exige este plano em mudanças de tela/rota/endpoint/schema; `npm run plano:registro` gera a linha do Registro a partir do git. Arquivos: infra (6), outros (1), front (2).
 - 2026-10-14 — `feat/hub-cliente`: Hub do cliente (lista de obras, 4 estados), 27 testes. Navbar ainda
   não existe (layout só tem o cabeçalho).

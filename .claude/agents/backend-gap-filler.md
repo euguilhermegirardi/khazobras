@@ -39,3 +39,7 @@ Liste: arquivos criados/alterados, script SQL novo (se houver), contrato final d
 (rota, método, request, response, códigos) para o front consumir, e o resultado de build/test.
 Atualize `docs/PLAN-09-frontend.md` (tela que fica desbloqueada) e remova a lacuna do `CLAUDE.md` raiz.
 Não faça commit; o usuário decide.
+
+Se um commit for bloqueado pelo hook do PLAN-09, resolva sozinho: atualize o plano, rode
+`cd frontend && npm run plano:registro -- --escrever`, `git add docs/PLAN-09-frontend.md` e commite de novo.
+Não espere o usuário e não use `SKIP_PLAN_CHECK=1` sem pedido dele.

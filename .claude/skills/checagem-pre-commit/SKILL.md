@@ -19,5 +19,7 @@ description: Checagem obrigatória antes de qualquer commit no KhazObras — rev
 6. Se mudou regra de acesso: confirmar teste novo/atualizado em `KhazObras.Security.Tests`.
 7. Build e testes verdes (`dotnet test` e/ou `npm test`) antes do commit.
 8. Se o commit mexe em tela/rota/endpoint/schema, `docs/PLAN-09-frontend.md` entra junto (o hook
-   `.githooks/pre-commit` bloqueia sem ele; ative com `bash scripts/instalar-hooks.sh`).
+   `.githooks/pre-commit` bloqueia sem ele; ative com `bash scripts/instalar-hooks.sh`). Bloqueou: atualize o
+   plano, rode `cd frontend && npm run plano:registro -- --escrever`, `git add` e commite de novo — sozinho,
+   sem esperar o usuário. `SKIP_PLAN_CHECK=1` só com pedido explícito dele.
 9. Mensagem de commit curta, no estilo do histórico (`git log --oneline -10`). Nunca `--no-verify`.
