@@ -10,7 +10,7 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 - React Router 7 (rotas com guarda por role) — pacote `react-router-dom`
 - TanStack Query (dados do servidor) — sem Redux; estado local com `useState`/`useReducer`
 - React Hook Form + Zod (formulários)
-- Tailwind CSS (puro por enquanto; shadcn/ui só se uma tela exigir componente complexo, e então registrar em `docs/PLAN-09-frontend.md`)
+- Tailwind CSS 4 + **shadcn/ui** (componentes acessíveis, código no repositório em `src/shared/ui/`)
 - Vitest + Testing Library + MSW (unit/integração); Playwright (e2e dos fluxos críticos)
 - Gráficos (Dashboard/Curva S): Recharts, ainda não instalado — adicionar ao construir o Dashboard
 
@@ -20,14 +20,26 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 frontend/src/
   app/            # providers, router, layouts (ClientLayout, AdminLayout)
   features/<mod>/ # um diretório por módulo: api.ts, types.ts, hooks.ts, components/, pages/
-  shared/         # ui/ (shadcn), lib/ (apiClient, formatters), hooks/
-  test/           # setup, handlers MSW
+  shared/         # ui/ (shadcn), auth/ (sessão, useAuth), lib/ (apiClient, formatters, utils), hooks/
+  test/           # setup, server MSW, helpers (handlers ficam dentro de cada teste)
 ```
 
-Uma feature nunca importa de outra feature; o que for comum sobe para `shared/`.
+Direção das dependências: `app → features → shared`. Uma feature nunca importa de outra feature; o que for
+comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shared/lib/`).
+
+## Componentes (shadcn/ui)
+
+- Componentes base em `src/shared/ui/` (`button`, `card`, `badge`...). Sempre usar antes de criar HTML
+  estilizado à mão. Feature de referência: `features/obras` (Hub).
+- Componente novo: `npx shadcn@latest add <nome>` (config em `components.json`). Não editar os componentes
+  base sem motivo; variação de uso vai por `className`/`variant`.
+- Cores só por tokens do tema (`bg-background`, `text-muted-foreground`, `border`, `bg-destructive`...),
+  nunca cor fixa (`slate-500`, `red-700`). Tema/marca se ajusta em `src/index.css`.
+- `cn()` de `@/shared/lib/utils` para juntar classes.
 
 ## Contrato com a API
 
+- Login: `POST /auth/login` → `{ token, expiresAt, userId, name, email, role }`; roles `Master`, `Admin`, `Client`.
 - Base URL vem de `import.meta.env.VITE_API_URL`. Nunca hardcode.
 - `apiClient` único (`shared/lib/apiClient.ts`): injeta `Authorization: Bearer`, trata 401 (logout +
   redirect para login), 403 (tela "sem permissão"), 409 (transição inválida → mensagem ao usuário),
@@ -64,7 +76,7 @@ Uma feature nunca importa de outra feature; o que for comum sobe para `shared/`.
 
 - Toda tela cobre os quatro estados: carregando, vazio, erro, sucesso.
 - Acessibilidade: elementos semânticos, labels em todo input, foco visível, contraste AA.
-- Linguagem da visão cliente é simplificada (sem SPI, CPI, Curva S).
+- Linguagem da visão cliente é simplificada (sem SPI, CPI, Curva S). Navbar e telas por papel: SPEC §5 (cliente) e §6 (admin).
 - Teste por comportamento do usuário (Testing Library), não por implementação. Fluxo crítico =
   teste e2e: login, aprovar medição (cliente), criar medição (admin), acesso negado entre obras.
 - Antes de concluir: `npm run lint && npm run typecheck && npm test` verdes.

@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { AppRoutes } from '@/app/AppRoutes'
-import { AuthProvider } from '@/features/auth/AuthContext'
-import type { AuthSession, Role } from '@/features/auth/types'
+import { AuthProvider } from '@/shared/auth/AuthContext'
+import type { AuthSession, Role } from '@/shared/auth/types'
 import { saveSession } from '@/shared/lib/session'
 
 export function fakeSession(role: Role): AuthSession {

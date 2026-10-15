@@ -19,8 +19,8 @@
 
 ## Pendências antes da próxima tela
 
-- [ ] **Conversar com o Guilherme sobre biblioteca de componentes com Tailwind** (shadcn/ui ou outra) antes de
-  seguir com as telas. Qualquer sessão (VS Code ou chat) deve lembrar disso antes de começar uma tela nova.
+- [x] Biblioteca de componentes decidida: **shadcn/ui** (ver Decisões).
+- [ ] Navbar do cliente (layout ainda só tem cabeçalho) — fazer antes ou junto da tela Fechamento.
 
 ## Telas do cliente (SPEC §5) — ordem sugerida
 
@@ -45,12 +45,26 @@ e flag `visivel_cliente`), Relatórios. Detalhar aqui quando iniciar.
 
 ## Lacunas de backend que bloqueiam telas
 
-Ver "Lacunas do backend" no `CLAUDE.md` raiz. Ao implementar uma, remover de lá e marcar aqui.
+Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (provavelmente com script `008_*.sql`+):
+
+- Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
+- Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
+- Cronograma: atualização de etapas e campo de % concluído — bloqueia Cronograma completo
+- Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
+- Categorias (CRUD); Empresa / equipe (Administração) — telas admin
+- PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
+- Envio real de e-mail / WhatsApp nas notificações
+- Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta, não plugada)
+- PDF consolidado (Fase 10)
 
 ## Decisões
 
 - Token em `sessionStorage` (V1). Sem refresh; sessão expira em 8h.
-- Estilo: Tailwind puro por enquanto; shadcn/ui e Recharts só quando uma tela exigir (Dashboard).
+- Componentes: **shadcn/ui** (Tailwind 4, tema por variáveis CSS em `src/index.css`), código em `src/shared/ui/`.
+  Button, Card e Badge já instalados; Hub e Login usam. Recharts entra com o Dashboard.
+- Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
+- E2E: Playwright (WebKit/Safari, paralelismo grátis); instalar no primeiro fluxo crítico (aprovar medição).
+- Sessão/auth em `src/shared/auth/` (usada por várias telas); `features/auth/` só tem a tela de login.
 - Node 20.19+ (ou 22.12+) por causa do Vite 8.
 - Uma branch por tela (`feat/<tela>`); nunca commitar direto na `main`.
 - Atualização do plano é travada no commit (hook versionado) e o Registro é gerado do git (`plano:registro`).
