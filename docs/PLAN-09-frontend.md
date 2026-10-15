@@ -10,7 +10,10 @@
 
 1. Mudar o status da tela na tabela abaixo (⬜ → 🟨 em andamento → ✅ feita).
 2. Acrescentar uma linha no **Registro**: `cd frontend && npm run plano:registro -- --escrever` gera a linha
-   a partir do git; complete com "Pendente: ..." se houver.
+   a partir do git; complete com "Pendente: ..." se houver. É **uma linha por branch**: rodar de novo
+   substitui a anterior e preserva o "Pendente:". Antes do merge, rode de novo com tudo commitado
+   (commit `docs: registro`).
+5. Hook bloqueou? O agente resolve sozinho (itens 1–4 + `git add` + commit), sem esperar o usuário.
 3. Se descobriu lacuna de backend, acrescentar na tabela de lacunas.
 4. Se tomou decisão técnica, acrescentar em **Decisões**.
 

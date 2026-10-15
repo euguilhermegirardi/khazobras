@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Monta a linha do "Registro" do docs/PLAN-09-frontend.md a partir do git (commits da branch + staged).
 // Uso (a partir de frontend/):  npm run plano:registro            -> só imprime
-//                                npm run plano:registro -- --escrever -> insere no topo do Registro
+//                                npm run plano:registro -- --escrever -> insere/atualiza a linha desta branch
+// Uma linha por branch: rodar de novo substitui a anterior (preserva "Pendente: ..." escrito à mão).
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -66,11 +67,32 @@ if (process.argv.includes('--escrever')) {
     process.exit(1)
   }
   const fim = i + titulo.length
-  const resto = conteudo.slice(fim).replace(/^\n/, '')
-  if (resto.includes(linha)) {
-    console.error('Linha idêntica já existe no Registro; nada escrito.')
-    process.exit(0)
+  const cabecalho = conteudo.slice(0, fim)
+  const linhas = conteudo.slice(fim).replace(/^\n/, '').split('\n')
+
+  // Agrupa entradas: cada uma começa com "- " e pode continuar em linhas indentadas.
+  const entradas = []
+  for (const l of linhas) {
+    if (l.startsWith('- ') || entradas.length === 0) entradas.push([l])
+    else entradas.at(-1).push(l)
   }
-  writeFileSync(path, `${conteudo.slice(0, fim)}\n${linha}\n${resto}`)
-  console.error('Linha inserida no topo do Registro. Revise, complete o "Pendente:" se houver, e faça git add.')
+
+  // Uma entrada por branch: se já existe, substitui (preservando o "Pendente: ..." escrito à mão).
+  const marca = `\`${branch}\`:`
+  const idx = entradas.findIndex((e) => e[0].startsWith('- ') && e[0].includes(marca))
+  let nova = linha
+  if (idx !== -1) {
+    const antiga = entradas[idx].map((l) => l.trim()).join(' ')
+    const pendente = antiga.match(/Pendente:.*$/)?.[0]
+    if (pendente && !nova.includes('Pendente:')) nova = `${nova} ${pendente}`
+    entradas.splice(idx, 1)
+  }
+  entradas.unshift([nova])
+
+  writeFileSync(path, `${cabecalho}\n${entradas.map((e) => e.join('\n')).join('\n')}`)
+  console.error(
+    idx === -1
+      ? 'Linha inserida no topo do Registro. Revise e faça git add.'
+      : 'Linha desta branch atualizada (movida para o topo). Revise e faça git add.',
+  )
 }

@@ -35,3 +35,7 @@ Você constrói o frontend do KhazObras. Antes de qualquer coisa, leia `CLAUDE.m
 
 Atualize `docs/PLAN-09-frontend.md` (tabela + registro). Resumo curto: o que a tela faz, arquivos criados, endpoints consumidos, resultado de lint/typecheck/test
 e qualquer divergência entre SPEC e backend. Trabalhe numa branch `feat/<tela>`; não faça commit (o usuário decide).
+
+Se um commit for bloqueado pelo hook do PLAN-09, resolva sozinho: atualize o plano, rode
+`cd frontend && npm run plano:registro -- --escrever`, `git add docs/PLAN-09-frontend.md` e commite de novo.
+Não espere o usuário e não use `SKIP_PLAN_CHECK=1` sem pedido dele.

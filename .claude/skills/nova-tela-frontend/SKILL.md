@@ -32,4 +32,7 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
 9. **Verificar**: `npm run lint && npm run typecheck && npm test`.
 10. **Plano**: atualizar `docs/PLAN-09-frontend.md`: status da tela, lacunas e decisões à mão; linha do
     Registro com `cd frontend && npm run plano:registro -- --escrever`. O hook de commit exige isso.
+    Se o hook bloquear, resolva sozinho (não espere o usuário); `SKIP_PLAN_CHECK=1` só se ele pedir.
 11. Rodar `checagem-pre-commit` e, em telas com ação de escrita ou restrição, `security-reviewer`.
+12. **Fechamento da branch** (antes do merge/PR): com tudo commitado, `cd frontend && npm run plano:registro -- --escrever`
+    (atualiza a linha desta branch com todos os commits) e commit `docs: registro`.
