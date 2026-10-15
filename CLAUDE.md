@@ -1,135 +1,83 @@
 # CLAUDE.md — KhazObras
 
-Sistema de gerenciamento de obras (Khaz Engenharia). Backend .NET 10 + Postgres + Cloudflare R2 pronto para uso; frontend React com esqueleto pronto (login, guardas de rota, cliente de API), telas por fazer.
-O usuário (Guilherme) responde em português — responda em português.
+Sistema de gerenciamento de obras (Khaz Engenharia): backend .NET 10 + Postgres + Cloudflare R2 (pronto),
+frontend React em construção. O usuário (Guilherme) fala português — responda em português.
 
-Referências obrigatórias antes de mexer em algo grande:
-- `docs/SPEC.md` — o quê (funcionalidades, perfis, modelo de dados)
-- `docs/PLAN-00-roadmap.md` — fases e status
-- `docs/PLAN-09-frontend.md` — plano vivo do frontend (status por tela, lacunas, decisões); atualizar a cada tela
+## Onde está cada coisa
 
-## Estado atual
-
-- Backend fases 1–8 concluídas, revisão de segurança concluída, 105 testes passando (inclui testes HTTP de 403/401 e CORS) (`KhazObras.Security.Tests`).
-- **Backend NÃO cobre todo o SPEC** — ver "Lacunas do backend" abaixo.
-- Fase 9 (frontend) em andamento: esqueleto e Hub do cliente prontos; próxima tela = Fechamento (ver `docs/PLAN-09-frontend.md`).
-
-## Plano vivo e trava de commit
-
-Commit que mexe em telas (`frontend/src/features/**`, exceto testes), `AppRoutes.tsx`, `Program.cs` ou
-`database/schema/**` é **bloqueado** se `docs/PLAN-09-frontend.md` não estiver no mesmo commit
-(hook `.githooks/pre-commit`). Ativar uma vez por clone: `bash scripts/instalar-hooks.sh`.
-Gerar a linha do Registro: `cd frontend && npm run plano:registro -- --escrever` (monta a partir do git).
-Status das telas, lacunas e decisões o agente atualiza à mão, olhando o `git diff --cached`.
-Liberado: branches `wip/*`, merge commits, ou `SKIP_PLAN_CHECK=1 git commit ...` (só quando não se aplica).
-
-**Se o hook bloquear, o agente resolve sozinho, sem esperar o usuário** (ele pode não estar no computador):
-atualiza status/lacunas/decisões no PLAN-09 a partir do `git diff --cached`, roda
-`cd frontend && npm run plano:registro -- --escrever`, faz `git add docs/PLAN-09-frontend.md` e commita de novo.
-Nunca usar `SKIP_PLAN_CHECK=1` nem branch `wip/*` por conta própria — só se o usuário pedir.
-O Registro tem **uma linha por branch**: rodar de novo substitui a anterior (preserva "Pendente: ...").
-Último passo antes do merge: rodar o `plano:registro -- --escrever` com tudo commitado e commitar `docs: registro`.
-
-## Agentes e skills do projeto (`.claude/`)
-
-Subagentes (`.claude/agents/`):
-- `backend-gap-filler` — implementa lacuna do backend (endpoint, módulo, script 007+) com teste.
-- `frontend-builder` — constrói uma tela por vez a partir do SPEC; para se faltar endpoint.
-- `frontend-tester` — testes Vitest/MSW/Playwright em contexto separado de quem escreveu o código.
-- `security-reviewer` — revisão somente-leitura (acesso, IDOR, vazamento de custo ao cliente, segredos).
-
-Skills (`.claude/skills/`): `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
+- `docs/SPEC.md` — o quê (funcionalidades, perfis, modelo de dados).
+- `docs/PLAN-00-roadmap.md` — fases e status. `PLAN-01`/`PLAN-02`: histórico de fases concluídas
+  (consultar só para entender o porquê de uma decisão).
+- `docs/PLAN-09-frontend.md` — **plano vivo**: status por tela, lacunas do backend, decisões, registro.
+- `frontend/CLAUDE.md` — regras do front (carrega ao mexer em `frontend/`).
+- `.claude/rules/` — convenções por caminho (backend, banco, testes do front), carregadas sob demanda.
+- `.claude/agents/` — `backend-gap-filler`, `frontend-builder`, `frontend-tester`, `security-reviewer`.
+- `.claude/skills/` — `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
 
 Fluxo por tela: lacuna? → `backend-gap-filler` → `frontend-builder` → `frontend-tester` →
 `security-reviewer` (telas com escrita/restrição) → `checagem-pre-commit` → commit.
-Regras do frontend: `frontend/CLAUDE.md`.
 
 ## Estrutura
 
 ```
-backend/
-  KhazObras.slnx
-  src/KhazObras.Api            # Program.cs (todos os endpoints), Validation/
-  src/KhazObras.Application    # Services, DTOs, Validators, Abstractions
-  src/KhazObras.Domain         # Entidades, enums
-  src/KhazObras.Infrastructure # Repositories (Dapper), Storage (R2), Persistence
-  tests/KhazObras.Security.Tests
-database/schema/001..007_*.sql # scripts versionados (007 = visivel_cliente no financeiro)
-docs/                          # SPEC, PLAN-*
-frontend/                      # React + Vite + TS (esqueleto); ver frontend/CLAUDE.md
+backend/src/KhazObras.{Api,Application,Domain,Infrastructure}   # Program.cs tem todos os endpoints
+backend/tests/KhazObras.Security.Tests                           # inclui Http/ (WebApplicationFactory)
+backend/tools/ResetMasterPassword
+database/schema/001..007_*.sql                                   # nunca editar script já aplicado
+frontend/                                                        # React + Vite + TS
+docs/  scripts/  .githooks/
 ```
 
 ## Comandos
 
 ```bash
-cd backend
-dotnet build
-dotnet test tests/KhazObras.Security.Tests
-dotnet run --project src/KhazObras.Api     # http://localhost:5285
-curl http://localhost:5285/healthcheck
-psql -d khazobras_db
+brew services start postgresql@16                              # Postgres local
+cd backend && dotnet build && dotnet test tests/KhazObras.Security.Tests
+cd backend && dotnet run --project src/KhazObras.Api           # API em :5285 (/healthcheck)
+cd backend && dotnet run --project tools/ResetMasterPassword   # redefine a senha do master
+cd frontend && npm run dev                                     # front em :5173 (Node 20.19+/22.12+)
+cd frontend && npm run lint && npm run typecheck && npm test
+bash scripts/instalar-hooks.sh                                 # uma vez por clone
 ```
 
-Postgres local via Homebrew: `brew services start postgresql@16`.
+## Plano vivo e trava de commit
 
-Ambiente local completo (um terminal cada; Node 20.19+ ou 22.12+ para o front):
-
-```bash
-brew services start postgresql@16
-cd backend && dotnet run --project src/KhazObras.Api          # API em :5285
-cd frontend && npm run dev                                     # front em :5173
-cd backend && dotnet run --project tools/ResetMasterPassword   # redefine a senha do master (pede no terminal)
-cd frontend && npm run lint && npm run typecheck && npm test   # checagem do front
-```
-
-## Regras por área (`.claude/rules/`)
-
-Carregadas só ao mexer nos caminhos indicados:
-- `backend-convencoes.md` (`backend/**`) — convenções de API/código e armadilhas já pagas.
-- `banco-de-dados.md` (`database/**` e Infrastructure) — schema, enums, SQL.
-- Frontend: `frontend/CLAUDE.md` (carrega ao trabalhar em `frontend/`).
+Commit que mexe em telas (`frontend/src/features/**`, exceto testes), `AppRoutes.tsx`, `Program.cs` ou
+`database/schema/**` é bloqueado pelo hook se `docs/PLAN-09-frontend.md` não estiver junto.
+**Se bloquear, o agente resolve sozinho, sem esperar o usuário**: atualiza status/lacunas/decisões a partir
+do `git diff --cached`, roda `cd frontend && npm run plano:registro -- --escrever` (uma linha por branch),
+`git add docs/PLAN-09-frontend.md` e commita de novo. `SKIP_PLAN_CHECK=1` ou branch `wip/*` só se o
+usuário pedir. Antes do merge: `plano:registro -- --escrever` com tudo commitado + commit `docs: registro`.
 
 ## Regras de segurança (inegociáveis — dados extremamente sensíveis)
 
-1. **Nenhum segredo em arquivo versionado.** Segredos só em `appsettings.Development.json` (gitignored) ou variáveis de ambiente. `appsettings.json` contém apenas Logging + AllowedHosts.
-2. **Antes de todo commit**: `git diff --cached` e um grep por segredos (chaves R2, JWT secret, senhas, hashes). Se achar algo, parar.
+1. **Nenhum segredo em arquivo versionado.** Só em `appsettings.Development.json` (gitignored) ou variáveis
+   de ambiente. `appsettings.json` contém apenas Logging + AllowedHosts.
+2. **Antes de todo commit**: `git diff --cached` + grep por segredos (chaves R2, JWT secret, senhas, hashes).
+   Achou algo: parar.
 3. Sem seed com hash de senha no repositório. O primeiro master é criado fora do git.
-4. Endpoint com escopo de obra → sempre `ObraAccessService.EnsureAccessAsync`; `UnauthorizedAccessException` → `Results.Forbid()`.
-5. Módulos internos (fornecedores, prestadores, estoque, pipeline) → `RequireAuthorization("AdminOrMaster")`. Criação de usuários e log de auditoria → `MasterOnly`.
-6. Cliente é somente leitura; única escrita permitida: aprovar medição da própria obra.
-7. Todo upload passa por `FileUploadValidator` (10 MB, extensão + MIME + magic bytes). Downloads sempre pela API autenticada, nunca URL pública do bucket.
-8. Filtrar também por dono no SQL (defense in depth), ex.: `WHERE id = @Id AND user_id = @UserId`.
-9. CORS configurado (política `Frontend` no `Program.cs`): só a origem exata do front. Dev: `http://localhost:5173` por padrão; produção: `Cors__AllowedOrigins__0` (variável de ambiente). Nunca `AllowAnyOrigin`.
-10. Mudou regra de acesso → adicionar teste em `KhazObras.Security.Tests`. Testes que passam pelo pipeline HTTP real (403/401, CORS) ficam em `tests/KhazObras.Security.Tests/Http/` (`WebApplicationFactory`, config por variáveis de ambiente com valores falsos; não tocam no banco nem no R2).
+4. Endpoint com escopo de obra → `ObraAccessService.EnsureAccessAsync`; `UnauthorizedAccessException` →
+   `Results.Forbid()`.
+5. Módulos internos (fornecedores, prestadores, estoque, pipeline) → `RequireAuthorization("AdminOrMaster")`.
+   Criação de usuários e auditoria → `MasterOnly`.
+6. Cliente é somente leitura; única escrita: aprovar medição da própria obra.
+7. Cliente nunca vê custo real/margem — só valores previstos/contratados (DTO separado no backend).
+8. Todo upload passa por `FileUploadValidator` (10 MB, extensão + MIME + magic bytes). Downloads sempre pela
+   API autenticada, nunca URL pública do bucket.
+9. Filtrar também por dono no SQL (defense in depth): `WHERE id = @Id AND user_id = @UserId`.
+10. CORS só para a origem exata do front (política `Frontend`; dev `http://localhost:5173`, produção
+    `Cors__AllowedOrigins__0`). Nunca `AllowAnyOrigin`.
+11. Mudou regra de acesso → teste em `KhazObras.Security.Tests` (pipeline HTTP real em `Http/`).
 
-Lacunas de segurança aceitas no V1: sem rate limit em `/auth/login`; JWT sem revogação/refresh (8h); `.txt` e ZIP renomeado para `.docx/.xlsx` com checagem fraca.
+Lacunas aceitas no V1: sem rate limit em `/auth/login`; JWT sem revogação/refresh (8h); `.txt` e ZIP
+renomeado para `.docx/.xlsx` com checagem fraca.
 
-## Notas para o frontend
+## Lacunas do backend
 
-- Login: `POST /auth/login` → `{ token, expiresAt, userId, name, email, role }`. Enviar `Authorization: Bearer <token>`. Roles: `Master`, `Admin`, `Client`.
-- Enums: **respostas** em PascalCase (`"MaoDeObra"`, `"PendingApproval"`); **requests** aceitam snake_case (`"mao_de_obra"`).
-- Visão cliente: Hub, Dashboard, Cronograma (sem Curva S), Fechamento (aprovação), Financeiro (somente leitura), Contratos, Relatório fotográfico, Relatório mensal, Projetos. Ver SPEC §5.
-- Visão admin/master: navbar do SPEC §6.
-- Cliente nunca vê custo real/margem — apenas valores previstos/contratados.
-
-## Lacunas do backend (o front vai esbarrar nelas)
-
-O SPEC não está 100% coberto. Faltam, e provavelmente exigem script `007_*.sql`:
-- Contratos e pagamentos (endpoints)
-- Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras
-- Cronograma: atualização de etapas e campo de % concluído
-- Categorias (CRUD)
-- Empresa / equipe (Administração)
-- PUT/PATCH/DELETE na maioria dos módulos
-- `GET /users/{id}`, desativar usuário
-- Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster; o de anexos financeiros já é liberado ao cliente para lançamentos `visivel_cliente`)
-- Financeiro do cliente: parcelas/pagamentos do contrato (depende do módulo Contratos); o resto da entrega 007 já existe
-- Envio real de e-mail / WhatsApp nas notificações
-- PDF consolidado (Fase 10)
-- Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta, não plugada)
-
-Ao encontrar uma dessas lacunas, implementar o endpoint no backend seguindo as convenções acima, antes de construir a tela.
+O backend não cobre todo o SPEC. A lista e quais telas cada lacuna bloqueia estão no
+`docs/PLAN-09-frontend.md`. Ao esbarrar numa, implementar no backend (`backend-gap-filler`) antes da tela.
 
 ## Decisão em aberto
 
-Possível transformação em SaaS (multi-tenant, nome neutro). Adiada até depois do frontend — não iniciar sem o usuário pedir.
+Possível transformação em SaaS (multi-tenant, nome neutro). Adiada até depois do frontend — não iniciar
+sem o usuário pedir.

@@ -26,6 +26,6 @@ description: Checklist para criar ou completar um endpoint/módulo do backend Kh
 8. **Testes** (`KhazObras.Security.Tests`): validator (válido e inválido), regra de acesso (cliente de
    outra obra → 403), transição de estado ilegal → 409.
 9. **Verificar**: `dotnet build` e `dotnet test tests/KhazObras.Security.Tests`.
-10. **Documentar**: remover a lacuna da lista no `CLAUDE.md` e atualizar `docs/PLAN-00-roadmap.md`;
+10. **Documentar**: remover a lacuna da lista em `docs/PLAN-09-frontend.md` e atualizar a tela desbloqueada;
     informar ao front o contrato final (rota, request, response, códigos).
 11. Rodar a skill `checagem-pre-commit` antes de commitar.

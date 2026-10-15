@@ -1,6 +1,6 @@
 ---
 name: backend-gap-filler
-description: Implementa no backend .NET um endpoint/módulo que falta (ver "Lacunas do backend" no CLAUDE.md) seguindo as convenções do projeto, com validação, controle de acesso e teste de segurança. Use ANTES de construir a tela do front que depende dele.
+description: Implementa no backend .NET um endpoint/módulo que falta (ver "Lacunas de backend" no docs/PLAN-09-frontend.md) seguindo as convenções do projeto, com validação, controle de acesso e teste de segurança. Use ANTES de construir a tela do front que depende dele.
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 ---
@@ -37,7 +37,7 @@ Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da ra
 
 Liste: arquivos criados/alterados, script SQL novo (se houver), contrato final do endpoint
 (rota, método, request, response, códigos) para o front consumir, e o resultado de build/test.
-Atualize `docs/PLAN-09-frontend.md` (tela que fica desbloqueada) e remova a lacuna do `CLAUDE.md` raiz.
+Atualize `docs/PLAN-09-frontend.md` (tela que fica desbloqueada) e remova a lacuna da lista desse arquivo.
 Não faça commit; o usuário decide.
 
 Se um commit for bloqueado pelo hook do PLAN-09, resolva sozinho: atualize o plano, rode
