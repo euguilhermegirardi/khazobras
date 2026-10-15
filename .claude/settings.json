@@ -7,7 +7,11 @@
       "Read(./database/seed/**)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
-      "Bash(git commit --no-verify:*)"
+      "Bash(git commit --no-verify:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git push -u origin main:*)",
+      "Bash(git push origin HEAD:main:*)",
+      "Bash(gh pr merge:*)"
     ],
     "allow": [
       "Bash(npm run lint:*)",
