@@ -101,6 +101,8 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("MasterOnly", policy => policy.RequireRole("Master"));
     options.AddPolicy("AdminOrMaster", policy => policy.RequireRole("Admin", "Master"));
+    // Aprovacao de medicao e ato do cliente (SPEC secao 5 item 4 e secao 8). Admin/Master nao aprovam no lugar dele.
+    options.AddPolicy("ClientOnly", policy => policy.RequireRole("Client"));
 });
 
 // CORS: libera SOMENTE a(s) origem(ns) exata(s) do frontend. Nunca AllowAnyOrigin.
@@ -409,9 +411,9 @@ app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal princ
         return Results.Conflict(new { message = ex.Message });
     }
 })
-.RequireAuthorization()
+.RequireAuthorization("ClientOnly")
 .WithName("ApproveMedicao")
-.WithDescription("Aprova medição (transição: pending_approval → approved). Realizado pelo cliente");
+.WithDescription("Aprova medição (transição: pending_approval → approved). Somente o cliente da obra; Admin/Master recebem 403");
 
 app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceRequest request, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

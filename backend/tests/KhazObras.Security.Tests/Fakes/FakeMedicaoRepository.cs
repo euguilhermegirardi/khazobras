@@ -30,31 +30,35 @@ public sealed class FakeMedicaoRepository : IMedicaoRepository
         return Task.FromResult<IReadOnlyList<Medicao>>(medicoes);
     }
 
-    public Task ApproveAsync(Guid id, Guid approvedByUserId, DateTime approvedAt)
+    // Espelha o UPDATE condicional do repositorio real: so transiciona a partir de pending_approval.
+    public Task<bool> ApproveAsync(Guid id, Guid approvedByUserId, DateTime approvedAt)
     {
         var medicao = _medicoes.FirstOrDefault(m => m.Id == id);
-        if (medicao != null)
+        if (medicao is null || medicao.Status != MedicaoStatus.PendingApproval)
         {
-            medicao.Status = MedicaoStatus.Approved;
-            medicao.ApprovedAt = approvedAt;
-            medicao.ApprovedByUserId = approvedByUserId;
-            medicao.UpdatedAt = DateTime.UtcNow;
+            return Task.FromResult(false);
         }
 
-        return Task.CompletedTask;
+        medicao.Status = MedicaoStatus.Approved;
+        medicao.ApprovedAt = approvedAt;
+        medicao.ApprovedByUserId = approvedByUserId;
+        medicao.UpdatedAt = DateTime.UtcNow;
+        return Task.FromResult(true);
     }
 
-    public Task IssueInvoiceAsync(Guid id, string nfNumber, DateTime nfIssuedAt)
+    // Espelha o UPDATE condicional do repositorio real: so transiciona a partir de approved.
+    public Task<bool> IssueInvoiceAsync(Guid id, string nfNumber, DateTime nfIssuedAt)
     {
         var medicao = _medicoes.FirstOrDefault(m => m.Id == id);
-        if (medicao != null)
+        if (medicao is null || medicao.Status != MedicaoStatus.Approved)
         {
-            medicao.Status = MedicaoStatus.InvoiceIssued;
-            medicao.NfNumber = nfNumber;
-            medicao.NfIssuedAt = nfIssuedAt;
-            medicao.UpdatedAt = DateTime.UtcNow;
+            return Task.FromResult(false);
         }
 
-        return Task.CompletedTask;
+        medicao.Status = MedicaoStatus.InvoiceIssued;
+        medicao.NfNumber = nfNumber;
+        medicao.NfIssuedAt = nfIssuedAt;
+        medicao.UpdatedAt = DateTime.UtcNow;
+        return Task.FromResult(true);
     }
 }

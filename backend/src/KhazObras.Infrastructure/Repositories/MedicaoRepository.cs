@@ -117,7 +117,7 @@ public sealed class MedicaoRepository : IMedicaoRepository
         return medicoes;
     }
 
-    public async Task ApproveAsync(Guid id, Guid approvedByUserId, DateTime approvedAt)
+    public async Task<bool> ApproveAsync(Guid id, Guid approvedByUserId, DateTime approvedAt)
     {
         using var connection = _connectionFactory.CreateConnection();
 
@@ -125,18 +125,20 @@ public sealed class MedicaoRepository : IMedicaoRepository
             UPDATE medicoes
             SET status = 'approved'::medicao_status, approved_at = @ApprovedAt,
                 approved_by_user_id = @ApprovedByUserId, updated_at = @UpdatedAt
-            WHERE id = @Id";
+            WHERE id = @Id AND status = 'pending_approval'::medicao_status";
 
-        await connection.ExecuteAsync(sql, new
+        var affected = await connection.ExecuteAsync(sql, new
         {
             Id = id,
             ApprovedAt = approvedAt,
             ApprovedByUserId = approvedByUserId,
             UpdatedAt = DateTime.UtcNow
         });
+
+        return affected == 1;
     }
 
-    public async Task IssueInvoiceAsync(Guid id, string nfNumber, DateTime nfIssuedAt)
+    public async Task<bool> IssueInvoiceAsync(Guid id, string nfNumber, DateTime nfIssuedAt)
     {
         using var connection = _connectionFactory.CreateConnection();
 
@@ -144,15 +146,17 @@ public sealed class MedicaoRepository : IMedicaoRepository
             UPDATE medicoes
             SET status = 'invoice_issued'::medicao_status, nf_number = @NfNumber,
                 nf_issued_at = @NfIssuedAt, updated_at = @UpdatedAt
-            WHERE id = @Id";
+            WHERE id = @Id AND status = 'approved'::medicao_status";
 
-        await connection.ExecuteAsync(sql, new
+        var affected = await connection.ExecuteAsync(sql, new
         {
             Id = id,
             NfNumber = nfNumber,
             NfIssuedAt = nfIssuedAt,
             UpdatedAt = DateTime.UtcNow
         });
+
+        return affected == 1;
     }
 
     private static async Task<IEnumerable<MedicaoItem>> GetItensAsync(System.Data.IDbConnection connection, Guid medicaoId)

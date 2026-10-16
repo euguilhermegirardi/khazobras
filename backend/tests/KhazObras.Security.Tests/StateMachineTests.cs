@@ -7,6 +7,10 @@ namespace KhazObras.Security.Tests;
 /// Tests for state machine transitions:
 /// - Medicao: PendingApproval → Approved → InvoiceIssued
 /// - RelatorioMensal: draft → published
+///
+/// Atencao: o "approve" aqui chama o repositorio direto (com um userId qualquer) so para testar a maquina
+/// de estados. QUEM pode aprovar (apenas o cliente da obra) e testado no pipeline HTTP em
+/// Http/ApproveMedicaoAuthorizationTests.
 /// </summary>
 public sealed class StateMachineTests : IntegrationTestBase
 {
