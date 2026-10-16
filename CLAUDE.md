@@ -12,10 +12,11 @@ frontend React em construção. O usuário (Guilherme) fala português — respo
 - `frontend/CLAUDE.md` — regras do front (carrega ao mexer em `frontend/`).
 - `.claude/rules/` — convenções por caminho (backend, banco, componentes e testes do front), sob demanda.
 - `.claude/agents/` — `backend-gap-filler`, `frontend-builder`, `frontend-tester`, `security-reviewer`.
-- `.claude/skills/` — `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
+- `.claude/skills/` — `ciclo-tela`, `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
 
-Fluxo por tela: lacuna? → `backend-gap-filler` → `frontend-builder` → `frontend-tester` →
-`security-reviewer` (telas com escrita/restrição) → `checagem-pre-commit` → commit.
+Fluxo por tela (skill `ciclo-tela`, a sessão principal orquestra): lacuna? → `backend-gap-filler` →
+`frontend-builder` → `frontend-tester` ⟲ (falhas voltam ao builder, máx. 3 rodadas, depois escala ao usuário)
+→ `security-reviewer` (telas com escrita/restrição) → `checagem-pre-commit` → PR.
 
 ## Estrutura
 
