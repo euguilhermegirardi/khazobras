@@ -29,15 +29,17 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
 6. **Formulários** (admin): React Hook Form + Zod, espelhando as regras do validator do backend;
    erros do servidor (400) mapeados nos campos.
 7. **Visão cliente**: linguagem simples, sem termos técnicos, só valores previstos/contratados.
-8. **Testes**: acionar `frontend-tester` (contexto separado) seguindo `.claude/rules/frontend-testes.md`.
-   Mínimo: 4 estados + teste de papel. Sem subagente disponível, escreva os testes e diga isso na entrega.
-   Se a tela chama endpoints novos, ajuste os testes antigos que renderizam essa rota (MSW falha em
-   chamada sem handler).
+8. **Testes**: são do `frontend-tester` (contexto separado), acionado pelo `ciclo-tela`; falhas voltam
+   para você corrigir o código, nunca o teste. Mínimo: 4 estados + teste de papel
+   (`.claude/rules/frontend-testes.md`). Fora do ciclo e sem subagente disponível, escreva os testes e diga
+   isso na entrega. Se a tela chama endpoints novos, ajuste os testes antigos que renderizam essa rota
+   (MSW falha em chamada sem handler).
 9. **Verificar**: `npm run lint && npm run typecheck && npm test`.
 10. **Plano**: atualizar `docs/PLAN-09-frontend.md`: status da tela, lacunas e decisões à mão; linha do
     Registro com `cd frontend && npm run plano:registro -- --escrever`. O hook de commit exige isso.
     Se o hook bloquear, resolva sozinho (não espere o usuário); `SKIP_PLAN_CHECK=1` só se ele pedir.
-11. Rodar `checagem-pre-commit` e, em telas com ação de escrita ou restrição, `security-reviewer`.
-12. **Fechamento da branch** (antes do merge/PR): com tudo commitado, `cd frontend && npm run plano:registro -- --escrever`
+11. Rodar `checagem-pre-commit` e, em telas com ação de escrita ou restrição, `security-reviewer`
+    (no `ciclo-tela`, o maestro faz isso).
+12. **Fechamento da branch** (no `ciclo-tela`, o maestro faz isso) (antes do merge/PR): com tudo commitado, `cd frontend && npm run plano:registro -- --escrever`
     (atualiza a linha desta branch com todos os commits) e commit `docs: registro`. Depois: push da branch e
     PR para a `main` (`gh pr create`). Nunca commitar, mergear ou dar push na `main`; o merge é do usuário.
