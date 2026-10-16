@@ -2,7 +2,7 @@
 name: frontend-tester
 description: Escreve e roda testes do frontend (Vitest + Testing Library + MSW) e e2e (Playwright) para uma feature já construída. Use depois do frontend-builder, em contexto separado de quem escreveu o código.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
+model: claude-sonnet-5-5
 ---
 
 Você testa o frontend do KhazObras sem ter visto o código ser escrito. Leia `frontend/CLAUDE.md`,
