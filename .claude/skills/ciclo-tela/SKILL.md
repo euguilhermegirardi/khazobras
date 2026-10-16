@@ -60,6 +60,14 @@ Tela com ação de escrita ou restrição de papel → `security-reviewer` sobre
 (`git diff main...feat/<tela>`). Achado → builder modo corrigir com o achado + reteste do tester (passo 2),
 contando nas mesmas 3 rodadas.
 
+## Relatório da manhã (sempre, entregue ou parado)
+
+Ao terminar **ou** parar, escreva `docs/relatorios/AAAA-MM-DD-<tela>.md` a partir de `docs/relatorios/MODELO.md`
+(métricas no cabeçalho + seções) e commite na branch da tela. É a primeira coisa que o usuário lê de manhã:
+comece por "Em uma linha" e "Precisa de você"; não cole transcript. Anote ao longo do ciclo (rodadas, falhas
+por tipo, decisões tomadas sem o SPEC dizer, o que travou) para não reconstruir de memória no fim.
+Parou? O relatório explica onde, por quê e o que falta decidir; a branch fica com tudo o que foi feito.
+
 ## 5. Fechar
 
 1. Suíte verde: `cd frontend && npm run lint && npm run typecheck && npm test`.
@@ -68,5 +76,5 @@ contando nas mesmas 3 rodadas.
    `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`.
 4. Push da branch e `gh pr create` para a `main`. Na descrição: o que a tela faz, endpoints consumidos,
    resultado da suíte e do e2e, capturas da tela (claro, escuro, mobile), **histórico do loop** (rodadas, falhas encontradas e como foram
-   corrigidas), achados do security-reviewer, pendências.
+   corrigidas), achados do security-reviewer, pendências e o link para o relatório da manhã.
 5. Nunca merge, push ou commit na `main`; nunca `--force`, `--no-verify` ou `SKIP_PLAN_CHECK=1`. O merge é do usuário.
