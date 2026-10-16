@@ -85,7 +85,7 @@ public sealed class IntegrationWorkflowTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task MedicaoApprove_FromApprovedStatus_ShouldBeIdempotent()
+    public async Task MedicaoApprove_FromApprovedStatus_ShouldBeRejectedAndKeepApproved()
     {
         // Arrange
         var admin = await CreateAdminUserAsync();
@@ -96,8 +96,9 @@ public sealed class IntegrationWorkflowTests : IntegrationTestBase
 
         await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, DateTime.UtcNow);
 
-        // Act & Assert: Approve again - should work (no state validation in fake repo)
-        await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, DateTime.UtcNow);
+        // Act & Assert: segunda aprovacao nao afeta linha (UPDATE condicional) e o status permanece Approved
+        var secondApproval = await MedicaoRepository.ApproveAsync(medicao.Id, admin.Id, DateTime.UtcNow);
+        Assert.False(secondApproval);
         var result = await MedicaoRepository.GetByIdAsync(medicao.Id);
 
         Assert.NotNull(result);

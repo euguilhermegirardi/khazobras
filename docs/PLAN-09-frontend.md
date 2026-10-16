@@ -27,7 +27,7 @@
 | # | Tela | Backend pronto? | Status | Branch / observação |
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
-| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | ⬜ | fluxo crítico; teste de papel obrigatório |
+| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | ⬜ | fluxo crítico; teste de papel obrigatório. Aprovar = só papel `Client` (403 p/ Admin/Master); backend em `feat/backend-aprovacao-cliente`, **não compilado/testado** (validar no Mac) |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ⬜ | |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
@@ -47,6 +47,7 @@ e flag `visivel_cliente`), Relatórios. Detalhar aqui quando iniciar.
 
 Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (provavelmente com script `008_*.sql`+):
 
+- `MedicaoResponse` devolve `ApprovedByUserId` ao cliente (achado B3): criar DTO reduzido para a visão cliente, como no Financeiro — antes/junto da tela Fechamento
 - Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
 - Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
 - Cronograma: atualização de etapas e campo de % concluído — bloqueia Cronograma completo
@@ -88,8 +89,16 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Atualização do plano é travada no commit (hook versionado) e o Registro é gerado do git (`plano:registro`).
 - Testes de rota passam pelo `renderApp` (helper) com MSW; endpoint não stubado derruba o teste.
 
+- **Aprovação de medição é do cliente** (decisão do dono; SPEC §5 item 4 e §8): o engenheiro gera, o cliente revisa e
+  aprova para emitir a NF. `POST /medicoes/{id}/approve` usa a política `ClientOnly` (só `Client`; Admin/Master = 403)
+  e `EnsureAccessAsync` (cliente de outra obra = 403). O `UPDATE` de aprovação e o de emissão de NF agora são condicionais
+  (`status = 'pending_approval'` / `'approved'`) e devolvem se afetaram linha; 0 linhas = 409 (corrige a corrida do B2).
+  Testes novos: `Http/ApproveMedicaoAuthorizationTests`. **Falta validar no Mac** (sessão de nuvem sem .NET):
+  `cd backend && dotnet build && dotnet test tests/KhazObras.Security.Tests`.
+
 ## Registro
 
+- 2026-10-16 — `feat/backend-aprovacao-cliente`: Backend: aprovação de medição só pelo cliente (política `ClientOnly`), UPDATE condicional por status (409), testes HTTP. Pendente: build/test no Mac; B3 (DTO reduzido ao cliente).
 - 2026-10-16 — `chore/design-somente-web`: Design check is desktop-only (SPEC §10): drop 390px requirement, use 1440/1280. Arquivos: infra (3), docs (1), front (1).
 - 2026-10-16 — `chore/relatorio-manha`: Morning report: template with metrics, written by ciclo-tela on finish or stop. Arquivos: infra (1), outros (1), docs (1).
 - 2026-10-16 — `chore/design-sistema`: Design reference: anonymize CREA and invoice numbers; Design system from the engineer's prototype: theme, app shell, base components, design guide, reference captures, design-reviewer in the loop. Arquivos: infra (8), outros (1), docs (18), front (15), front/app (5), features/obras (3).

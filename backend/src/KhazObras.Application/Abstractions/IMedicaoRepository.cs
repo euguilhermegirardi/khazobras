@@ -7,6 +7,9 @@ public interface IMedicaoRepository
     Task<Medicao> CreateAsync(Medicao medicao);
     Task<Medicao?> GetByIdAsync(Guid id);
     Task<IReadOnlyList<Medicao>> GetByObraIdAsync(Guid obraId);
-    Task ApproveAsync(Guid id, Guid approvedByUserId, DateTime approvedAt);
-    Task IssueInvoiceAsync(Guid id, string nfNumber, DateTime nfIssuedAt);
+    /// <summary>Aprova so se o status atual for pending_approval. Retorna false se nenhuma linha foi afetada.</summary>
+    Task<bool> ApproveAsync(Guid id, Guid approvedByUserId, DateTime approvedAt);
+
+    /// <summary>Emite a NF so se o status atual for approved. Retorna false se nenhuma linha foi afetada.</summary>
+    Task<bool> IssueInvoiceAsync(Guid id, string nfNumber, DateTime nfIssuedAt);
 }
