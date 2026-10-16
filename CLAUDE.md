@@ -8,6 +8,7 @@ frontend React em construção. O usuário (Guilherme) fala português — respo
 - `docs/SPEC.md` — o quê (funcionalidades, perfis, modelo de dados).
 - `docs/PLAN-00-roadmap.md` — fases e status. `PLAN-01`/`PLAN-02`: histórico de fases concluídas
   (consultar só para entender o porquê de uma decisão).
+- `docs/design/` — referência visual (HTML anonimizado do engenheiro): aparência e padrões, não funcionalidades.
 - `docs/PLAN-09-frontend.md` — **plano vivo**: status por tela, lacunas do backend, decisões, registro.
 - `frontend/CLAUDE.md` — regras do front (carrega ao mexer em `frontend/`).
 - `.claude/rules/` — convenções por caminho (backend, banco, componentes e testes do front), sob demanda.
