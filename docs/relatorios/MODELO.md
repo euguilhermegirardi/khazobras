@@ -28,7 +28,7 @@ para decidir. "Nada" se não houver.>
 ## O que foi entregue
 - O que a tela faz (para o cliente/admin, em linguagem de produto)
 - Endpoints consumidos
-- Capturas: claro, escuro, mobile (caminhos ou anexos no PR)
+- Capturas: claro, escuro, notebook 1280px (caminhos ou anexos no PR)
 
 ## Como foi o loop
 | Rodada | Quem achou | Falha (tipo) | Como foi corrigida |
