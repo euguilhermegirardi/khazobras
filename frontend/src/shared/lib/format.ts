@@ -4,3 +4,10 @@ const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: '
 export function formatCurrency(value: number): string {
   return currency.format(value)
 }
+
+const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 })
+
+/** Quantidades (até 3 casas) para exibição. */
+export function formatQuantity(value: number): string {
+  return decimal.format(value)
+}

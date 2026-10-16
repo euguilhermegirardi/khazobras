@@ -18,3 +18,13 @@ export function toDateOnly(date: Date): string {
   const day = String(date.getDate()).padStart(2, '0')
   return `${date.getFullYear()}-${month}-${day}`
 }
+
+/** "junho de 2025" a partir de um DATE "yyyy-MM-dd" (competência de uma medição). */
+export function formatMonthYear(value: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(parseDateOnly(value))
+}
+
+/** Data (dd/MM/aaaa) de um instante com fuso (TIMESTAMPTZ, ISO 8601), no fuso do navegador. */
+export function formatTimestamp(value: string): string {
+  return new Intl.DateTimeFormat('pt-BR').format(new Date(value))
+}

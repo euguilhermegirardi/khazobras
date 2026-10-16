@@ -27,7 +27,7 @@
 | # | Tela | Backend pronto? | Status | Branch / observação |
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
-| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | ⬜ | fluxo crítico; teste de papel obrigatório |
+| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | 🟨 | `feat/fechamento`: telas construídas (lista + itens + aprovar com confirmação); faltam testes (tester), revisão de design e segurança. Fluxo crítico; teste de papel obrigatório |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ⬜ | |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
@@ -50,6 +50,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
 - Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
 - Cronograma: atualização de etapas e campo de % concluído — bloqueia Cronograma completo
+- Medições (achados do `feat/fechamento`, para o `backend-gap-filler`): (1) `MedicaoResponse` devolve `ApprovedByUserId`
+  (id interno) ao cliente — criar DTO reduzido para o cliente, como no Financeiro; o front já ignora o campo.
+  (2) `POST /medicoes/{id}/approve` aceita qualquer papel com acesso à obra (Admin/Master também aprovam); SPEC §5/§8 diz
+  que a aprovação é do cliente — decidir e cobrir em `Security.Tests`. (3) `GET /obras/{id}/medicoes` não é paginado
+  (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo); a tela mostra só
+  descrição, tipo, quantidade, valor unitário e total.
 - Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
@@ -86,8 +92,14 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Atualização do plano é travada no commit (hook versionado) e o Registro é gerado do git (`plano:registro`).
 - Testes de rota passam pelo `renderApp` (helper) com MSW; endpoint não stubado derruba o teste.
 
+- Fechamento (cliente): rota `/cliente/obras/:obraId/fechamento` (lista) e `.../fechamento/:medicaoId` (itens + aprovar).
+  Aprovação pede confirmação inline (`Alert` + botões), porque o shadcn `alert-dialog` não pôde ser instalado na nuvem
+  (pendência: trocar por `AlertDialog` quando o registro estiver acessível). Status em linguagem simples: "Aguardando sua
+  aprovação" / "Aprovada" / "Nota fiscal emitida". Tipo `Medicao` omite `approvedByUserId` de propósito.
+
 ## Registro
 
+- 2026-10-16 — `feat/fechamento`: (sem commits ainda; descreva o que está staged).
 - 2026-10-16 — `chore/relatorio-manha`: Morning report: template with metrics, written by ciclo-tela on finish or stop. Arquivos: infra (1), outros (1), docs (1).
 - 2026-10-16 — `chore/design-sistema`: Design reference: anonymize CREA and invoice numbers; Design system from the engineer's prototype: theme, app shell, base components, design guide, reference captures, design-reviewer in the loop. Arquivos: infra (8), outros (1), docs (18), front (15), front/app (5), features/obras (3).
 - 2026-10-16 — `chore/design-referencia`: Design reference: anonymized prototype HTML in docs/design. Arquivos: outros (1), docs (2).
