@@ -1,0 +1,238 @@
+{
+  "GET /obras/a1/medicoes": [
+    {
+      "id": "m3",
+      "obraId": "a1",
+      "etapaId": null,
+      "numero": 3,
+      "competencia": "2026-03-01",
+      "valorTotal": 13416.5,
+      "status": "PendingApproval",
+      "approvedAt": null,
+      "nfNumber": null,
+      "nfIssuedAt": null,
+      "createdAt": "2026-03-28T12:00:00Z",
+      "itens": [
+        {
+          "id": "i31",
+          "tipo": "MaoDeObra",
+          "descricao": "Alvenaria do pavimento térreo",
+          "quantidade": 120.5,
+          "valorUnitario": 45,
+          "valorTotal": 5422.5
+        },
+        {
+          "id": "i32",
+          "tipo": "MaoDeObra",
+          "descricao": "Reboco interno — sala e cozinha",
+          "quantidade": 86,
+          "valorUnitario": 32,
+          "valorTotal": 2752
+        },
+        {
+          "id": "i33",
+          "tipo": "Material",
+          "descricao": "Cimento CP-II 50 kg",
+          "quantidade": 80,
+          "valorUnitario": 38.9,
+          "valorTotal": 3112.0
+        },
+        {
+          "id": "i34",
+          "tipo": "Material",
+          "descricao": "Areia média (m³)",
+          "quantidade": 12,
+          "valorUnitario": 140,
+          "valorTotal": 1680
+        },
+        {
+          "id": "i35",
+          "tipo": "Equipamento",
+          "descricao": "Betoneira 400 L (diária)",
+          "quantidade": 5,
+          "valorUnitario": 90,
+          "valorTotal": 450
+        }
+      ]
+    },
+    {
+      "id": "m2",
+      "obraId": "a1",
+      "etapaId": null,
+      "numero": 2,
+      "competencia": "2026-02-01",
+      "valorTotal": 7950.0,
+      "status": "Approved",
+      "approvedAt": "2026-03-02T15:00:00Z",
+      "nfNumber": null,
+      "nfIssuedAt": null,
+      "createdAt": "2026-02-28T12:00:00Z",
+      "itens": [
+        {
+          "id": "i21",
+          "tipo": "MaoDeObra",
+          "descricao": "Fundação — concretagem",
+          "quantidade": 40,
+          "valorUnitario": 120,
+          "valorTotal": 4800
+        },
+        {
+          "id": "i22",
+          "tipo": "Material",
+          "descricao": "Aço CA-50 8 mm (barra)",
+          "quantidade": 60,
+          "valorUnitario": 52.5,
+          "valorTotal": 3150.0
+        }
+      ]
+    },
+    {
+      "id": "m1",
+      "obraId": "a1",
+      "etapaId": null,
+      "numero": 1,
+      "competencia": "2026-01-01",
+      "valorTotal": 4290,
+      "status": "InvoiceIssued",
+      "approvedAt": "2026-02-02T15:00:00Z",
+      "nfNumber": "000123",
+      "nfIssuedAt": "2026-02-10T15:00:00Z",
+      "createdAt": "2026-01-28T12:00:00Z",
+      "itens": [
+        {
+          "id": "i11",
+          "tipo": "MaoDeObra",
+          "descricao": "Locação e escavação",
+          "quantidade": 30,
+          "valorUnitario": 95,
+          "valorTotal": 2850
+        },
+        {
+          "id": "i12",
+          "tipo": "Equipamento",
+          "descricao": "Retroescavadeira (hora)",
+          "quantidade": 8,
+          "valorUnitario": 180,
+          "valorTotal": 1440
+        }
+      ]
+    }
+  ],
+  "GET /medicoes/m3": {
+    "id": "m3",
+    "obraId": "a1",
+    "etapaId": null,
+    "numero": 3,
+    "competencia": "2026-03-01",
+    "valorTotal": 13416.5,
+    "status": "PendingApproval",
+    "approvedAt": null,
+    "nfNumber": null,
+    "nfIssuedAt": null,
+    "createdAt": "2026-03-28T12:00:00Z",
+    "itens": [
+      {
+        "id": "i31",
+        "tipo": "MaoDeObra",
+        "descricao": "Alvenaria do pavimento térreo",
+        "quantidade": 120.5,
+        "valorUnitario": 45,
+        "valorTotal": 5422.5
+      },
+      {
+        "id": "i32",
+        "tipo": "MaoDeObra",
+        "descricao": "Reboco interno — sala e cozinha",
+        "quantidade": 86,
+        "valorUnitario": 32,
+        "valorTotal": 2752
+      },
+      {
+        "id": "i33",
+        "tipo": "Material",
+        "descricao": "Cimento CP-II 50 kg",
+        "quantidade": 80,
+        "valorUnitario": 38.9,
+        "valorTotal": 3112.0
+      },
+      {
+        "id": "i34",
+        "tipo": "Material",
+        "descricao": "Areia média (m³)",
+        "quantidade": 12,
+        "valorUnitario": 140,
+        "valorTotal": 1680
+      },
+      {
+        "id": "i35",
+        "tipo": "Equipamento",
+        "descricao": "Betoneira 400 L (diária)",
+        "quantidade": 5,
+        "valorUnitario": 90,
+        "valorTotal": 450
+      }
+    ]
+  },
+  "GET /medicoes/m2": {
+    "id": "m2",
+    "obraId": "a1",
+    "etapaId": null,
+    "numero": 2,
+    "competencia": "2026-02-01",
+    "valorTotal": 7950.0,
+    "status": "Approved",
+    "approvedAt": "2026-03-02T15:00:00Z",
+    "nfNumber": null,
+    "nfIssuedAt": null,
+    "createdAt": "2026-02-28T12:00:00Z",
+    "itens": [
+      {
+        "id": "i21",
+        "tipo": "MaoDeObra",
+        "descricao": "Fundação — concretagem",
+        "quantidade": 40,
+        "valorUnitario": 120,
+        "valorTotal": 4800
+      },
+      {
+        "id": "i22",
+        "tipo": "Material",
+        "descricao": "Aço CA-50 8 mm (barra)",
+        "quantidade": 60,
+        "valorUnitario": 52.5,
+        "valorTotal": 3150.0
+      }
+    ]
+  },
+  "GET /medicoes/m1": {
+    "id": "m1",
+    "obraId": "a1",
+    "etapaId": null,
+    "numero": 1,
+    "competencia": "2026-01-01",
+    "valorTotal": 4290,
+    "status": "InvoiceIssued",
+    "approvedAt": "2026-02-02T15:00:00Z",
+    "nfNumber": "000123",
+    "nfIssuedAt": "2026-02-10T15:00:00Z",
+    "createdAt": "2026-01-28T12:00:00Z",
+    "itens": [
+      {
+        "id": "i11",
+        "tipo": "MaoDeObra",
+        "descricao": "Locação e escavação",
+        "quantidade": 30,
+        "valorUnitario": 95,
+        "valorTotal": 2850
+      },
+      {
+        "id": "i12",
+        "tipo": "Equipamento",
+        "descricao": "Retroescavadeira (hora)",
+        "quantidade": 8,
+        "valorUnitario": 180,
+        "valorTotal": 1440
+      }
+    ]
+  }
+}
