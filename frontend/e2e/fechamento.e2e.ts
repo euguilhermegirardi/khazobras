@@ -49,7 +49,7 @@ test('cliente revisa a medição pendente e a aprova com confirmação', async (
   expect(posts).toHaveLength(0)
   await page.getByRole('button', { name: 'Confirmar aprovação' }).click()
 
-  await expect(page.getByText(/Você aprovou esta medição em/)).toBeVisible()
+  await expect(page.getByText(/Medição aprovada em 01\/04\/2026/)).toBeVisible()
   await expect(page.getByRole('button', { name: /aprovar/i })).toHaveCount(0)
   expect(posts).toEqual(['Bearer token-sintetico'])
 })
@@ -61,4 +61,39 @@ test('cliente sem vínculo com a obra recebe 403 e não vê medições', async (
   await page.goto('/cliente/obras/outra/fechamento')
   await expect(page.getByRole('alert')).toContainText('não tem permissão')
   await expect(page.getByRole('table')).toHaveCount(0)
+})
+
+test.describe('tela estreita (celular)', () => {
+  test.use({ viewport: { width: 375, height: 700 } })
+
+  test('lista e detalhe mantêm mês, tipo, quantidade e valores visíveis, sem rolagem horizontal da página', async ({ page }) => {
+    await page.route(`${API}/**`, async (route) => {
+      const key = `${route.request().method()} ${new URL(route.request().url()).pathname}`
+      if (key === `GET /obras/${OBRA}/medicoes`) return route.fulfill({ json: [pendente] })
+      if (key === 'GET /medicoes/m3') return route.fulfill({ json: pendente })
+      return route.fulfill({ status: 501, json: { message: `sem mock: ${key}` } })
+    })
+    await entrarComoCliente(page)
+    const semRolagemHorizontal = () =>
+      page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)
+
+    await page.goto(`/cliente/obras/${OBRA}/fechamento`)
+    const linha = page.getByRole('row', { name: /Medição 3/ })
+    await expect(linha).toBeVisible()
+    await expect(linha.getByText(/março de 2026/i).and(page.locator(':visible'))).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Mês de referência' })).toBeHidden()
+    await expect(linha.getByText(/R\$\s*450,00/)).toBeVisible()
+    await expect(linha.getByText('Aguardando sua aprovação')).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Ver itens da medição 3' })).toBeVisible()
+    expect(await semRolagemHorizontal()).toBe(true)
+
+    await page.getByRole('link', { name: 'Ver itens da medição 3' }).click()
+    const item = page.getByRole('row', { name: /Betoneira/ })
+    await expect(item).toBeVisible()
+    await expect(item.getByText(/Equipamento · 5/).and(page.locator(':visible'))).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: 'Quantidade' })).toBeHidden()
+    await expect(item.getByText(/R\$\s*90,00/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Aprovar medição' })).toBeVisible()
+    expect(await semRolagemHorizontal()).toBe(true)
+  })
 })

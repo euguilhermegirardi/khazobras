@@ -155,6 +155,93 @@ describe('Fechamento - lista (cliente)', () => {
   })
 })
 
+describe('Fechamento - tela estreita (jsdom não aplica CSS; a visibilidade real está no e2e)', () => {
+  it('lista: o mês de referência também está dentro da célula "Medição N" (linha pequena do celular)', async () => {
+    server.use(getLista([pendente]))
+    renderApp(LISTA, 'Client')
+    await screen.findByText('Medição 3')
+
+    const celulaMedicao = screen.getAllByRole('row')[1]!.querySelector('td')!
+    expect(celulaMedicao).toHaveTextContent(/Medição 3/)
+    expect(celulaMedicao).toHaveTextContent(/março de 2026/i)
+    expect(screen.getByRole('link', { name: 'Ver itens da medição 3' })).toBeInTheDocument()
+  })
+
+  it('detalhe: tipo e quantidade também acompanham a descrição, e valor unitário e total seguem nas colunas', async () => {
+    server.use(getDetalhe(pendente))
+    renderApp(DETALHE(pendente), 'Client')
+    await screen.findByRole('heading', { name: 'Medição 3' })
+
+    const celulaDescricao = screen.getByText('Alvenaria do pavimento térreo').closest('td')!
+    expect(celulaDescricao).toHaveTextContent(/Mão de obra · 120,5/)
+    expect(screen.getByRole('columnheader', { name: 'Valor unit.' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Total' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Aprovar medição' })).toBeEnabled()
+  })
+})
+
+describe('Fechamento - troca de sessão', () => {
+  const obraHub = {
+    id: OBRA_ID, nome: 'Residencial Aurora', endereco: 'Rua das Flores, 100', valorContratado: 1500000,
+    dataInicio: '2026-03-01', dataPrevisaoTermino: '2026-12-15', status: 'EmAndamento', createdAt: '2026-02-20T12:00:00Z',
+  }
+
+  it('depois de sair e entrar com outra sessão, as medições da sessão anterior não aparecem nem por um instante', async () => {
+    const outra = medicao({ id: 'bbbbbbbb-0000-0000-0000-000000000009', numero: 9, competencia: '2026-05-01' })
+    let chamadas = 0
+    server.use(
+      http.get(`${API}/obras/${OBRA_ID}/medicoes`, async () => {
+        chamadas += 1
+        if (chamadas === 1) return HttpResponse.json([pendente])
+        await delay(300)
+        return HttpResponse.json([outra])
+      }),
+      http.get(`${API}/obras`, () => HttpResponse.json({ totalItems: 1, pageIndex: 0, pageSize: 50, items: [obraHub] })),
+      http.post(`${API}/auth/login`, () =>
+        HttpResponse.json({
+          token: 'tok-outro', expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+          userId: '33333333-3333-3333-3333-333333333333', name: 'Outro Cliente', email: 'outro@example.com', role: 'Client',
+        }),
+      ),
+    )
+    const user = userEvent.setup()
+    renderApp(LISTA, 'Client')
+    expect(await screen.findByText('Medição 3')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /Sair/ }))
+    await user.type(await screen.findByLabelText('E-mail'), 'outro@example.com')
+    await user.type(screen.getByLabelText('Senha'), 'qualquer')
+    await user.click(screen.getByRole('button', { name: 'Entrar' }))
+    await user.click(await screen.findByRole('link', { name: /Residencial Aurora/ }))
+    await user.click(await screen.findByRole('link', { name: /Fechamento/ }))
+
+    // Sem cache: mostra carregando e nunca a medição da sessão anterior.
+    expect(screen.getByRole('status')).toHaveTextContent('Carregando medições')
+    expect(screen.queryByText('Medição 3')).not.toBeInTheDocument()
+    expect(await screen.findByText('Medição 9')).toBeInTheDocument()
+    expect(screen.queryByText('Medição 3')).not.toBeInTheDocument()
+    expect(chamadas).toBe(2)
+  })
+
+  it('401 em chamada limpa a sessão e o cache: ao voltar ao login nada da sessão anterior fica na tela', async () => {
+    let chamadas = 0
+    server.use(
+      http.get(`${API}/obras/${OBRA_ID}/medicoes`, () => {
+        chamadas += 1
+        return chamadas === 1 ? HttpResponse.json([pendente]) : new HttpResponse(null, { status: 401 })
+      }),
+      http.get(`${API}/medicoes/${pendente.id}`, () => new HttpResponse(null, { status: 401 })),
+    )
+    const user = userEvent.setup()
+    renderApp(LISTA, 'Client')
+    await user.click(await screen.findByRole('link', { name: 'Ver itens da medição 3' }))
+
+    expect(await screen.findByRole('button', { name: /entrar/i })).toBeInTheDocument()
+    expect(screen.queryByText('Medição 3')).not.toBeInTheDocument()
+    expect(screen.queryByText('Alvenaria do pavimento térreo')).not.toBeInTheDocument()
+  })
+})
+
 describe('Fechamento - detalhe (cliente)', () => {
   it('mostra carregando e depois os itens com tipo, quantidade, valores e total', async () => {
     server.use(getDetalhe(pendente))
@@ -246,7 +333,7 @@ describe('Fechamento - detalhe (cliente)', () => {
       server.use(getDetalhe(m))
       renderApp(DETALHE(m), 'Client')
 
-      expect(await screen.findByText(/Você aprovou esta medição em 02\/03\/2026/)).toBeInTheDocument()
+      expect(await screen.findByText(/Medição aprovada em 02\/03\/2026/)).toBeInTheDocument()
       expect(screen.getByText(/vai emitir a nota fiscal/)).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /aprovar|criar|editar|excluir|emitir/i })).not.toBeInTheDocument()
     })
@@ -282,7 +369,7 @@ describe('Fechamento - detalhe (cliente)', () => {
 
       await user.click(screen.getByRole('button', { name: 'Confirmar aprovação' }))
 
-      expect(await screen.findByText(/Você aprovou esta medição em 01\/04\/2026/)).toBeInTheDocument()
+      expect(await screen.findByText(/Medição aprovada em 01\/04\/2026/)).toBeInTheDocument()
       expect(posts).toBe(1)
       expect(screen.queryByRole('button', { name: /aprovar/i })).not.toBeInTheDocument()
       expect(screen.getByText('Nota fiscal', { exact: false })).toBeInTheDocument()
@@ -329,11 +416,11 @@ describe('Fechamento - detalhe (cliente)', () => {
       expect(screen.getByRole('button', { name: 'Aprovando…' })).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Cancelar' })).toBeDisabled()
       await user.click(screen.getByRole('button', { name: 'Aprovando…' }))
-      expect(await screen.findByText(/Você aprovou esta medição/)).toBeInTheDocument()
+      expect(await screen.findByText(/Medição aprovada em 01\/04\/2026/)).toBeInTheDocument()
       expect(posts).toBe(1)
     })
 
-    it('409 mostra a mensagem do servidor e a medição continua pendente (permite tentar de novo)', async () => {
+    it('409 mostra mensagem amigável (sem nome interno do status) e a medição continua pendente (permite tentar de novo)', async () => {
       server.use(
         getDetalhe(pendente),
         http.post(`${API}/medicoes/${pendente.id}/approve`, () =>
@@ -346,7 +433,8 @@ describe('Fechamento - detalhe (cliente)', () => {
       await user.click(await screen.findByRole('button', { name: 'Aprovar medição' }))
       await user.click(screen.getByRole('button', { name: 'Confirmar aprovação' }))
 
-      expect(await screen.findByText(/Medicao nao pode ser aprovada no status atual/)).toBeInTheDocument()
+      expect(await screen.findByText(/já não está aguardando aprovação/)).toBeInTheDocument()
+      expect(screen.queryByText(/Medicao nao pode|status atual|Approved/)).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Confirmar aprovação' })).toBeEnabled()
     })
 
@@ -365,8 +453,17 @@ describe('Fechamento - detalhe (cliente)', () => {
       await user.click(await screen.findByRole('button', { name: 'Aprovar medição' }))
       await user.click(screen.getByRole('button', { name: 'Confirmar aprovação' }))
 
-      expect(await screen.findByText(/Você aprovou esta medição/)).toBeInTheDocument()
+      expect(await screen.findByText(/Medição aprovada em 01\/04\/2026/)).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /aprovar/i })).not.toBeInTheDocument()
+    })
+
+    it('texto após aprovar é neutro: não afirma quem aprovou', async () => {
+      const m = medicao({ ...aprovada, obraId: OBRA_ID })
+      server.use(getDetalhe(m))
+      renderApp(DETALHE(m), 'Client')
+
+      expect(await screen.findByText(/Medição aprovada em 02\/03\/2026/)).toBeInTheDocument()
+      expect(screen.queryByText(/Você aprovou|aprovada por|aprovou esta/i)).not.toBeInTheDocument()
     })
 
     it('500 na aprovação mostra o código de suporte', async () => {
