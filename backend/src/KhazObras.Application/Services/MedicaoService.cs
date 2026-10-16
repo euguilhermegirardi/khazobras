@@ -69,7 +69,12 @@ public sealed class MedicaoService
         }
 
         var approvedAt = DateTime.UtcNow;
-        await _medicaoRepository.ApproveAsync(id, approvedByUserId, approvedAt);
+        // O UPDATE confere o status de novo (atomico): perde a corrida contra aprovacao/NF concorrente.
+        var updated = await _medicaoRepository.ApproveAsync(id, approvedByUserId, approvedAt);
+        if (!updated)
+        {
+            throw new InvalidOperationException("Medicao nao esta mais pendente de aprovacao.");
+        }
 
         medicao.Status = MedicaoStatus.Approved;
         medicao.ApprovedAt = approvedAt;
@@ -90,7 +95,11 @@ public sealed class MedicaoService
         }
 
         var nfIssuedAt = DateTime.UtcNow;
-        await _medicaoRepository.IssueInvoiceAsync(id, nfNumber, nfIssuedAt);
+        var updated = await _medicaoRepository.IssueInvoiceAsync(id, nfNumber, nfIssuedAt);
+        if (!updated)
+        {
+            throw new InvalidOperationException("Medicao nao esta mais aprovada para emissao de NF.");
+        }
 
         medicao.Status = MedicaoStatus.InvoiceIssued;
         medicao.NfNumber = nfNumber;
