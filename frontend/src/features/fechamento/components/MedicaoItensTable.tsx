@@ -15,18 +15,23 @@ export const MedicaoItensTable = ({ itens, valorTotal }: MedicaoItensTableProps)
     <TableHeader>
       <TableRow className="hover:bg-transparent">
         <TableHead>Descrição</TableHead>
-        <TableHead>Tipo</TableHead>
-        <TableHead className="text-right">Quantidade</TableHead>
-        <TableHead className="text-right">Valor unitário</TableHead>
+        <TableHead className="hidden sm:table-cell">Tipo</TableHead>
+        <TableHead className="hidden text-right sm:table-cell">Quantidade</TableHead>
+        <TableHead className="text-right">Valor unit.</TableHead>
         <TableHead className="text-right">Total</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
       {itens.map((item) => (
         <TableRow key={item.id}>
-          <TableCell>{item.descricao}</TableCell>
-          <TableCell className="text-muted-foreground">{ITEM_TIPO_LABEL[item.tipo]}</TableCell>
-          <TableCell className="text-right">{formatQuantity(item.quantidade)}</TableCell>
+          <TableCell className="whitespace-normal">
+            {item.descricao}
+            <span className="block text-xs text-muted-foreground sm:hidden">
+              {ITEM_TIPO_LABEL[item.tipo]} · {formatQuantity(item.quantidade)}
+            </span>
+          </TableCell>
+          <TableCell className="hidden text-muted-foreground sm:table-cell">{ITEM_TIPO_LABEL[item.tipo]}</TableCell>
+          <TableCell className="hidden text-right sm:table-cell">{formatQuantity(item.quantidade)}</TableCell>
           <TableCell className="text-right">{formatCurrency(item.valorUnitario)}</TableCell>
           <TableCell className="text-right font-medium">{formatCurrency(item.valorTotal)}</TableCell>
         </TableRow>

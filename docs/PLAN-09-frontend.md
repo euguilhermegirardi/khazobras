@@ -27,7 +27,7 @@
 | # | Tela | Backend pronto? | Status | Branch / observação |
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
-| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | 🟨 | `feat/fechamento`: telas construídas (lista + itens + aprovar com confirmação); faltam testes (tester), revisão de design e segurança. Fluxo crítico; teste de papel obrigatório |
+| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | 🟨 | `feat/fechamento`: telas construídas (lista + itens + aprovar com confirmação); testes do tester ok; rodada 1 de correções (tabelas responsivas no celular, texto neutro de aprovação, 409 amigável, cache limpo no signOut); falta revalidar design e segurança. Fluxo crítico; teste de papel obrigatório |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ⬜ | |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
@@ -99,7 +99,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
-- 2026-10-16 — `feat/fechamento`: (sem commits ainda; descreva o que está staged).
+- 2026-10-16 — `feat/fechamento`: feat(fechamento): tela Fechamento do cliente (medições, itens e aprovação); test: fechamento (cliente) — unitários, e2e de aprovação e mock de captura. Arquivos: front (9), front/app (2), features/fechamento (10).
 - 2026-10-16 — `chore/relatorio-manha`: Morning report: template with metrics, written by ciclo-tela on finish or stop. Arquivos: infra (1), outros (1), docs (1).
 - 2026-10-16 — `chore/design-sistema`: Design reference: anonymize CREA and invoice numbers; Design system from the engineer's prototype: theme, app shell, base components, design guide, reference captures, design-reviewer in the loop. Arquivos: infra (8), outros (1), docs (18), front (15), front/app (5), features/obras (3).
 - 2026-10-16 — `chore/design-referencia`: Design reference: anonymized prototype HTML in docs/design. Arquivos: outros (1), docs (2).

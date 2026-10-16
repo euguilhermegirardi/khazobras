@@ -84,7 +84,7 @@ export const FechamentoPage = ({ medicaoPath }: FechamentoPageProps) => {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead>Medição</TableHead>
-                  <TableHead>Mês de referência</TableHead>
+                  <TableHead className="hidden sm:table-cell">Mês de referência</TableHead>
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Situação</TableHead>
                   <TableHead>

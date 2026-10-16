@@ -13,6 +13,9 @@ interface AprovarMedicaoPanelProps {
 
 const MENSAGEM_ERRO = 'Não foi possível aprovar a medição. Tente novamente.'
 
+const MENSAGEM_CONFLITO =
+  'Esta medição já não está aguardando aprovação. Atualizamos a página com a situação atual.'
+
 /** Única ação de escrita do cliente: aprovar a medição, com confirmação (ação formal e sem volta). */
 export const AprovarMedicaoPanel = ({ medicao }: AprovarMedicaoPanelProps) => {
   // Estados
@@ -20,7 +23,8 @@ export const AprovarMedicaoPanel = ({ medicao }: AprovarMedicaoPanelProps) => {
   // Hooks
   const { mutate, isPending, isError, error, reset } = useApproveMedicao(medicao.obraId, medicao.id)
   // Constants derivadas
-  const mensagemErro = error instanceof ApiError ? error.message : MENSAGEM_ERRO
+  const mensagemErro =
+    error instanceof ApiError ? (error.status === 409 ? MENSAGEM_CONFLITO : error.message) : MENSAGEM_ERRO
   // Functions
   const handleAbrir = () => setConfirmando(true)
   const handleCancelar = () => {
@@ -32,7 +36,7 @@ export const AprovarMedicaoPanel = ({ medicao }: AprovarMedicaoPanelProps) => {
   // Return
   if (!confirmando) {
     return (
-      <Button onClick={handleAbrir}>Aprovar medição</Button>
+      <Button className="self-start" onClick={handleAbrir}>Aprovar medição</Button>
     )
   }
 

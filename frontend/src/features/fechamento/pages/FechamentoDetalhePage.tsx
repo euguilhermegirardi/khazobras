@@ -88,7 +88,7 @@ export const FechamentoDetalhePage = ({ listaPath }: FechamentoDetalhePageProps)
             <CircleCheck aria-hidden />
             <AlertDescription>
               <p>
-                {data.approvedAt ? `Você aprovou esta medição em ${formatTimestamp(data.approvedAt)}. ` : 'Medição aprovada. '}
+                {data.approvedAt ? `Medição aprovada em ${formatTimestamp(data.approvedAt)}. ` : 'Medição aprovada. '}
                 {data.status === 'InvoiceIssued' && data.nfNumber
                   ? `Nota fiscal nº ${data.nfNumber}${data.nfIssuedAt ? `, emitida em ${formatTimestamp(data.nfIssuedAt)}` : ''}.`
                   : 'A Khaz Engenharia vai emitir a nota fiscal.'}

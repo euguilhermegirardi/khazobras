@@ -14,8 +14,13 @@ interface MedicaoLinhaResumoProps {
 
 export const MedicaoLinhaResumo = ({ medicao, to }: MedicaoLinhaResumoProps) => (
   <TableRow>
-    <TableCell className="font-medium">Medição {medicao.numero}</TableCell>
-    <TableCell className="text-muted-foreground">{formatMonthYear(medicao.competencia)}</TableCell>
+    <TableCell className="font-medium">
+      Medição {medicao.numero}
+      <span className="block text-xs font-normal text-muted-foreground sm:hidden">
+        {formatMonthYear(medicao.competencia)}
+      </span>
+    </TableCell>
+    <TableCell className="hidden text-muted-foreground sm:table-cell">{formatMonthYear(medicao.competencia)}</TableCell>
     <TableCell className="text-right">{formatCurrency(medicao.valorTotal)}</TableCell>
     <TableCell>
       <MedicaoStatusBadge status={medicao.status} />
