@@ -79,6 +79,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-16 — `chore/loop-agentes`: Loop builder↔tester: ciclo-tela skill, tester report contract, builder fix mode. Arquivos: infra (4), outros (1).
 - 2026-10-15 — `chore/padroes-componentes`: Frontend conventions: explicit oxlint config, shared/interfaces, component structure rule. Arquivos: infra (2), outros (1), front (14), front/app (4), features/auth (1), features/obras (6).
 - 2026-10-14 — `chore/skill-tela-shadcn`: Skill nova-tela-frontend: shadcn/ui guidance and Skeleton loading state. Arquivos: infra (1), front (2), features/obras (1).
 - 2026-10-14 — `chore/revisao-infra`: Review of Claude infra: slim root CLAUDE.md, shadcn/ui setup, auth to shared/, gaps moved to PLAN-09. Arquivos: infra (2), outros (1), front (17), front/app (4), features/auth (1), features/obras (1).
