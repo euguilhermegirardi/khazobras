@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, LayoutGrid, type LucideIcon } from 'lucide-react'
+import { Building2, LayoutDashboard, LayoutGrid, type LucideIcon, Ruler } from 'lucide-react'
 
 /**
  * Itens da sidebar por visão. Ordem e nomes: SPEC §5 (cliente) e §6 (admin).
@@ -25,7 +25,10 @@ export interface NavConfig {
 
 export const CLIENT_NAV: NavConfig = {
   hub: { label: 'Minhas obras', to: '/cliente', icon: LayoutGrid, end: true },
-  obra: [{ label: 'Dashboard', to: '/cliente/obras/:obraId', icon: LayoutDashboard, end: true }],
+  obra: [
+    { label: 'Dashboard', to: '/cliente/obras/:obraId', icon: LayoutDashboard, end: true },
+    { label: 'Fechamento', to: '/cliente/obras/:obraId/fechamento', icon: Ruler },
+  ],
   empresa: [],
 }
 

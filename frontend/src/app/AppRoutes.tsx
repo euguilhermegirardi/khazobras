@@ -3,6 +3,8 @@ import { homePathFor } from '@/shared/auth/homePath'
 import { useAuth } from '@/shared/auth/useAuth'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { ADMIN_ROLES, CLIENT_ROLES } from '@/shared/auth/roles'
+import { FechamentoDetalhePage } from '@/features/fechamento/pages/FechamentoDetalhePage'
+import { FechamentoPage } from '@/features/fechamento/pages/FechamentoPage'
 import { ObraHubPage } from '@/features/obras/pages/ObraHubPage'
 import { AdminLayout, ClientLayout } from './layouts'
 import { AdminDashboardPage, ClientObraPage, ForbiddenPage, NotFoundPage } from './pages'
@@ -25,6 +27,14 @@ export const AppRoutes = () => {
         <Route element={<ClientLayout />}>
           <Route path="/cliente" element={<ObraHubPage obraPath={(id) => `/cliente/obras/${id}`} />} />
           <Route path="/cliente/obras/:obraId" element={<ClientObraPage />} />
+          <Route
+            path="/cliente/obras/:obraId/fechamento"
+            element={<FechamentoPage medicaoPath={(obraId, id) => `/cliente/obras/${obraId}/fechamento/${id}`} />}
+          />
+          <Route
+            path="/cliente/obras/:obraId/fechamento/:medicaoId"
+            element={<FechamentoDetalhePage listaPath={(obraId) => `/cliente/obras/${obraId}/fechamento`} />}
+          />
         </Route>
       </Route>
 
