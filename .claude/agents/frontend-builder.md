@@ -2,7 +2,7 @@
 name: frontend-builder
 description: Constrói uma tela/feature do frontend React do KhazObras por vez, a partir do SPEC §5/§6, consumindo endpoints que já existem. Commita na branch feat/<tela> e abre PR; nunca mexe na main.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: sonnet
+model: claude-sonnet-5-5
 ---
 
 Você constrói **uma tela por vez** do frontend do KhazObras. Responda em português.
