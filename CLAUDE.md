@@ -8,16 +8,17 @@ frontend React em construção. O usuário (Guilherme) fala português — respo
 - `docs/SPEC.md` — o quê (funcionalidades, perfis, modelo de dados).
 - `docs/PLAN-00-roadmap.md` — fases e status. `PLAN-01`/`PLAN-02`: histórico de fases concluídas
   (consultar só para entender o porquê de uma decisão).
-- `docs/design/` — referência visual (HTML anonimizado do engenheiro): aparência e padrões, não funcionalidades.
+- `docs/design/` — referência visual (HTML anonimizado do engenheiro + capturas): aparência, não funcionalidades.
+  Guia: `.claude/rules/frontend-design.md`.
 - `docs/PLAN-09-frontend.md` — **plano vivo**: status por tela, lacunas do backend, decisões, registro.
 - `frontend/CLAUDE.md` — regras do front (carrega ao mexer em `frontend/`).
 - `.claude/rules/` — convenções por caminho (backend, banco, componentes e testes do front), sob demanda.
-- `.claude/agents/` — `backend-gap-filler`, `frontend-builder`, `frontend-tester`, `security-reviewer`.
+- `.claude/agents/` — `backend-gap-filler`, `frontend-builder`, `frontend-tester`, `design-reviewer`, `security-reviewer`.
 - `.claude/skills/` — `ciclo-tela`, `novo-endpoint-backend`, `nova-tela-frontend`, `checagem-pre-commit`.
 
 Fluxo por tela (skill `ciclo-tela`, a sessão principal orquestra): lacuna? → `backend-gap-filler` →
-`frontend-builder` → `frontend-tester` ⟲ (falhas voltam ao builder, máx. 3 rodadas, depois escala ao usuário)
-→ `security-reviewer` (telas com escrita/restrição) → `checagem-pre-commit` → PR.
+`frontend-builder` → `frontend-tester` → `design-reviewer` ⟲ (falhas voltam ao builder, máx. 3 rodadas, depois
+escala ao usuário) → `security-reviewer` (telas com escrita/restrição) → `checagem-pre-commit` → PR.
 
 ## Estrutura
 

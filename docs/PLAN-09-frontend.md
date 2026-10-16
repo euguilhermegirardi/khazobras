@@ -64,6 +64,15 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Button, Card, Badge e Skeleton já instalados; Hub e Login usam. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright (WebKit/Safari, paralelismo grátis); instalar no primeiro fluxo crítico (aprovar medição).
+- **Design = protótipo do engenheiro** (`docs/design/referencia.html`, anonimizado, + `capturas/`): tema copiado em
+  `src/index.css` (claro/escuro pelo sistema, cores semânticas info/success/warning/danger/neutral), moldura
+  sidebar+topbar em `src/app/shell/` (itens em `src/app/navigation.ts`), componentes `table`/`tabs`/`alert` +
+  `KpiCard`/`ProgressBar`. Guia: `.claude/rules/frontend-design.md`. Do protótipo vem só a aparência; conteúdo é do SPEC.
+- Verificação visual no loop: `design-reviewer` compara a captura da tela (`scripts/capturar-tela.mjs` + mocks do
+  tester em `frontend/e2e/mocks/`) com a referência.
+- Pendência de ambiente: o registro do shadcn (`ui.shadcn.com`) é bloqueado na sessão de nuvem; `table`/`tabs`/`alert`
+  foram escritos a partir do código padrão do shadcn. Rodar agentes à noite na nuvem exige resolver isso
+  (liberar o domínio ou rodar no Mac).
 - Entrega de tela autônoma pela skill `ciclo-tela`: builder ↔ tester em loop (tester nunca corrige produção,
   builder nunca mexe nos testes do tester), máx. 3 rodadas, escala ao usuário em divergência/sem progresso.
 - Interfaces/tipos da API em `src/shared/interfaces/`; componente só tem a interface das próprias props; um

@@ -9,6 +9,8 @@ Você constrói **uma tela por vez** do frontend do KhazObras. Responda em portu
 
 - **Como:** siga a skill `nova-tela-frontend` (passo a passo) e o `frontend/CLAUDE.md` (regras). Leia também
   `docs/PLAN-09-frontend.md` (ordem, pendências, lacunas) e a seção da tela no `docs/SPEC.md`.
+- **Aparência:** `.claude/rules/frontend-design.md`. Antes de escrever JSX, abra com Read a captura de
+  referência da tela (`docs/design/capturas/`) e monte com os componentes do mapa "padrão → componente".
 - **Falta endpoint ou o response vaza campo interno para o cliente?** Pare e liste o que falta para o
   `backend-gap-filler`. Não invente contrato nem mocke como se existisse.
 
@@ -17,7 +19,7 @@ Você constrói **uma tela por vez** do frontend do KhazObras. Responda em portu
 - **Construir** (chamado com o nome da tela): passos da skill até a verificação (lint, typecheck, testes
   existentes verdes). Os testes da tela são do `frontend-tester`; você só ajusta testes antigos que
   quebraram porque a tela chama endpoints novos.
-- **Corrigir** (chamado com o relatório do `frontend-tester` ou do `security-reviewer`): corrija o código
+- **Corrigir** (chamado com o relatório do `frontend-tester`, do `design-reviewer` ou do `security-reviewer`): corrija o código
   de produção para cada falha `bug-feature`/achado, rode a suíte e responda falha por falha o que
   mudou. **Não edite, apague nem pule os testes do tester.** Se achar que um teste está errado, não
   mexa nele: registre como `CONTESTO: <teste> — <motivo com fonte no SPEC>` e siga com as outras falhas.

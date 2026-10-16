@@ -4,7 +4,8 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/shared/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md border px-2 py-0.5 text-xs font-medium whitespace-nowrap focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
+  // Protótipo (.badge): pílula, 11px, peso médio, fundo suave + texto escuro da mesma cor.
+  'inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {
@@ -12,6 +13,12 @@ const badgeVariants = cva(
         secondary: 'border-transparent bg-secondary text-secondary-foreground',
         destructive: 'border-transparent bg-destructive text-white',
         outline: 'text-foreground',
+        // Status (ver mapa em .claude/rules/frontend-design.md)
+        info: 'border-transparent bg-info-soft text-info-soft-foreground',
+        success: 'border-transparent bg-success-soft text-success-soft-foreground',
+        warning: 'border-transparent bg-warning-soft text-warning-soft-foreground',
+        danger: 'border-transparent bg-danger-soft text-danger-soft-foreground',
+        neutral: 'border-transparent bg-neutral-soft text-neutral-soft-foreground',
       },
     },
     defaultVariants: { variant: 'default' },
