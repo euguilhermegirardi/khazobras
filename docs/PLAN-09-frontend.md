@@ -88,6 +88,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-16 — `chore/design-sistema`: Design reference: anonymize CREA and invoice numbers; Design system from the engineer's prototype: theme, app shell, base components, design guide, reference captures, design-reviewer in the loop. Arquivos: infra (8), outros (1), docs (18), front (15), front/app (5), features/obras (3).
 - 2026-10-16 — `chore/design-referencia`: Design reference: anonymized prototype HTML in docs/design. Arquivos: outros (1), docs (2).
 - 2026-10-16 — `chore/loop-agentes`: Loop builder↔tester: ciclo-tela skill, tester report contract, builder fix mode. Arquivos: infra (4), outros (1).
 - 2026-10-15 — `chore/padroes-componentes`: Frontend conventions: explicit oxlint config, shared/interfaces, component structure rule. Arquivos: infra (2), outros (1), front (14), front/app (4), features/auth (1), features/obras (6).
