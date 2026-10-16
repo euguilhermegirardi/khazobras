@@ -15,8 +15,9 @@ Leia `.claude/rules/frontend-design.md` (checklist e mapa de referências). Resp
    ```bash
    node scripts/capturar-tela.mjs --rota <rota> --papel <Client|Admin> --mocks frontend/e2e/mocks/<tela>.json --saida /tmp/<tela>.png
    node scripts/capturar-tela.mjs ... --tema dark --saida /tmp/<tela>-escuro.png
-   node scripts/capturar-tela.mjs ... --largura 390 --saida /tmp/<tela>-mobile.png
+   node scripts/capturar-tela.mjs ... --largura 1280 --saida /tmp/<tela>-notebook.png
    ```
+   O sistema é **só desktop** (SPEC §10): não capture nem avalie larguras de celular.
    Sem mock da tela ou "Chamadas sem mock" no log → `BLOQUEADO` (tipo `ambiente`), não invente dados.
 3. Abra com Read a sua captura **e** a captura de referência da tabela do guia. Compare item a item do
    checklist. Confira no código (Grep) cor fixa, HTML estilizado à mão no lugar de componente, status fora do mapa.
