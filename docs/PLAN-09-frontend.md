@@ -104,6 +104,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-16 — `chore/plano-limpeza`: docs: PLAN-09 pós-merge — Fechamento ✅ (linha única), lacunas consolidadas, decisão de aprovação em Decisões.
 - 2026-10-16 — `feat/fechamento`: feat(fechamento): tela Fechamento do cliente (medições, itens e aprovação); test: fechamento (cliente) — unitários, e2e de aprovação e mock de captura; fix(fechamento): tabelas responsivas no celular, texto neutro de aprovação, 409 amigável, limpa cache ao sair; test: fechamento reteste (texto neutro, 409 amigável, tela estreita, limpeza de cache ao trocar sessão); test: fechamento remove testes de tela estreita (sistema é desktop-only); docs: relatório da manhã do Fechamento + status no PLAN-09. Arquivos: docs (7), front (9), front/app (2), features/fechamento (10).
 - 2026-10-16 — `feat/backend-aprovacao-cliente`: Backend: aprovação de medição só pelo cliente (política `ClientOnly`), UPDATE condicional por status (409), testes HTTP. Mesclado (PR #1). Pendente: B3 (DTO reduzido ao cliente).
 - 2026-10-16 — `chore/design-somente-web`: Design check is desktop-only (SPEC §10): drop 390px requirement, use 1440/1280. Arquivos: infra (3), docs (1), front (1).
