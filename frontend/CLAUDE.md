@@ -80,6 +80,7 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
 
 - Toda tela cobre os quatro estados: carregando, vazio, erro, sucesso.
 - Acessibilidade: elementos semânticos, labels em todo input, foco visível, contraste AA.
+- **Só desktop web** (SPEC §10): larguras de referência 1440px e 1280px; sem layout mobile.
 - Linguagem da visão cliente é simplificada (sem SPI, CPI, Curva S). Navbar e telas por papel: SPEC §5 (cliente) e §6 (admin).
 - Teste por comportamento do usuário (Testing Library), não por implementação. Fluxo crítico =
   teste e2e: login, aprovar medição (cliente), criar medição (admin), acesso negado entre obras.
