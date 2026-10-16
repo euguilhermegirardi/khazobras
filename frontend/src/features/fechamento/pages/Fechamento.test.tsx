@@ -155,31 +155,6 @@ describe('Fechamento - lista (cliente)', () => {
   })
 })
 
-describe('Fechamento - tela estreita (jsdom não aplica CSS; a visibilidade real está no e2e)', () => {
-  it('lista: o mês de referência também está dentro da célula "Medição N" (linha pequena do celular)', async () => {
-    server.use(getLista([pendente]))
-    renderApp(LISTA, 'Client')
-    await screen.findByText('Medição 3')
-
-    const celulaMedicao = screen.getAllByRole('row')[1]!.querySelector('td')!
-    expect(celulaMedicao).toHaveTextContent(/Medição 3/)
-    expect(celulaMedicao).toHaveTextContent(/março de 2026/i)
-    expect(screen.getByRole('link', { name: 'Ver itens da medição 3' })).toBeInTheDocument()
-  })
-
-  it('detalhe: tipo e quantidade também acompanham a descrição, e valor unitário e total seguem nas colunas', async () => {
-    server.use(getDetalhe(pendente))
-    renderApp(DETALHE(pendente), 'Client')
-    await screen.findByRole('heading', { name: 'Medição 3' })
-
-    const celulaDescricao = screen.getByText('Alvenaria do pavimento térreo').closest('td')!
-    expect(celulaDescricao).toHaveTextContent(/Mão de obra · 120,5/)
-    expect(screen.getByRole('columnheader', { name: 'Valor unit.' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Total' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Aprovar medição' })).toBeEnabled()
-  })
-})
-
 describe('Fechamento - troca de sessão', () => {
   const obraHub = {
     id: OBRA_ID, nome: 'Residencial Aurora', endereco: 'Rua das Flores, 100', valorContratado: 1500000,
