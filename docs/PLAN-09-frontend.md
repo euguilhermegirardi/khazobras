@@ -20,14 +20,14 @@
 ## Pendências antes da próxima tela
 
 - [x] Biblioteca de componentes decidida: **shadcn/ui** (ver Decisões).
-- [ ] Navbar do cliente (layout ainda só tem cabeçalho) — fazer antes ou junto da tela Fechamento.
+- [x] Navbar do cliente: moldura sidebar + topbar em `src/app/shell/` (itens em `src/app/navigation.ts`).
 
 ## Telas do cliente (SPEC §5) — ordem sugerida
 
 | # | Tela | Backend pronto? | Status | Branch / observação |
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
-| 2 | Fechamento (medições + aprovar) | ✅ `GET /obras/{id}/medicoes`, `POST /medicoes/{id}/approve` | 🟨 | `feat/fechamento`: telas construídas (lista + itens + aprovar com confirmação); testes do tester ok; rodada 1 de correções (tabelas responsivas no celular, texto neutro de aprovação, 409 amigável, cache limpo no signOut); falta revalidar design e segurança. Fluxo crítico; teste de papel obrigatório |
+| 2 | Fechamento (medições + aprovar) | 🟨 endpoints ok; regra "só o cliente aprova" + UPDATE condicional em `feat/backend-aprovacao-cliente` (não compilado: validar no Mac) | 🟨 | `feat/fechamento`: lista + itens + aprovar com confirmação; 58 testes + 2 e2e; design e segurança do front ok. Vira ✅ quando o backend for validado e mesclado. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ⬜ | |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
