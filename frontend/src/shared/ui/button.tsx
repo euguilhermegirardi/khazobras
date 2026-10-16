@@ -8,18 +8,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground shadow-xs hover:bg-primary/90',
-        destructive: 'bg-destructive text-white shadow-xs hover:bg-destructive/90',
-        outline: 'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
+        // Protótipo: .btn-primary (azul) e .btn (contorno fino, fundo branco). Sem sombra.
+        default: 'border border-primary bg-primary text-primary-foreground hover:border-primary-hover hover:bg-primary-hover',
+        destructive: 'bg-destructive text-white hover:bg-destructive/90',
+        outline: 'border border-input bg-card hover:bg-accent hover:text-accent-foreground',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-9 px-4 py-2 has-[>svg]:px-3',
-        sm: 'h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5',
-        lg: 'h-10 rounded-md px-6 has-[>svg]:px-4',
-        icon: 'size-9',
+        // .btn = 12px / ~30px de altura; .btn-sm = 11px / ~24px
+        default: 'h-8 px-3.5 text-xs has-[>svg]:px-3',
+        sm: 'h-7 gap-1.5 px-2.5 text-[11px] has-[>svg]:px-2',
+        lg: 'h-9 px-5 text-sm has-[>svg]:px-4',
+        icon: 'size-8',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },

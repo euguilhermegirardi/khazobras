@@ -45,7 +45,9 @@ export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
   if (data.items.length === 0) {
     return (
       <PageSection title={TITULO}>
-        <p className="rounded-lg border border-dashed p-6 text-muted-foreground">{MENSAGEM_VAZIO}</p>
+        <p className="rounded-xl border border-dashed bg-card p-7 text-center text-[13px] text-muted-foreground">
+          {MENSAGEM_VAZIO}
+        </p>
       </PageSection>
     )
   }

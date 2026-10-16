@@ -13,7 +13,7 @@ export const ErrorState = ({ error, fallbackMessage, onRetry }: ErrorStateProps)
   const apiError = error instanceof ApiError ? error : null
 
   return (
-    <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+    <div role="alert" className="rounded-md border border-danger/25 bg-danger-soft p-4 text-[13px] text-danger-soft-foreground">
       <p>{apiError?.message ?? fallbackMessage}</p>
       {apiError?.requestId && (
         <p className="mt-1 text-sm text-muted-foreground">Código para o suporte: {apiError.requestId}</p>

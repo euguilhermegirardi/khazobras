@@ -18,7 +18,7 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 
 ```
 frontend/src/
-  app/            # providers, router, layouts (ClientLayout, AdminLayout)
+  app/            # providers, router, layouts (ClientLayout, AdminLayout), shell/ (sidebar+topbar), navigation.ts
   features/<mod>/ # um diretório por módulo: api.ts, hooks.ts, constants.ts, components/, pages/
   shared/         # interfaces/ (tipos da API), ui/ (shadcn), components/ (ErrorState, PageSection),
                   # auth/ (sessão, useAuth), lib/ (apiClient, formatters, utils), hooks/
@@ -30,12 +30,15 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
 
 ## Componentes (shadcn/ui)
 
-- Componentes base em `src/shared/ui/` (`button`, `card`, `badge`, `skeleton`). Sempre usar antes de criar HTML
-  estilizado à mão. Feature de referência: `features/obras` (Hub).
+- **Aparência = protótipo do engenheiro** (`docs/design/`): guia em `.claude/rules/frontend-design.md`.
+- Componentes base em `src/shared/ui/` (`button`, `card`, `badge`, `skeleton`, `table`, `tabs`, `alert`) e padrões em
+  `src/shared/components/` (`PageSection`, `ErrorState`, `KpiCard`, `ProgressBar`). Moldura (sidebar + topbar):
+  `src/app/shell/`, itens em `src/app/navigation.ts`. Sempre usar antes de criar HTML estilizado à mão.
+  Feature de referência: `features/obras` (Hub).
 - Componente novo: `npx shadcn@latest add <nome>` (config em `components.json`). Não editar os componentes
   base sem motivo; variação de uso vai por `className`/`variant`.
-- Cores só por tokens do tema (`bg-background`, `text-muted-foreground`, `border`, `bg-destructive`...),
-  nunca cor fixa (`slate-500`, `red-700`). Tema/marca se ajusta em `src/index.css`.
+- Cores só por tokens do tema (`bg-card`, `text-muted-foreground`, `bg-success-soft`, `text-danger`...),
+  nunca cor fixa (`slate-500`, `#185FA5`). Tema (copiado do protótipo) em `src/index.css`.
 - `cn()` de `@/shared/lib/utils` para juntar classes.
 
 ## Contrato com a API

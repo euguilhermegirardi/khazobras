@@ -19,13 +19,15 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
    - `hooks.ts`: `useQuery`/`useMutation` com chaves estáveis (`['obra', obraId, 'medicoes', page]`);
      mutação invalida as chaves afetadas.
    - `components/` e `pages/`: página fina, lógica em hooks.
-   - UI: componentes de `src/shared/ui/` (shadcn/ui) primeiro; faltou um → `npx shadcn@latest add <nome>`
-     (nunca recriar à mão). Cores só por tokens do tema (`text-muted-foreground`, `bg-destructive`...),
+   - Aparência: `.claude/rules/frontend-design.md` + a captura de referência da tela em `docs/design/capturas/`
+     (abra com Read antes de montar). Item da sidebar em `src/app/navigation.ts`, na ordem do SPEC.
+   - UI: componentes de `src/shared/ui/` (shadcn/ui) e `src/shared/components/` (`KpiCard`, `ProgressBar`) primeiro; faltou um → `npx shadcn@latest add <nome>`
+     (nunca recriar à mão; sem acesso ao registro do shadcn, pare e registre a pendência). Cores só por tokens do tema (`text-muted-foreground`, `bg-destructive`...),
      nunca cor fixa. O Hub (`features/obras`) é o exemplo.
 4. **Estados**: carregando (`Skeleton` de `shared/ui`, dentro de `role="status"` com texto `sr-only`), vazio (mensagem útil), erro (com `requestId` em 500;
    403 → sem permissão; 409 → mensagem da transição), sucesso.
 5. **Rota**: registrar com guarda de role dentro do layout certo (`ClientLayout` / `AdminLayout`) e
-   o item no navbar na ordem do SPEC.
+   o item da sidebar em `src/app/navigation.ts` (bloco obra ou empresa), na ordem do SPEC.
 6. **Formulários** (admin): React Hook Form + Zod, espelhando as regras do validator do backend;
    erros do servidor (400) mapeados nos campos.
 7. **Visão cliente**: linguagem simples, sem termos técnicos, só valores previstos/contratados.

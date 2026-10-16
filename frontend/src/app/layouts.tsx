@@ -1,32 +1,6 @@
-import { Outlet } from 'react-router-dom'
-import { useAuth } from '@/shared/auth/useAuth'
-import { Button } from '@/shared/ui/button'
+import { ADMIN_NAV, CLIENT_NAV } from './navigation'
+import { AppShell } from './shell/AppShell'
 
-interface ShellProps {
-  title: string
-}
-
-const Shell = ({ title }: ShellProps) => {
-  const { session, signOut } = useAuth()
-
-  return (
-    <div className="min-h-screen bg-muted/40">
-      <header className="flex items-center justify-between border-b bg-background px-6 py-3">
-        <strong>{title}</strong>
-        <div className="flex items-center gap-4 text-sm">
-          <span>{session?.name}</span>
-          <Button variant="outline" size="sm" onClick={signOut}>
-            Sair
-          </Button>
-        </div>
-      </header>
-      <main className="p-6">
-        <Outlet />
-      </main>
-    </div>
-  )
-}
-
-// Navbar do SPEC §5 (cliente) e §6 (admin/master) entra aqui, tela a tela.
-export const ClientLayout = () => <Shell title="KhazObras — Minha obra" />
-export const AdminLayout = () => <Shell title="KhazObras — Gestão" />
+// Itens da sidebar: app/navigation.ts (cada tela nova adiciona o seu, na ordem do SPEC §5/§6).
+export const ClientLayout = () => <AppShell nav={CLIENT_NAV} obraRoute="/cliente/obras/:obraId/*" />
+export const AdminLayout = () => <AppShell nav={ADMIN_NAV} obraRoute="/admin/obras/:obraId/*" />

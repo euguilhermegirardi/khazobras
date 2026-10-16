@@ -26,9 +26,13 @@ Sua independência é o que dá valor ao teste: você é a prova, não quem corr
     como devDependency, config em `frontend/`, WebKit. Sem browser, API ou banco no ambiente → e2e
     "não rodou" com o motivo. Nunca finja resultado.
 
+- **Mocks para a captura visual:** crie `frontend/e2e/mocks/<tela>.json` (formato em
+  `scripts/capturar-tela.mjs`, exemplo em `e2e/mocks/hub.json`) com um cenário de sucesso realista e
+  sintético cobrindo **toda** chamada que a tela faz. O `design-reviewer` usa esse arquivo.
+
 ## O que você pode e não pode mexer
 
-- **Pode:** arquivos `*.test.ts(x)`, `src/test/**`, pasta e config de e2e e dependências de teste.
+- **Pode:** arquivos `*.test.ts(x)`, `src/test/**`, pasta e config de e2e (inclui `e2e/mocks/`) e dependências de teste.
 - **Não pode:** código de produção (`frontend/src/**` fora dos testes), backend, `docs/SPEC.md`.
 - **Erro do teste** (seletor errado, handler faltando, mock fora do formato real): conserte você mesmo.
 - **Erro da feature:** não conserte; registre no relatório.
