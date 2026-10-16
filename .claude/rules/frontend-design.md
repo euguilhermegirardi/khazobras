@@ -105,4 +105,5 @@ Mapas de rótulo e de cor ficam no `constants.ts` da feature (ex.: `OBRA_STATUS_
 4. Cores só por token e pelo mapa de status; nenhuma cor fixa (`blue-600`, `#185FA5`).
 5. Tipografia e raios da seção Tokens; números alinhados à direita em tabelas de valores.
 6. Estados carregando/vazio/erro com a mesma moldura e o mesmo visual (Skeleton, vazio tracejado, `ErrorState`).
-7. Funciona em 1440px e 390px (sidebar some abaixo de 640px) e no tema escuro.
+7. Desktop web: confira em 1440px e 1280px (notebook) e no tema escuro. **Sem mobile** (SPEC §10: sistema
+   desktop-only) — não reporte nem corrija quebra em larguras de celular.

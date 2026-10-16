@@ -75,6 +75,6 @@ Parou? O relatório explica onde, por quê e o que falta decidir; a branch fica 
 3. `docs/PLAN-09-frontend.md` atualizado (status da tela, lacunas, decisões) e, com tudo commitado,
    `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`.
 4. Push da branch e `gh pr create` para a `main`. Na descrição: o que a tela faz, endpoints consumidos,
-   resultado da suíte e do e2e, capturas da tela (claro, escuro, mobile), **histórico do loop** (rodadas, falhas encontradas e como foram
+   resultado da suíte e do e2e, capturas da tela (claro, escuro, notebook 1280px), **histórico do loop** (rodadas, falhas encontradas e como foram
    corrigidas), achados do security-reviewer, pendências e o link para o relatório da manhã.
 5. Nunca merge, push ou commit na `main`; nunca `--force`, `--no-verify` ou `SKIP_PLAN_CHECK=1`. O merge é do usuário.
