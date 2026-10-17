@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Modelo: troque CAMINHO_DO_REPO pelo caminho absoluto do clone (ex.: /Users/guilherme/dev/khazobras).
+     Instalação e teste: docs/NOITE.md -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.khazobras.noite</string>
+
+  <!-- zsh de login: carrega o PATH do Homebrew/Node/.NET como no seu terminal -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd "CAMINHO_DO_REPO" &amp;&amp; ./scripts/noite.sh</string>
+  </array>
+
+  <!-- Todo dia à 1h -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>1</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>CAMINHO_DO_REPO/logs-noite/launchd.log</string>
+  <key>StandardErrorPath</key>
+  <string>CAMINHO_DO_REPO/logs-noite/launchd.log</string>
+</dict>
+</plist>

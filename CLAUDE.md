@@ -10,6 +10,7 @@ frontend React em construção. O usuário (Guilherme) fala português — respo
   (consultar só para entender o porquê de uma decisão).
 - `docs/design/` — referência visual (HTML anonimizado do engenheiro + capturas): aparência, não funcionalidades.
   Guia: `.claude/rules/frontend-design.md`.
+- `docs/NOITE.md` — execução noturna no Mac (`scripts/noite.sh`, launchd, guardas em `.claude/hooks/`).
 - `docs/relatorios/` — relatório da manhã de cada ciclo de tela (modelo em `MODELO.md`, métricas no cabeçalho).
 - `docs/PLAN-09-frontend.md` — **plano vivo**: status por tela, lacunas do backend, decisões, registro.
 - `frontend/CLAUDE.md` — regras do front (carrega ao mexer em `frontend/`).
