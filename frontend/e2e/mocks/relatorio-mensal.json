@@ -1,0 +1,31 @@
+{
+  "GET /obras/a1/relatorios-mensais": [
+    {
+      "id": "r3",
+      "obraId": "a1",
+      "competencia": "2026-03-01",
+      "conteudo": "Março: concluída a alvenaria do pavimento térreo e iniciada a instalação elétrica.\nA cobertura foi liberada para execução no início de abril.\nNão houve interrupções por chuva neste mês.",
+      "status": "published",
+      "publishedAt": "2026-04-02T15:00:00Z",
+      "createdAt": "2026-04-01T12:00:00Z"
+    },
+    {
+      "id": "r2",
+      "obraId": "a1",
+      "competencia": "2026-02-01",
+      "conteudo": "Fevereiro: fundação concluída e curada. Entrega dos materiais da alvenaria dentro do prazo.",
+      "status": "published",
+      "publishedAt": "2026-03-03T15:00:00Z",
+      "createdAt": "2026-03-02T12:00:00Z"
+    },
+    {
+      "id": "r1",
+      "obraId": "a1",
+      "competencia": "2026-01-01",
+      "conteudo": "Janeiro: mobilização do canteiro, locação da obra e escavação das fundações.",
+      "status": "published",
+      "publishedAt": "2026-02-02T15:00:00Z",
+      "createdAt": "2026-02-01T12:00:00Z"
+    }
+  ]
+}
