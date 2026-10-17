@@ -65,11 +65,26 @@ fi
 for c in claude git node npm dotnet gh python3 perl; do command -v "$c" >/dev/null || falhar "comando '$c' não encontrado no PATH ($PATH)"; done
 python3 - "$ROOT" <<'CONFIA' || falhar "o Claude Code ainda não confia nesta pasta (sem isso ignora as permissões e os hooks de guarda). Rode 'claude' aqui uma vez, responda Yes e saia com /exit"
 import json, os, sys
-try:
-    d = json.load(open(os.path.expanduser("~/.claude.json")))
-except Exception:
-    sys.exit(1)
-sys.exit(0 if d.get("projects", {}).get(sys.argv[1], {}).get("hasTrustDialogAccepted") else 1)
+base = os.environ.get("CLAUDE_CONFIG_DIR")
+cands = [os.path.join(base, ".claude.json")] if base else []
+cands.append(os.path.expanduser("~/.claude.json"))
+projetos = {}
+for c in cands:
+    try:
+        projetos.update(json.load(open(c)).get("projects", {}))
+    except Exception:
+        pass
+# A confiança vale para a pasta ou qualquer pasta acima dela (como o Claude Code faz).
+d = os.path.realpath(sys.argv[1])
+alvos = set()
+for p in (sys.argv[1], d):
+    while True:
+        alvos.add(p)
+        pai = os.path.dirname(p)
+        if pai == p:
+            break
+        p = pai
+sys.exit(0 if any(projetos.get(a, {}).get("hasTrustDialogAccepted") for a in alvos) else 1)
 CONFIA
 git worktree prune
 [ "$(git worktree list | wc -l | tr -d ' ')" -eq 1 ] || falhar "há worktrees extras: $(git worktree list | tail -n +2 | awk '{print $1}' | tr '\n' ' '). Confira se têm algo e remova com: git worktree remove --force <caminho>"
