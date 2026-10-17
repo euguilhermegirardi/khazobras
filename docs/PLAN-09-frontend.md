@@ -67,7 +67,8 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Instalados: Button, Card, Badge, Skeleton, Table, Tabs, Alert. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright em **Chromium** (instalado com o Fechamento, `frontend/e2e/*.e2e.ts`). Era WebKit, mas o Playwright 1.64
-  não oferece WebKit no macOS 13 (Mac do usuário); `PW_BROWSER=webkit` onde houver suporte. Na nuvem:
+  não baixa navegadores no macOS 13 (Mac do usuário): lá usa o Google Chrome instalado (`channel: 'chrome'`, automático;
+  `PW_CHANNEL` força). `PW_BROWSER=webkit` onde houver suporte. Na nuvem:
   `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
 - **Design = protótipo do engenheiro** (`docs/design/referencia.html`, anonimizado, + `capturas/`): tema copiado em
   `src/index.css` (claro/escuro pelo sistema, cores semânticas info/success/warning/danger/neutral), moldura
@@ -109,6 +110,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-16 — `chore/e2e-chrome-mac13`: e2e/captures: use installed Google Chrome on macOS 13 (Playwright 1.64 ships no browsers there). Arquivos: docs (1), front (1), infra (2).
 - 2026-10-16 — `chore/e2e-chromium`: e2e: default to Chromium (Playwright has no WebKit on macOS 13); WebKit opt-in via PW_BROWSER. Arquivos: infra (1), docs (1), front (1).
 - 2026-10-16 — `chore/execucao-noturna`: Night runs on the Mac: noite.sh (preflight, limits, resume, push+PR), guard hooks, launchd template, ciclo-tela night mode. Arquivos: infra (6), outros (2), docs (1).
 - 2026-10-16 — `chore/plano-limpeza`: docs: PLAN-09 pós-merge — Fechamento ✅ (linha única), lacunas consolidadas, decisão de aprovação em Decisões.

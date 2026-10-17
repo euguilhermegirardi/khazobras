@@ -4,6 +4,7 @@
 // passe VENDOR_DIR=<pasta com node_modules/chart.js e @tabler/icons-webfont>.
 import { createRequire } from 'node:module'
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { release } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const require = createRequire(join(process.cwd(), 'frontend/package.json'))
@@ -29,7 +30,10 @@ const prepararRotas = async (page) => {
     r.fulfill({ path: join(nm, '@tabler/icons-webfont/dist', r.request().url().split('/dist/')[1].split('?')[0]) }))
 }
 
-const browser = await chromium.launch()
+// Navegador: no macOS 13 (Darwin 22) o Playwright 1.64 não baixa navegadores → usa o Google Chrome instalado.
+const macOS13 = process.platform === 'darwin' && release().startsWith('22.')
+const channel = process.env.PW_CHANNEL || (macOS13 ? 'chrome' : undefined)
+const browser = await chromium.launch(channel ? { channel } : {})
 for (const tema of ['light', 'dark']) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: tema, acceptDownloads: true })
   const page = await ctx.newPage()
