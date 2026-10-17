@@ -70,3 +70,8 @@ Retomada: a sessão anterior caiu depois de commitar a tela (`b78fc24`), o backe
   depois caiu para Read/Grep).
 - A sessão anterior caiu sem gravar `.noite/atual.json`. Gravar o estado logo no passo 0, antes do builder,
   deixaria a retomada explícita.
+- **Disparo repetido da mesma tela:** uma terceira sessão abriu com a tela já parada e o relatório commitado,
+  sem `.noite/atual.json`. Ela não rodou o design de novo, porque `.claude/settings.json` ainda não libera
+  `npm run dev` nem `node scripts/capturar-tela.mjs`. Ajuste sugerido para o `noite.sh`: tirar a tela da fila
+  quando o resultado for `parado`, ou pular a tela se a branch já tiver `docs/relatorios/*-<slug>.md`. Ao ler o
+  estado logo no início, um `git show` composto (`;` + `$(...)`) foi negado, e os comandos separados passaram.
