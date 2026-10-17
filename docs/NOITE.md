@@ -18,8 +18,11 @@ launchd (1h) → scripts/noite.sh → confere ambiente → claude -p "/ciclo-tel
 
 ## Instalação (uma vez)
 
-1. **Pré-requisitos no Mac:** `claude` (Claude Code atualizado), `node`, `dotnet`, `gh`, Postgres, e no `frontend/`:
+1. **Pré-requisitos no Mac:** `claude` (o Claude Code **de linha de comando**; a extensão do VS Code não instala o comando),
+   `node`, `dotnet`, `gh`, Postgres, Google Chrome (macOS 13), e no `frontend/`:
    ```bash
+   npm install -g @anthropic-ai/claude-code
+   claude --version
    cd frontend && npm install && npx playwright install chromium
    # macOS 13: o Playwright 1.64 não baixa navegadores nesse sistema; ele usa o Google Chrome instalado
    # (automático). Basta ter o Chrome em /Applications. Pode pular o "playwright install".
