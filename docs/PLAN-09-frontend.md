@@ -67,7 +67,8 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Instalados: Button, Card, Badge, Skeleton, Table, Tabs, Alert. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright em **Chromium** (instalado com o Fechamento, `frontend/e2e/*.e2e.ts`). Era WebKit, mas o Playwright 1.64
-  não oferece WebKit no macOS 13 (Mac do usuário); `PW_BROWSER=webkit` onde houver suporte. Na nuvem:
+  não baixa navegadores no macOS 13 (Mac do usuário): lá usa o Google Chrome instalado (`channel: 'chrome'`, automático;
+  `PW_CHANNEL` força). `PW_BROWSER=webkit` onde houver suporte. Na nuvem:
   `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
 - **Design = protótipo do engenheiro** (`docs/design/referencia.html`, anonimizado, + `capturas/`): tema copiado em
   `src/index.css` (claro/escuro pelo sistema, cores semânticas info/success/warning/danger/neutral), moldura

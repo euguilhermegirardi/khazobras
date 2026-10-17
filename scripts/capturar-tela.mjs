@@ -5,6 +5,7 @@
 // Requer Playwright (`@playwright/test`, instalado com o e2e). Dados sintéticos apenas.
 import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
+import { release } from 'node:os'
 import { join } from 'node:path'
 
 const args = Object.fromEntries(
@@ -21,7 +22,10 @@ const mocks = args.mocks ? JSON.parse(readFileSync(args.mocks, 'utf8')) : {}
 const require = createRequire(join(process.cwd(), 'frontend/package.json'))
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE ?? '@playwright/test')
 
-const browser = await chromium.launch()
+// Navegador: no macOS 13 (Darwin 22) o Playwright 1.64 não baixa navegadores → usa o Google Chrome instalado.
+const macOS13 = process.platform === 'darwin' && release().startsWith('22.')
+const channel = process.env.PW_CHANNEL || (macOS13 ? 'chrome' : undefined)
+const browser = await chromium.launch(channel ? { channel } : {})
 const page = await browser.newPage({ viewport: { width: largura, height: 900 }, colorScheme: args.tema ?? 'light' })
 const naoMockadas = []
 
