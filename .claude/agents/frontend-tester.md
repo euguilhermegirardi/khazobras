@@ -23,7 +23,7 @@ Sua independência é o que dá valor ao teste: você é a prova, não quem corr
 - e2e (Playwright) só para fluxos críticos: login, aprovar medição (cliente), criar medição e emitir NF
   (admin), acesso negado a obra não vinculada.
   - Playwright ainda não instalado? Instale no primeiro fluxo crítico (decisão do PLAN-09): `@playwright/test`
-    como devDependency, config em `frontend/`, WebKit. Sem browser, API ou banco no ambiente → e2e
+    como devDependency, config em `frontend/`, Chromium. Sem browser, API ou banco no ambiente → e2e
     "não rodou" com o motivo. Nunca finja resultado.
 
 - **Mocks para a captura visual:** crie `frontend/e2e/mocks/<tela>.json` (formato em

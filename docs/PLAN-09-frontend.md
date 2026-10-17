@@ -66,8 +66,9 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Componentes: **shadcn/ui** (Tailwind 4, tema por variáveis CSS em `src/index.css`), código em `src/shared/ui/`.
   Instalados: Button, Card, Badge, Skeleton, Table, Tabs, Alert. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
-- E2E: Playwright (WebKit/Safari, paralelismo grátis), instalado com o Fechamento (`frontend/e2e/*.e2e.ts`). Na nuvem só
-  há Chromium: `PW_BROWSER=chromium PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
+- E2E: Playwright em **Chromium** (instalado com o Fechamento, `frontend/e2e/*.e2e.ts`). Era WebKit, mas o Playwright 1.64
+  não oferece WebKit no macOS 13 (Mac do usuário); `PW_BROWSER=webkit` onde houver suporte. Na nuvem:
+  `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
 - **Design = protótipo do engenheiro** (`docs/design/referencia.html`, anonimizado, + `capturas/`): tema copiado em
   `src/index.css` (claro/escuro pelo sistema, cores semânticas info/success/warning/danger/neutral), moldura
   sidebar+topbar em `src/app/shell/` (itens em `src/app/navigation.ts`), componentes `table`/`tabs`/`alert` +
