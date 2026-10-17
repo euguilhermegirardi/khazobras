@@ -486,6 +486,7 @@ database/seed/
 
 # Execução noturna dos agentes (estado local, logs e fila)
 .claude/ciclos/
+.noite/
 .claude/worktrees/
 noite.fila
 logs-noite/

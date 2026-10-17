@@ -83,7 +83,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (liberar o domínio ou rodar no Mac).
 - **Execução noturna no Mac do usuário** (decisão out/2026; a nuvem não tem .NET/NuGet/shadcn/`gh`): `scripts/noite.sh`
   via launchd roda `claude -p "/ciclo-tela <tela>"` com `KHAZ_NOITE=1`, limites de tempo/turnos/custo e 1 retomada pelo
-  estado em `.claude/ciclos/atual.json`; o agente não dá push (hook `guarda-noite.sh`), o script faz push + PR no fim.
+  estado em `.noite/atual.json`; o agente não dá push (hook `guarda-noite.sh`), o script faz push + PR no fim.
   Fila em `noite.fila`. Guia: `docs/NOITE.md`.
 - Entrega de tela autônoma pela skill `ciclo-tela`: builder ↔ tester em loop (tester nunca corrige produção,
   builder nunca mexe nos testes do tester), máx. 3 rodadas, escala ao usuário em divergência/sem progresso.

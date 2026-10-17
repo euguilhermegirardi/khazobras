@@ -20,9 +20,9 @@ if [ -z "$TELA" ]; then echo "Fila vazia (noite.fila). Nada a fazer."; exit 0; f
 
 DATA="$(date +%F)"
 SLUG="$(python3 -c 'import sys,unicodedata,re; t=unicodedata.normalize("NFKD",sys.argv[1]).encode("ascii","ignore").decode().lower(); print(re.sub(r"[^a-z0-9]+","-",t).strip("-"))' "$TELA")"
-LOGDIR="$ROOT/logs-noite"; mkdir -p "$LOGDIR" "$ROOT/.claude/ciclos"
+LOGDIR="$ROOT/logs-noite"; mkdir -p "$LOGDIR" "$ROOT/.noite"
 LOG="$LOGDIR/$DATA-$SLUG.log"
-ESTADO="$ROOT/.claude/ciclos/atual.json"
+ESTADO="$ROOT/.noite/atual.json"      # fora de .claude/: o Claude Code protege essa pasta contra escrita
 exec > >(tee -a "$LOG") 2>&1
 
 MODELO="${KHAZ_MODELO:-opus}"                 # maestro; os subagentes têm modelo fixo no próprio arquivo
@@ -31,6 +31,7 @@ MAX_TURNS="${KHAZ_MAX_TURNS:-400}"
 MAX_USD="${KHAZ_MAX_USD:-25}"
 TENTATIVAS="${KHAZ_TENTATIVAS:-2}"            # 1 execução + 1 retomada se cair no meio
 INICIO="$(date +%s)"
+NEGADAS="$ROOT/.noite/negadas.md"; : > "$NEGADAS"
 
 avisar() { osascript -e "display notification \"$1\" with title \"KhazObras — noite\"" >/dev/null 2>&1 || true; }
 falhar() {
@@ -39,7 +40,11 @@ falhar() {
     echo
     echo "**Motivo:** $1"
     echo
-    echo "Log completo: \`logs-noite/$DATA-$SLUG.log\`. Nada foi alterado na main."
+    if [ -s "${NEGADAS:-/nao-existe}" ]; then echo "**Permissões negadas ao agente:**"; echo; cat "$NEGADAS"; echo; fi
+    if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+      echo "**Arquivos soltos na árvore** (limpe antes da próxima noite):"; echo; git status --short | sed 's/^/    /'; echo
+    fi
+    echo "Log completo: \`logs-noite/$DATA-$SLUG.log\`."
   } > "$LOGDIR/$DATA-$SLUG-FALHA.md"
   echo "FALHA: $1"; avisar "Não rodou: $1"; exit 1
 }
@@ -58,6 +63,16 @@ fi
 
 # ── 2. Pré-checagem do ambiente (falhou = não roda, e o relatório de falha explica) ────────────────────
 for c in claude git node npm dotnet gh python3 perl; do command -v "$c" >/dev/null || falhar "comando '$c' não encontrado no PATH ($PATH)"; done
+python3 - "$ROOT" <<'CONFIA' || falhar "o Claude Code ainda não confia nesta pasta (sem isso ignora as permissões e os hooks de guarda). Rode 'claude' aqui uma vez, responda Yes e saia com /exit"
+import json, os, sys
+try:
+    d = json.load(open(os.path.expanduser("~/.claude.json")))
+except Exception:
+    sys.exit(1)
+sys.exit(0 if d.get("projects", {}).get(sys.argv[1], {}).get("hasTrustDialogAccepted") else 1)
+CONFIA
+git worktree prune
+[ "$(git worktree list | wc -l | tr -d ' ')" -eq 1 ] || falhar "há worktrees extras: $(git worktree list | tail -n +2 | awk '{print $1}' | tr '\n' ' '). Confira se têm algo e remova com: git worktree remove --force <caminho>"
 git fetch -q origin || falhar "git fetch falhou (rede ou credenciais do GitHub)"
 [ -z "$(git status --porcelain)" ] || falhar "há mudanças locais não commitadas no repositório; a noite só roda com a árvore limpa"
 git checkout -q main && git pull -q --ff-only || falhar "não consegui atualizar a main (checkout/pull)"
@@ -69,7 +84,7 @@ pg_isready -q 2>/dev/null || log "Aviso: Postgres não respondeu (só importa se
 PERM_PROMPTS=()
 claude --help 2>/dev/null | grep -q -- '--permission-prompts' && PERM_PROMPTS=(--permission-prompts none)
 
-# ── 3. O que o agente pode fazer sozinho (o resto é negado e anotado em .claude/ciclos/negadas.jsonl) ──
+# ── 3. O que o agente pode fazer sozinho (o resto é negado; o script lista as negações no log e no PR) ──
 ALLOWED=(
   Read Glob Grep Edit Write Agent Skill TaskCreate TaskUpdate TaskList TaskGet
   "Bash(cd *)" "Bash(pwd)" "Bash(ls *)" "Bash(cat *)" "Bash(head *)" "Bash(tail *)" "Bash(wc *)" "Bash(grep *)"
@@ -79,17 +94,17 @@ ALLOWED=(
   "Bash(git status *)" "Bash(git diff *)" "Bash(git log *)" "Bash(git show *)" "Bash(git add *)" "Bash(git commit *)"
   "Bash(git checkout *)" "Bash(git switch *)" "Bash(git branch *)" "Bash(git rev-parse *)" "Bash(git fetch *)"
   "Bash(git pull *)" "Bash(git merge *)" "Bash(git stash *)" "Bash(git restore *)" "Bash(git ls-files *)"
-  "Bash(git rm *)" "Bash(git mv *)" "Bash(git worktree *)"
+  "Bash(git rm *)" "Bash(git mv *)"
   "Bash(npm *)" "Bash(npx *)" "Bash(node *)" "Bash(dotnet *)"
   "Bash(pgrep *)" "Bash(pkill *)" "Bash(kill *)" "Bash(lsof *)" "Bash(curl -s http://localhost*)"
 )
 
 PROMPT_INICIAL="/ciclo-tela $TELA
 Execução noturna: o usuário está dormindo e KHAZ_NOITE=1. Siga a seção \"Modo noturno\" da skill: estado em
-.claude/ciclos/atual.json a cada etapa, nunca espere resposta (escalar = escrever o relatório e parar), sem push e
+.noite/atual.json a cada etapa, nunca espere resposta (escalar = escrever o relatório e parar), sem push e
 sem PR (o script faz no fim). Data de hoje: $DATA."
 PROMPT_RETOMADA="/ciclo-tela $TELA
-Execução noturna (KHAZ_NOITE=1) — RETOMADA: a sessão anterior caiu no meio. Leia .claude/ciclos/atual.json e o git
+Execução noturna (KHAZ_NOITE=1) — RETOMADA: a sessão anterior caiu no meio. Leia .noite/atual.json e o git
 da branch indicada, e continue do passo registrado (não refaça o que já está commitado). Mesmas regras do \"Modo
 noturno\" da skill. Data de hoje: $DATA."
 
@@ -111,6 +126,20 @@ while [ "$tentativa" -le "$TENTATIVAS" ]; do
       --output-format json > "$LOGDIR/$DATA-$SLUG-tentativa$tentativa.json"
   codigo=$?
   log "claude terminou com código $codigo"
+  python3 - "$LOGDIR/$DATA-$SLUG-tentativa$tentativa.json" "$NEGADAS" <<'NEG'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(0)
+with open(sys.argv[2], "a", encoding="utf-8") as f:
+    for n in d.get("permission_denials") or []:
+        inp = n.get("tool_input") or {}
+        alvo = inp.get("command") or inp.get("file_path") or json.dumps(inp, ensure_ascii=False)
+        alvo = " ".join(str(alvo).split())[:200]
+        print(f"Negado: {n.get('tool_name')}: {alvo}")
+        f.write(f"- {n.get('tool_name')}: `{alvo}`\n")
+NEG
   concluido && break
   tentativa=$(( tentativa + 1 ))
 done
@@ -121,7 +150,7 @@ RESULTADO="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get
 RELATORIO="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("relatorio",""))' "$ESTADO" 2>/dev/null)"
 log "Estado final: resultado=$RESULTADO branch=$BRANCH relatorio=$RELATORIO"
 
-case "$BRANCH" in feat/*) ;; *) falhar "o ciclo não registrou uma branch feat/* em .claude/ciclos/atual.json (resultado: $RESULTADO)";; esac
+case "$BRANCH" in feat/*) ;; *) falhar "o ciclo não registrou uma branch feat/* em .noite/atual.json (resultado: $RESULTADO)";; esac
 git checkout -q "$BRANCH" 2>/dev/null || falhar "branch $BRANCH não existe localmente"
 [ -z "$(git status --porcelain)" ] || { git stash -u -q -m "noite $DATA: sobras não commitadas"; log "Aviso: havia mudanças não commitadas; guardei em git stash."; }
 [ "$(git rev-list --count origin/main..HEAD)" -gt 0 ] || falhar "a branch $BRANCH não tem commits além da main"
@@ -131,11 +160,11 @@ if gh pr view "$BRANCH" >/dev/null 2>&1; then
   log "PR já existe para $BRANCH (push atualizou)."
 else
   TITULO="$TELA — ciclo noturno $DATA ($RESULTADO)"
-  if [ -n "$RELATORIO" ] && [ -f "$RELATORIO" ]; then
-    gh pr create --base main --head "$BRANCH" --title "$TITULO" --body-file "$RELATORIO" || falhar "gh pr create falhou"
-  else
-    gh pr create --base main --head "$BRANCH" --title "$TITULO" --body "Relatório não encontrado; veja logs-noite/$DATA-$SLUG.log." || falhar "gh pr create falhou"
-  fi
+  CORPO="$ROOT/.noite/pr-corpo.md"
+  if [ -n "$RELATORIO" ] && [ -f "$RELATORIO" ]; then cat "$RELATORIO" > "$CORPO"
+  else echo "Relatório não encontrado; veja logs-noite/$DATA-$SLUG.log." > "$CORPO"; fi
+  if [ -s "$NEGADAS" ]; then printf '\n## Permissões negadas (anotadas pelo script)\n\n' >> "$CORPO"; cat "$NEGADAS" >> "$CORPO"; fi
+  gh pr create --base main --head "$BRANCH" --title "$TITULO" --body-file "$CORPO" || falhar "gh pr create falhou"
 fi
 git checkout -q main
 
