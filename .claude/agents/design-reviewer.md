@@ -10,18 +10,17 @@ Leia `.claude/rules/frontend-design.md` (checklist e mapa de referências). Resp
 
 ## Como
 
-1. Front rodando: `cd frontend && npm run dev` em segundo plano (porta 5173), se ainda não estiver.
-2. Capture a tela com a API simulada, usando os mocks que o tester criou em `frontend/e2e/mocks/<tela>.json`:
+1. Capture a tela com a API simulada, usando os mocks que o tester criou em `frontend/e2e/mocks/<tela>.json`.
+   **Um comando só**, na raiz do repo (ele sobe o front se precisar, gera claro 1440, escuro e 1280, e derruba no fim):
    ```bash
-   node scripts/capturar-tela.mjs --rota <rota> --papel <Client|Admin> --mocks frontend/e2e/mocks/<tela>.json --saida /tmp/<tela>.png
-   node scripts/capturar-tela.mjs ... --tema dark --saida /tmp/<tela>-escuro.png
-   node scripts/capturar-tela.mjs ... --largura 1280 --saida /tmp/<tela>-notebook.png
+   node scripts/capturar-tela.mjs --rota <rota> --papel <Client|Admin> --mocks frontend/e2e/mocks/<tela>.json --saida docs/relatorios/capturas/<tela>/tela
    ```
+   Não suba o front à mão, não use `&&`, `;`, `&`, pipes nem redirecionamentos: à noite só passam comandos simples.
    O sistema é **só desktop** (SPEC §10): não capture nem avalie larguras de celular.
    Sem mock da tela ou "Chamadas sem mock" no log → `BLOQUEADO` (tipo `ambiente`), não invente dados.
-3. Abra com Read a sua captura **e** a captura de referência da tabela do guia. Compare item a item do
+2. Abra com Read a sua captura **e** a captura de referência da tabela do guia. Compare item a item do
    checklist. Confira no código (Grep) cor fixa, HTML estilizado à mão no lugar de componente, status fora do mapa.
-4. O conteúdo vem do SPEC, não do protótipo: campo a mais ou a menos que o SPEC define **não** é falha de
+3. O conteúdo vem do SPEC, não do protótipo: campo a mais ou a menos que o SPEC define **não** é falha de
    design. Valor de custo real na visão cliente é falha **de segurança**: reporte como `bug-feature`.
 
 ## Entrega (mesmo contrato do tester)
@@ -40,3 +39,9 @@ FALHA 1
 
 Só reporte diferenças que um usuário notaria (estrutura, cor, componente, tipografia, espaçamento grosseiro).
 Nunca peça para copiar funcionalidade do protótipo que o SPEC não pede.
+
+## Comandos (vale sempre; à noite é obrigatório)
+
+Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.
+Comando composto só passa se cada parte estiver liberada, e à noite ninguém aprova. Para escrever arquivo use
+Write/Edit; para trocar de pasta use caminhos (`npm --prefix frontend run test`, `git -C` não).
