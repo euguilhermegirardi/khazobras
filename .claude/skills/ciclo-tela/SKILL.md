@@ -23,6 +23,9 @@ delega, lê relatórios e decide; não escreve código de feature nem teste.
 - **Sem push e sem PR**: o script faz os dois no fim (o hook `guarda-noite.sh` bloqueia push/gh). Commite tudo na
   branch antes de terminar: árvore suja no fim vira `git stash` e se perde do PR.
 - **Sem mudança de schema e sem backend que exija aplicar SQL**: lacuna assim = parar (relatório explica).
+- **Lacuna de backend sem schema**: o `backend-gap-filler` commita na **própria `feat/<tela>`** (não numa
+  `feat/backend-*`), antes da tela, para sair no mesmo PR — o script só publica a branch do estado. O teste em
+  `KhazObras.Security.Tests/Http/` é obrigatório; destaque a correção no relatório ("Precisa de você": revisar).
 - Permissão negada? Não contorne; anote o comando em `notas` (o script também lista as negações no PR) e leve para
   "Sinais para o harness". Prefira comandos simples, um por chamada: composto (`&&`, `;`, heredoc) só passa se
   cada parte estiver liberada.
