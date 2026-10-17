@@ -28,7 +28,7 @@
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
-| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | 🟨 | `feat/relatorio-mensal`. Lista dos publicados, mês mais novo primeiro, texto puro; 8 testes. Pendente: ciclo (tester/design/security) e lacuna B4 abaixo |
+| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | 🟨 | `feat/relatorio-mensal`. Lista dos publicados, mês mais novo primeiro, texto puro; 8 testes. Pendente: ciclo (tester/design/security). B4/B5 resolvidas no backend |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
@@ -53,11 +53,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Medições (achados do Fechamento): (B3) `MedicaoResponse` devolve `ApprovedByUserId` (id interno) ao cliente — criar DTO
   reduzido para a visão cliente, como no Financeiro (o front já ignora o campo); `GET /obras/{id}/medicoes` não é paginado
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
-- Relatórios mensais (achados da tela Relatório mensal): (B4, **segurança**) o filtro de rascunho é só o parâmetro
-  `onlyPublished` (default `false`), controlado pelo chamador: um cliente que chame sem ele, ou `GET /relatorios-mensais/{id}`
-  de um rascunho, recebe o rascunho da própria obra. Forçar `published` no backend quando o papel é `Client`
-  (lista e por id; rascunho = 404). (B5) `RelatorioMensalResponse` devolve `CreatedByUserId` (id interno) ao cliente
-  — DTO reduzido; o front já ignora o campo. `GET` não é paginado (array puro).
+- Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
@@ -117,7 +113,11 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   único texto livre (não há campos estruturados como no protótipo), então a tela é uma lista de cards por mês
   (competência + data de publicação + texto com `whitespace-pre-line`, nunca HTML). Sem filtro/aba de histórico: todos
   os publicados aparecem, do mais novo ao mais antigo. A tela sempre pede `onlyPublished=true`, mas isso não é controle
-  de acesso (ver B4). Tipo `RelatorioMensal` omite `createdByUserId`.
+  de acesso. Tipo `RelatorioMensal` omite `createdByUserId`.
+- Relatório mensal, regra no backend (B4/B5): para `Client`, `GET /obras/{id}/relatorios-mensais` ignora `onlyPublished` e
+  só devolve `published`; `GET /relatorios-mensais/{id}` de rascunho = 404. O cliente recebe `RelatorioMensalClienteResponse`
+  (sem `createdByUserId`); Admin/Master seguem com o DTO completo e `onlyPublished` opcional. Testes:
+  `Http/RelatorioMensalClienteTests`.
 
 ## Registro
 
