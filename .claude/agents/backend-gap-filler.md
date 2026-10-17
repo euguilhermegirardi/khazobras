@@ -43,3 +43,9 @@ Não faça commit; o usuário decide.
 Se um commit for bloqueado pelo hook do PLAN-09, resolva sozinho: atualize o plano, rode
 `cd frontend && npm run plano:registro -- --escrever`, `git add docs/PLAN-09-frontend.md` e commite de novo.
 Não espere o usuário e não use `SKIP_PLAN_CHECK=1` sem pedido dele.
+
+## Comandos (vale sempre; à noite é obrigatório)
+
+Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.
+Comando composto só passa se cada parte estiver liberada, e à noite ninguém aprova. Para escrever arquivo use
+Write/Edit; para trocar de pasta use caminhos (`npm --prefix frontend run test`, `git -C` não).

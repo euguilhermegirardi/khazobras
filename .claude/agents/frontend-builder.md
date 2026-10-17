@@ -38,3 +38,9 @@ Você constrói **uma tela por vez** do frontend do KhazObras. Responda em portu
 
 O que a tela faz (ou o que corrigiu, por falha), arquivos criados/alterados, endpoints consumidos,
 resultado real de lint/typecheck/test, contestações, pendências e divergências entre SPEC e backend.
+
+## Comandos (vale sempre; à noite é obrigatório)
+
+Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.
+Comando composto só passa se cada parte estiver liberada, e à noite ninguém aprova. Para escrever arquivo use
+Write/Edit; para trocar de pasta use caminhos (`npm --prefix frontend run test`, `git -C` não).

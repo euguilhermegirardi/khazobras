@@ -62,6 +62,8 @@ launchctl kickstart gui/$(id -u)/com.khazobras.noite   # dispara o agendamento a
 ```
 
 - Tela **entregue** sai da fila; tela **parada** fica (você decide o que o relatório pede e ela roda de novo).
+- Tela com PR aberto não roda de novo (evita repetir a mesma tela). Para retomar uma parada na mesma branch depois
+  de ajustar: `KHAZ_REPETIR=1 ./scripts/noite.sh "<tela>"`.
 - Limites (variáveis de ambiente no plist ou no terminal): `KHAZ_LIMITE_SEG` (padrão 18000 = 5 h),
   `KHAZ_MAX_TURNS` (400), `KHAZ_MAX_USD` (25, estimativa), `KHAZ_MODELO` (`opus`, o maestro), `KHAZ_TENTATIVAS` (2).
 - Logs: `logs-noite/` (texto + JSON de cada tentativa com custo estimado e `session_id`).

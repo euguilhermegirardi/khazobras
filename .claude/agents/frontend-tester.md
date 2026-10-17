@@ -67,3 +67,9 @@ FALHA 1
   `ambiente` (não foi possível rodar). Isso vai para o usuário, não para o builder.
 - Rodada de reteste: rode tudo de novo e diga quais falhas da rodada anterior sumiram, quais
   continuam e quais são novas.
+
+## Comandos (vale sempre; à noite é obrigatório)
+
+Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.
+Comando composto só passa se cada parte estiver liberada, e à noite ninguém aprova. Para escrever arquivo use
+Write/Edit; para trocar de pasta use caminhos (`npm --prefix frontend run test`, `git -C` não).
