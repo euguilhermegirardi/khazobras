@@ -28,7 +28,7 @@
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
-| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ⬜ | |
+| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | 🟨 | `feat/relatorio-mensal`. Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Tester verde, segurança sem achados; parado no design (sem captura: Bash negado ao design-reviewer na noite). B4/B5 resolvidas no backend. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
@@ -53,6 +53,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Medições (achados do Fechamento): (B3) `MedicaoResponse` devolve `ApprovedByUserId` (id interno) ao cliente — criar DTO
   reduzido para a visão cliente, como no Financeiro (o front já ignora o campo); `GET /obras/{id}/medicoes` não é paginado
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
+- Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
@@ -107,9 +108,20 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Aprovação pede confirmação inline (`Alert` + botões), porque o shadcn `alert-dialog` não pôde ser instalado na nuvem
   (pendência: trocar por `AlertDialog` quando o registro estiver acessível). Status em linguagem simples: "Aguardando sua
   aprovação" / "Aprovada" / "Nota fiscal emitida". Tipo `Medicao` omite `approvedByUserId` de propósito.
+- Relatório mensal (cliente): rota `/cliente/obras/:obraId/relatorio-mensal`, item "Relatório mensal" na sidebar (após
+  Fechamento, enquanto Financeiro/Cronograma não existem). SPEC só diz "versão publicada, sem edição"; o `conteudo` é um
+  único texto livre (não há campos estruturados como no protótipo), então a tela é uma lista de cards por mês
+  (competência + data de publicação + texto com `whitespace-pre-line`, nunca HTML). Sem filtro/aba de histórico: todos
+  os publicados aparecem, do mais novo ao mais antigo. A tela sempre pede `onlyPublished=true`, mas isso não é controle
+  de acesso. Tipo `RelatorioMensal` omite `createdByUserId`.
+- Relatório mensal, regra no backend (B4/B5): para `Client`, `GET /obras/{id}/relatorios-mensais` ignora `onlyPublished` e
+  só devolve `published`; `GET /relatorios-mensais/{id}` de rascunho = 404. O cliente recebe `RelatorioMensalClienteResponse`
+  (sem `createdByUserId`); Admin/Master seguem com o DTO completo e `onlyPublished` opcional. Testes:
+  `Http/RelatorioMensalClienteTests`.
 
 ## Registro
 
+- 2026-10-16 — `feat/relatorio-mensal`: (sem commits ainda; descreva o que está staged). Arquivos: front/app (2), features/relatorio-mensal (5), front (1).
 - 2026-10-16 — `chore/e2e-chrome-mac13`: e2e/captures: use installed Google Chrome on macOS 13 (Playwright 1.64 ships no browsers there). Arquivos: docs (1), front (1), infra (2).
 - 2026-10-16 — `chore/e2e-chromium`: e2e: default to Chromium (Playwright has no WebKit on macOS 13); WebKit opt-in via PW_BROWSER. Arquivos: infra (1), docs (1), front (1).
 - 2026-10-16 — `chore/execucao-noturna`: Night runs on the Mac: noite.sh (preflight, limits, resume, push+PR), guard hooks, launchd template, ciclo-tela night mode. Arquivos: infra (6), outros (2), docs (1).

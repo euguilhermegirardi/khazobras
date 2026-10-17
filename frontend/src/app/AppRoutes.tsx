@@ -6,6 +6,7 @@ import { ADMIN_ROLES, CLIENT_ROLES } from '@/shared/auth/roles'
 import { FechamentoDetalhePage } from '@/features/fechamento/pages/FechamentoDetalhePage'
 import { FechamentoPage } from '@/features/fechamento/pages/FechamentoPage'
 import { ObraHubPage } from '@/features/obras/pages/ObraHubPage'
+import { RelatorioMensalPage } from '@/features/relatorio-mensal/pages/RelatorioMensalPage'
 import { AdminLayout, ClientLayout } from './layouts'
 import { AdminDashboardPage, ClientObraPage, ForbiddenPage, NotFoundPage } from './pages'
 import { ProtectedRoute } from './ProtectedRoute'
@@ -35,6 +36,7 @@ export const AppRoutes = () => {
             path="/cliente/obras/:obraId/fechamento/:medicaoId"
             element={<FechamentoDetalhePage listaPath={(obraId) => `/cliente/obras/${obraId}/fechamento`} />}
           />
+          <Route path="/cliente/obras/:obraId/relatorio-mensal" element={<RelatorioMensalPage />} />
         </Route>
       </Route>
 

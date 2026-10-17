@@ -732,6 +732,13 @@ app.MapGet("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalServi
         return Results.Forbid();
     }
 
+    if (!accessService.IsAdminOrMaster(principal))
+    {
+        // Cliente: só publicados e sem ids internos (rascunho = 404).
+        var visaoCliente = await service.GetPublishedByIdForClientAsync(id);
+        return visaoCliente is null ? Results.NotFound() : Results.Ok(visaoCliente);
+    }
+
     return Results.Ok(result);
 })
 .RequireAuthorization()
@@ -747,6 +754,12 @@ app.MapGet("/obras/{obraId:guid}/relatorios-mensais", async (Guid obraId, Relato
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
+    }
+
+    if (!accessService.IsAdminOrMaster(principal))
+    {
+        // Cliente: ignora onlyPublished, sempre só publicados e sem ids internos.
+        return Results.Ok(await service.GetPublishedByObraIdForClientAsync(obraId));
     }
 
     var result = await service.GetByObraIdAsync(obraId, onlyPublished);
