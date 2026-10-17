@@ -86,6 +86,20 @@ describe('Relatório mensal (cliente)', () => {
     expect(screen.queryByRole('button', { name: /criar|novo|editar|excluir|publicar/i })).not.toBeInTheDocument()
   })
 
+  it('não exibe ids internos nem rascunho/status técnico ao cliente', async () => {
+    server.use(getLista([relatorio()]))
+    renderApp(ROTA, 'Client')
+    await screen.findByText(/Fundação concluída/)
+
+    expect(screen.queryByText(/draft|rascunho|createdBy/i)).not.toBeInTheDocument()
+    expect(document.body.textContent).not.toContain('r1')
+  })
+
+  it('master também não entra na rota do cliente', async () => {
+    renderApp(ROTA, 'Master')
+    expect(await screen.findByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument()
+  })
+
   it('admin não entra na rota do cliente', async () => {
     renderApp(ROTA, 'Admin')
     expect(await screen.findByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument()
