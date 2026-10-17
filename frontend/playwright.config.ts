@@ -1,9 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
 // e2e dos fluxos críticos (CLAUDE.md). Arquivos *.e2e.ts para o Vitest não os coletar.
-// Navegador: PLAN-09 decidiu WebKit; no ambiente de nuvem só há Chromium, então PW_BROWSER=chromium
-// (e PW_CHROMIUM_PATH, se a revisão instalada diferir da esperada pelo Playwright) troca só para rodar lá.
-const browser = process.env.PW_BROWSER ?? 'webkit'
+// Navegador: Chromium (o Playwright atual não oferece WebKit no macOS 13, o Mac de desenvolvimento).
+// PW_BROWSER=webkit roda no WebKit onde houver suporte. PW_CHROMIUM_PATH aponta outro Chromium (ex.: nuvem,
+// quando a revisão instalada difere da esperada pelo Playwright).
+const browser = process.env.PW_BROWSER ?? 'chromium'
 const executablePath = process.env.PW_CHROMIUM_PATH || undefined
 
 export default defineConfig({
