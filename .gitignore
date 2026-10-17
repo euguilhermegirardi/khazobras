@@ -483,3 +483,9 @@ $RECYCLE.BIN/
 
 **/appsettings.Development.json
 database/seed/
+
+# Execução noturna dos agentes (estado local, logs e fila)
+.claude/ciclos/
+.claude/worktrees/
+noite.fila
+logs-noite/

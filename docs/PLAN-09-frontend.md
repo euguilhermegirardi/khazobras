@@ -79,6 +79,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Pendência de ambiente: o registro do shadcn (`ui.shadcn.com`) é bloqueado na sessão de nuvem; `table`/`tabs`/`alert`
   foram escritos a partir do código padrão do shadcn. Rodar agentes à noite na nuvem exige resolver isso
   (liberar o domínio ou rodar no Mac).
+- **Execução noturna no Mac do usuário** (decisão out/2026; a nuvem não tem .NET/NuGet/shadcn/`gh`): `scripts/noite.sh`
+  via launchd roda `claude -p "/ciclo-tela <tela>"` com `KHAZ_NOITE=1`, limites de tempo/turnos/custo e 1 retomada pelo
+  estado em `.claude/ciclos/atual.json`; o agente não dá push (hook `guarda-noite.sh`), o script faz push + PR no fim.
+  Fila em `noite.fila`. Guia: `docs/NOITE.md`.
 - Entrega de tela autônoma pela skill `ciclo-tela`: builder ↔ tester em loop (tester nunca corrige produção,
   builder nunca mexe nos testes do tester), máx. 3 rodadas, escala ao usuário em divergência/sem progresso.
 - Interfaces/tipos da API em `src/shared/interfaces/`; componente só tem a interface das próprias props; um
@@ -104,6 +108,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-16 — `chore/execucao-noturna`: Night runs on the Mac: noite.sh (preflight, limits, resume, push+PR), guard hooks, launchd template, ciclo-tela night mode. Arquivos: infra (6), outros (2), docs (1).
 - 2026-10-16 — `chore/plano-limpeza`: docs: PLAN-09 pós-merge — Fechamento ✅ (linha única), lacunas consolidadas, decisão de aprovação em Decisões.
 - 2026-10-16 — `feat/fechamento`: feat(fechamento): tela Fechamento do cliente (medições, itens e aprovação); test: fechamento (cliente) — unitários, e2e de aprovação e mock de captura; fix(fechamento): tabelas responsivas no celular, texto neutro de aprovação, 409 amigável, limpa cache ao sair; test: fechamento reteste (texto neutro, 409 amigável, tela estreita, limpeza de cache ao trocar sessão); test: fechamento remove testes de tela estreita (sistema é desktop-only); docs: relatório da manhã do Fechamento + status no PLAN-09. Arquivos: docs (7), front (9), front/app (2), features/fechamento (10).
 - 2026-10-16 — `feat/backend-aprovacao-cliente`: Backend: aprovação de medição só pelo cliente (política `ClientOnly`), UPDATE condicional por status (409), testes HTTP. Mesclado (PR #1). Pendente: B3 (DTO reduzido ao cliente).

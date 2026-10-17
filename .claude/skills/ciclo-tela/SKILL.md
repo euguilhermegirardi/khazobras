@@ -8,6 +8,24 @@ description: Orquestra a entrega autônoma de uma tela do frontend KhazObras —
 Quem roda esta skill é a **sessão principal** (o maestro): subagente não chama subagente. O maestro só
 delega, lê relatórios e decide; não escreve código de feature nem teste.
 
+## Modo noturno (quando `KHAZ_NOITE=1` / disparado por `scripts/noite.sh`)
+
+- **Ninguém vai responder.** Onde a skill diz "pare e chame o usuário": escreva o relatório da manhã com o motivo
+  em "Precisa de você", marque `resultado: "parado"` no estado e **termine** (não pergunte, não espere).
+- **Estado em `.claude/ciclos/atual.json`** (o script lê no fim e usa para retomar se a sessão cair). Atualize a cada
+  etapa concluída, sobrescrevendo o arquivo:
+  ```json
+  {"tela": "...", "branch": "feat/<slug>", "passo": "construir|teste|design|seguranca|relatorio|fim",
+   "rodada": 0, "resultado": "andamento|entregue|parado", "relatorio": "docs/relatorios/AAAA-MM-DD-<slug>.md",
+   "notas": ["falhas por tipo, decisões, o que travou — matéria-prima do relatório"]}
+  ```
+  Retomada: leia o estado e o `git log` da branch e continue do `passo`; não refaça o que já está commitado.
+- **Sem push e sem PR**: o script faz os dois no fim (o hook `guarda-noite.sh` bloqueia push/gh). Commite tudo na
+  branch antes de terminar: árvore suja no fim vira `git stash` e se perde do PR.
+- **Sem mudança de schema e sem backend que exija aplicar SQL**: lacuna assim = parar (relatório explica).
+- Permissão negada? Não contorne. As negações ficam em `.claude/ciclos/negadas.jsonl`; leve para "Sinais para o harness".
+- Uma tela por noite. Encerrou (entregue ou parado) → `passo: "fim"` e termine a sessão.
+
 ## 0. Preparar
 
 - Tela e ordem: `docs/PLAN-09-frontend.md`. Branch `feat/<tela>` a partir da `main` atualizada.
@@ -74,7 +92,7 @@ Parou? O relatório explica onde, por quê e o que falta decidir; a branch fica 
 2. `checagem-pre-commit`.
 3. `docs/PLAN-09-frontend.md` atualizado (status da tela, lacunas, decisões) e, com tudo commitado,
    `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`.
-4. Push da branch e `gh pr create` para a `main`. Na descrição: o que a tela faz, endpoints consumidos,
+4. (Fora do modo noturno) Push da branch e `gh pr create` para a `main`. Na descrição: o que a tela faz, endpoints consumidos,
    resultado da suíte e do e2e, capturas da tela (claro, escuro, notebook 1280px), **histórico do loop** (rodadas, falhas encontradas e como foram
    corrigidas), achados do security-reviewer, pendências e o link para o relatório da manhã.
 5. Nunca merge, push ou commit na `main`; nunca `--force`, `--no-verify` ou `SKIP_PLAN_CHECK=1`. O merge é do usuário.
