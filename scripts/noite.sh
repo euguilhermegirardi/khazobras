@@ -92,6 +92,10 @@ git fetch -q origin || falhar "git fetch falhou (rede ou credenciais do GitHub)"
 [ -z "$(git status --porcelain)" ] || falhar "há mudanças locais não commitadas no repositório; a noite só roda com a árvore limpa"
 git checkout -q main && git pull -q --ff-only || falhar "não consegui atualizar a main (checkout/pull)"
 gh auth status >/dev/null 2>&1 || falhar "gh não está autenticado (rode: gh auth login)"
+if [ "${KHAZ_REPETIR:-0}" != "1" ]; then
+  PR_ABERTO="$(gh pr list --head "feat/$SLUG" --state open --json url --jq '.[0].url' 2>/dev/null)"
+  [ -z "$PR_ABERTO" ] || falhar "a tela já tem PR aberto ($PR_ABERTO). Revise/mergeie e tire de noite.fila, ou rode de novo com KHAZ_REPETIR=1"
+fi
 pg_isready -q 2>/dev/null || log "Aviso: Postgres não respondeu (só importa se o ciclo precisar do backend real)."
 (cd frontend && npm install --no-audit --no-fund --silent) || falhar "npm install falhou no frontend"
 (cd frontend && npx --no-install playwright --version >/dev/null 2>&1) || log "Aviso: Playwright indisponível; e2e e captura visual vão sair como 'não rodou'."

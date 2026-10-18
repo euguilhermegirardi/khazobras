@@ -19,6 +19,7 @@ delega, lê relatórios e decide; não escreve código de feature nem teste.
    "rodada": 0, "resultado": "andamento|entregue|parado", "relatorio": "docs/relatorios/AAAA-MM-DD-<slug>.md",
    "notas": ["falhas por tipo, decisões, o que travou — matéria-prima do relatório"]}
   ```
+  **Grave o estado já no passo 0**, logo depois de criar/entrar na branch (antes do builder).
   Retomada: leia o estado e o `git log` da branch e continue do `passo`; não refaça o que já está commitado.
 - **Sem push e sem PR**: o script faz os dois no fim (o hook `guarda-noite.sh` bloqueia push/gh). Commite tudo na
   branch antes de terminar: árvore suja no fim vira `git stash` e se perde do PR.

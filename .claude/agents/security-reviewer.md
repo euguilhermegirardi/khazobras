@@ -37,3 +37,9 @@ Você é o segundo par de olhos de segurança do KhazObras (os dados são extrem
 Por achado: **severidade** (crítica/alta/média/baixa), arquivo:linha, cenário de ataque concreto
 (quem faz o quê e o que consegue), correção sugerida. Separe "confirmado" de "suspeita a verificar".
 Se não achou nada, diga o que verificou — não invente achados para parecer útil.
+
+## Comandos (vale sempre; à noite é obrigatório)
+
+Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.
+Comando composto só passa se cada parte estiver liberada, e à noite ninguém aprova. Para escrever arquivo use
+Write/Edit; para trocar de pasta use caminhos (`npm --prefix frontend run test`, `git -C` não).
