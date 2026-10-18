@@ -671,6 +671,15 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
         return Results.NotFound();
     }
 
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, relatorio.ObraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
     if (!accessService.IsAdminOrMaster(principal))
     {
         return Results.Forbid();
@@ -681,14 +690,54 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
         return Results.BadRequest(new { message = validationError });
     }
 
+    // O validador generico aceita PDF/Office; foto aceita apenas imagem (extensao + content-type).
+    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+    var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+    var imageContentTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+    if (!imageExtensions.Contains(extension)
+        || !imageContentTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
+    {
+        return Results.BadRequest(new { message = "Foto deve ser uma imagem (jpg, jpeg, png, webp ou gif)." });
+    }
+
     using var stream = file.OpenReadStream();
-    var result = await service.UploadFotoAsync(id, stream, file.FileName, file.ContentType, dataFoto, descricao, ordem);
+    var result = await service.UploadFotoAsync(id, stream, extension, file.ContentType, dataFoto, descricao, ordem);
     return Results.Created($"/fotos/{result.Id}", result);
 })
 .DisableAntiforgery()
 .RequireAuthorization("AdminOrMaster")
 .WithName("UploadFoto")
 .WithDescription("Adiciona foto a um relatório fotográfico (máx 10MB, validado por magic bytes)");
+
+app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveFotoAsync(fotoId);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var result = await service.DownloadFotoAsync(fotoId, obraId.Value);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    var (content, fileName, contentType) = result.Value;
+    return Results.File(content, contentType, fileName);
+})
+.RequireAuthorization()
+.WithName("DownloadFoto")
+.WithDescription("Baixa o arquivo de uma foto de relatório fotográfico (cliente: somente da própria obra)");
 
 app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, IValidator<CreateRelatorioMensalRequest> validator, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

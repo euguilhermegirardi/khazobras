@@ -29,7 +29,7 @@
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
-| 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
+| 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
 | 7 | Projetos | 🟨 listagem ok; download pelo cliente bloqueado | ⬜ | lacuna: liberar download ao cliente da obra |
@@ -55,6 +55,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
+- Downloads fora da régua (security-reviewer, 18/10): `GET /projetos/{id}/download` sem `EnsureAccessAsync` (e baixa do R2
+  antes de checar o perfil) e `/financeiro/anexos/{id}/download` com a segunda query só por id. Corrigir com o padrão do
+  download de foto (resolve `obra_id` → `EnsureAccessAsync` → `WHERE id = @Id AND obra_id = @ObraId`) antes das telas
+  Projetos e Financeiro.
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
@@ -120,6 +124,27 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   `Http/RelatorioMensalClienteTests`.
   Filtro `status = 'published'` também no SQL (`GetPublished...Async` no repositório, defense in depth).
   `POST /relatorios-mensais/{id}/publish` passou a chamar `EnsureAccessAsync` (regra 4).
+- Relatório fotográfico, backend (18/10): `GET /fotos/{fotoId}/arquivo` (`RequireAuthorization` + `EnsureAccessAsync` pela obra do
+  relatório; 401/403/404) devolve a imagem pelo R2 via API, sem URL pública. A tabela `fotos` não guarda content type nem nome:
+  ambos saem da `storage_key` (`{guid}{ext}`; tipo pela extensão jpg/png/webp/gif). `FotoResponse` não expõe `storage_key`,
+  então não precisou de DTO de visão cliente. `POST /relatorios-fotograficos/{id}/fotos` passou a chamar `EnsureAccessAsync`.
+  O front deve buscar a imagem com o token (fetch -> blob -> object URL), pois `<img src>` não envia `Authorization`.
+  Testes: `Http/FotoDownloadTests`. Escrito na nuvem sem .NET: validar com `dotnet build` e `dotnet test`.
+  Correção do security-reviewer (rodada 2): o download resolve só o `obra_id` da foto (`GetObraIdByFotoIdAsync`), valida acesso e
+  busca o arquivo com `WHERE f.id = @FotoId AND r.obra_id = @ObraId` (`GetFotoByIdAndObraAsync`; obra errada = 404). Upload de
+  foto aceita só jpg/jpeg/png/webp/gif (400 caso contrário); chave nova `{guid}{ext}` sem nome original (chaves antigas
+  `{guid}-{nome}` seguem legíveis); `Content-Disposition` fixo `foto-{fotoId}{ext}`. Backlog: mesmo padrão sem `EnsureAccessAsync`
+  em `/financeiro/anexos/{id}/download` e `GET /projetos/{id}/download`.
+- Relatório fotográfico (cliente, front): rota `/cliente/obras/:obraId/relatorio-fotografico`, item na sidebar antes de
+  "Relatório mensal" (SPEC §5: item 7 vem antes do 8). Tabs Mensal/Etapa filtram `tipo` no front (o backend devolve tudo
+  num array). Mensal: título = `formatMonthYearTitle(competencia)`, ordenado por competência desc; Etapa: título = nome da
+  etapa via `GET /obras/{id}/etapas` (falha ou etapa desconhecida = título do relatório; erro de etapas não derruba a tela).
+  Imagens: hook de base `hooks/useAuthenticatedObjectUrl` (reusa `apiDownload`: Bearer -> blob -> object URL, revogado no
+  cleanup; cache 5 min no TanStack Query), reaproveitável por Projetos e Financeiro. Foto que falha = placeholder
+  "Imagem indisponível". Ampliar: `components/ImageDialog` feito à mão (role=dialog, Esc/clique fora/botão fechar, foco
+  vai ao botão e volta ao gatilho), porque `@radix-ui/react-dialog` não está instalado; trocar por shadcn `dialog` quando
+  o registro estiver acessível. Todas as miniaturas do relatório carregam de uma vez (sem lazy/paginação; V1).
+  Tipos `Foto`/`RelatorioFotografico` (`interfaces/relatorioFotografico.ts`) e `Etapa` (`interfaces/etapa.ts`, só id/nome/ordem).
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
@@ -138,6 +163,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-18 — `feat/relatorio-fotografico`: feat(backend): download autenticado de fotos do relatório fotográfico; feat(relatorio-fotografico): tela do cliente com tabs Mensal e Etapa; chore(captura): mocks de imagem e chave com curinga no capturar-tela; test: relatorio-fotografico (unitários, e2e e mocks de captura); fix(relatorio-fotografico): overlay do diálogo escuro nos dois temas; docs: capturas do relatório fotográfico (claro, escuro, 1280); fix(backend): download de foto preso à obra no SQL, upload só de imagem, nome fixo; fix(api-client): nome de arquivo malformado não derruba o download; docs: relatório da manhã do Relatório fotográfico, PLAN-09 e npm run e2e. Arquivos: infra (2), backend (4), testes backend (2), docs (4), front (10), front/rotas-layouts (2), modules/relatorio-fotografico (8).
 - 2026-10-18 — `refactor/estrutura-modules`: refactor(front): estrutura por módulos (modules/ + base plana em src/). Arquivos: infra (5), outros (1), front (36), front/rotas-layouts (10), modules/auth (2), modules/fechamento (10), modules/obras (6), modules/relatorio-mensal (5).
 - 2026-10-18 — `feat/ajustes-relatorio-shell`: feat: voltar ao hub em toda tela da obra, hover escuro na sidebar, ajustes do relatório mensal. Arquivos: backend (4), testes backend (1), front/app (4), features/relatorio-mensal (1), front (4).
 - 2026-10-16 — `feat/relatorio-mensal`: (sem commits ainda; descreva o que está staged). Arquivos: front/app (2), features/relatorio-mensal (5), front (1).

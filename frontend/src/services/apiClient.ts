@@ -117,5 +117,14 @@ export async function apiDownload(path: string, signal?: AbortSignal): Promise<{
   const response = await handle(await send(path, { signal }, {}))
   const disposition = response.headers.get('Content-Disposition')
   const match = disposition?.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i)
-  return { blob: await response.blob(), fileName: match?.[1] ? decodeURIComponent(match[1]) : null }
+  return { blob: await response.blob(), fileName: match?.[1] ? decodeFileName(match[1]) : null }
+}
+
+/** Nome malformado (ex.: "obra 100%.jpg") nao pode derrubar o download: cai no valor cru. */
+function decodeFileName(raw: string): string {
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw
+  }
 }

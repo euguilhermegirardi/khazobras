@@ -101,6 +101,34 @@ public sealed class RelatorioFotograficoRepository : IRelatorioFotograficoReposi
         return foto;
     }
 
+    public async Task<Guid?> GetObraIdByFotoIdAsync(Guid fotoId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT r.obra_id
+            FROM fotos f
+            JOIN relatorios_fotograficos r ON r.id = f.relatorio_fotografico_id
+            WHERE f.id = @FotoId";
+
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(sql, new { FotoId = fotoId });
+    }
+
+    public async Task<Foto?> GetFotoByIdAndObraAsync(Guid fotoId, Guid obraId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT f.id, f.relatorio_fotografico_id AS RelatorioFotograficoId, f.storage_key AS StorageKey,
+                   f.data_foto AS DataFoto, f.descricao, f.ordem, f.created_at AS CreatedAt
+            FROM fotos f
+            JOIN relatorios_fotograficos r ON r.id = f.relatorio_fotografico_id
+            WHERE f.id = @FotoId AND r.obra_id = @ObraId";
+
+        var row = await connection.QuerySingleOrDefaultAsync<FotoRow>(sql, new { FotoId = fotoId, ObraId = obraId });
+        return row?.ToEntity();
+    }
+
     private static async Task<IEnumerable<Foto>> GetFotosAsync(System.Data.IDbConnection connection, Guid relatorioId)
     {
         const string sql = @"

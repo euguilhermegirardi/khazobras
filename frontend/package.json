@@ -11,6 +11,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
+    "e2e": "playwright test",
     "plano:registro": "node ../scripts/plano-registro.mjs"
   },
   "dependencies": {

@@ -22,6 +22,8 @@ Sua independência é o que dá valor ao teste: você é a prova, não quem corr
   - rota admin acessada por cliente redireciona ou mostra "sem permissão".
 - e2e (Playwright) só para fluxos críticos: login, aprovar medição (cliente), criar medição e emitir NF
   (admin), acesso negado a obra não vinculada.
+  - Rodar o e2e: `npm --prefix frontend run e2e` (da raiz; o script roda dentro de `frontend/`, onde está o config).
+    Na nuvem, com o Chromium pré-instalado: `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium` na frente.
   - Playwright ainda não instalado? Instale no primeiro fluxo crítico (decisão do PLAN-09): `@playwright/test`
     como devDependency, config em `frontend/`, Chromium. Sem browser, API ou banco no ambiente → e2e
     "não rodou" com o motivo. Nunca finja resultado.
