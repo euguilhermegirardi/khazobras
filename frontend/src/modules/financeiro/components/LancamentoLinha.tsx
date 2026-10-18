@@ -23,17 +23,18 @@ export const LancamentoLinha = ({ lancamento, baixandoId, onDownload }: Lancamen
     <TableCell className="font-medium">{lancamento.descricao}</TableCell>
     <TableCell className="text-right whitespace-nowrap tabular-nums">{formatCurrency(lancamento.valor)}</TableCell>
     <TableCell>
-      {lancamento.anexos.length === 0 ? (
-        <span className="text-muted-foreground" aria-label="Sem comprovante">
-          —
-        </span>
-      ) : (
-        <div className="flex items-center gap-0.5">
-          {lancamento.anexos.map((anexo) => (
+      {/* Mesma altura (h-7 = botão do clipe) com ou sem anexo, para as linhas ficarem iguais */}
+      <div className="flex h-7 items-center gap-0.5">
+        {lancamento.anexos.length === 0 ? (
+          <span className="px-2 text-muted-foreground" aria-label="Sem comprovante">
+            —
+          </span>
+        ) : (
+          lancamento.anexos.map((anexo) => (
             <ComprovanteButton key={anexo.id} anexo={anexo} baixando={baixandoId === anexo.id} onDownload={onDownload} />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </TableCell>
   </TableRow>
 )

@@ -39,7 +39,7 @@ export const AppRoutes = () => {
             element={<FechamentoDetalhePage listaPath={(obraId) => `/cliente/obras/${obraId}/fechamento`} />}
           />
           <Route path="/cliente/obras/:obraId/financeiro" element={<FinanceiroPage />} />
-          <Route path="/cliente/obras/:obraId/relatorio-fotografico"element={<RelatorioFotograficoPage />} />
+          <Route path="/cliente/obras/:obraId/relatorio-fotografico" element={<RelatorioFotograficoPage />} />
           <Route path="/cliente/obras/:obraId/relatorio-mensal" element={<RelatorioMensalPage />} />
         </Route>
       </Route>
