@@ -175,12 +175,13 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (não existe % concluído no backend; `percentualPeso` está no tipo mas não é exibido). KPIs: Etapas totais, Concluídas, Em
   andamento, Não iniciadas (contagem por status exato; status desconhecido entra só no total). Linha do tempo **mensal** do
   mês da menor data ao mês da maior (previstas e reais; sem nenhuma data = só o mês de hoje), cabeçalho "Mar/26" (`formatMonthYearShort`),
-  largura fixa de 80px por mês, rolagem horizontal só dentro do card (`overflow-x-auto`), colunas Etapa + Situação fixas
-  (`sticky left-0`). Barra grossa = período **previsto** (data final inclusiva, mín. 6px); período **real** = segunda barra fina
-  logo abaixo (só quando há início e fim reais) mais a linha de texto "Real: ..." na coluna da etapa (só início: "iniciada em",
+  meses de largura flexível (esticam para ocupar o card; mínimo 48px, então ~12 meses cabem em 1440 e 1280 sem rolar; posições
+  das barras e do "Hoje" em %), rolagem horizontal só dentro do card e só quando nem o mínimo cabe (`overflow-x-auto`), colunas
+  Etapa + Situação fixas (`sticky left-0`, 336px), linhas de 64px (3 linhas de texto com respiro igual). Barra grossa = período **previsto** (data final inclusiva, mín. 6px); período **real** = segunda barra fina
+  logo abaixo em `bg-foreground` (cor que não é de nenhum status; mesma classe na legenda) (só quando há início e fim reais) mais a linha de texto "Real: ..." na coluna da etapa (só início: "iniciada em",
   só fim: "concluída em"). Cor por status via token (success/info/neutral) + legenda; **situação também em texto** (Badge na
   coluna Situação) e período por extenso na coluna da etapa, então nada depende só de cor. Status desconhecido = neutro com o
-  texto cru. Etapa sem as duas datas previstas: sem barra, texto "Sem datas previstas". Marcador "Hoje" (linha `bg-danger`) e
+  texto cru. Etapa sem as duas datas previstas: sem barra, texto "Sem datas previstas". Marcador "Hoje" (linha de 2px `bg-danger`, mesma classe na legenda) e
   "Hoje: dd/mm/aaaa" no cabeçalho do card só se o mês de hoje está na grade. Acessibilidade: barras `role="img"` com
   `aria-label` "<nome>: previsto de dd/mm/aaaa a dd/mm/aaaa, <situação>" (real: "<nome>: realizado de ... a ..."); área
   rolável é `role="region"` rotulada. Hoje é fixado na montagem da página (`useState`). Tipo `EtapaCronograma extends Etapa`

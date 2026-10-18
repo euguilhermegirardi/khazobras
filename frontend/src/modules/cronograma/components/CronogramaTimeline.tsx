@@ -2,7 +2,7 @@ import { CalendarRange } from 'lucide-react'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { EtapaCronograma } from '@/interfaces/etapa'
 import { formatDateOnly, formatMonthYearShort, monthIndexToDateOnly } from '@/utils/dates'
-import { MONTH_WIDTH } from '../constants'
+import { LEFT_COLUMNS_WIDTH, MONTH_MIN_WIDTH } from '../constants'
 import { buildRange, todayLeft } from '../timeline'
 import { CronogramaLegenda } from './CronogramaLegenda'
 import { EtapaLinha } from './EtapaLinha'
@@ -35,17 +35,16 @@ export const CronogramaTimeline = ({ etapas, hoje }: CronogramaTimelineProps) =>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto" role="region" aria-label="Linha do tempo das etapas">
-          <div className="min-w-max">
+          <div style={{ minWidth: LEFT_COLUMNS_WIDTH + range.months * MONTH_MIN_WIDTH }}>
             <div className="flex border-b">
-              <div className="sticky left-0 z-10 flex w-96 shrink-0 items-center bg-card text-[11px] text-muted-foreground">
-                <span className="w-64">Etapa</span>
-                <span className="w-32">Situação</span>
+              <div className="sticky left-0 z-10 flex w-84 shrink-0 items-center bg-card text-[11px] text-muted-foreground">
+                <span className="w-56">Etapa</span>
+                <span className="w-28">Situação</span>
               </div>
               {meses.map((mes) => (
                 <div
                   key={mes}
-                  className="flex h-8 shrink-0 items-center border-l px-1.5 text-[11px] text-muted-foreground"
-                  style={{ width: MONTH_WIDTH }}
+                  className="flex h-8 min-w-0 flex-1 basis-0 items-center border-l px-1.5 text-[11px] text-muted-foreground"
                 >
                   {formatMonthYearShort(mes)}
                 </div>

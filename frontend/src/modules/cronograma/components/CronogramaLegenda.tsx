@@ -1,4 +1,4 @@
-import { BAR_CLASS } from '../constants'
+import { BAR_CLASS, HOJE_CLASS, REAL_BAR_CLASS } from '../constants'
 
 interface CronogramaLegendaProps {
   /** Mostra a entrada "Hoje" (só quando o marcador aparece na grade). */
@@ -20,12 +20,12 @@ export const CronogramaLegenda = ({ comHoje }: CronogramaLegendaProps) => (
       </li>
     ))}
     <li className="flex items-center gap-1.5">
-      <span aria-hidden className="h-1.5 w-4 rounded-sm bg-foreground/60" />
+      <span aria-hidden className={`h-1.5 w-4 rounded-sm ${REAL_BAR_CLASS}`} />
       Período realizado
     </li>
     {comHoje && (
       <li className="flex items-center gap-1.5">
-        <span aria-hidden className="h-3 w-px bg-danger" />
+        <span aria-hidden className={`h-3 ${HOJE_CLASS}`} />
         Hoje
       </li>
     )}

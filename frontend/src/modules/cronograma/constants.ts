@@ -18,7 +18,16 @@ export const BAR_CLASS: Record<EtapaTone, string> = {
   neutral: 'bg-neutral',
 }
 
-/** Largura de um mês na linha do tempo (px). */
-export const MONTH_WIDTH = 80
+/** Barra do período realizado: cor que não é de nenhum status (a legenda usa a mesma classe). */
+export const REAL_BAR_CLASS = 'bg-foreground'
+
+/** Marcador de "Hoje": a mesma classe na linha e na legenda (2px para não borrar em posição fracionária). */
+export const HOJE_CLASS = 'w-0.5 bg-danger'
+
+/** Largura mínima de um mês (px): abaixo disso a linha do tempo rola dentro do card. Acima, o mês estica. */
+export const MONTH_MIN_WIDTH = 48
+
+/** Largura das colunas fixas Etapa + Situação (px): entra no cálculo da largura mínima da linha do tempo. */
+export const LEFT_COLUMNS_WIDTH = 336
 
 export const MENSAGEM_VAZIO = 'O cronograma desta obra ainda não foi cadastrado'
