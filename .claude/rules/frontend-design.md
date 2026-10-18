@@ -119,6 +119,12 @@ Mapas de rótulo e de cor ficam no `constants.ts` do módulo (ex.: `OBRA_STATUS_
 8. Datas em título no formato "Setembro de 2026" (sem "De" maiúsculo).
 8a. Tabelas: altura de linha uniforme. Célula de ação (botão-ícone) e o "—" de quando não há ação ocupam a
    mesma altura; compare linhas com e sem ação na captura.
+8c. Texto dentro de linhas e células com respiro: nada encostando na borda da linha vizinha nem cortado.
+8d. Legenda = elemento: cada cor/forma da legenda é exatamente a usada no gráfico/timeline (mesmo token, mesma
+   opacidade), e nenhuma cor de série coincide com a cor de um status diferente.
+8e. Gráficos e timelines cabem na largura do card em 1440 e 1280 quando o intervalo é normal (~12–18 meses);
+   rolagem horizontal dentro do card só como último recurso. Compare onde os dados terminam com onde a
+   captura corta.
 8b. A sidebar é `sticky h-screen`: na captura de página inteira a faixa dela termina na altura do viewport. Igual
    ao protótipo; não é falha.
 9. Desktop web: confira em 1440px e 1280px (notebook) e no tema escuro. **Sem mobile** (SPEC §10: sistema
