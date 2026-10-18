@@ -43,6 +43,9 @@ Regenerar capturas: `node scripts/design-capturas.mjs`.
   (verde, só admin)**. Item novo: `app/navigation.ts`, na ordem do SPEC.
 - Topbar branca fixa; conteúdo em fundo cinza (`bg-background`) com `p-5`.
 - Toda tela começa com `PageSection` (título 18px + descrição opcional + ações à direita).
+- **Navegação comum a várias telas mora no `AppShell`**, nunca dentro de uma página (ex.: o "← Minhas obras"
+  de volta ao hub aparece em toda tela da obra). Precisa de algo assim? Mude o shell, não copie por página.
+  Voltar específico da tela (ex.: detalhe → lista) fica na página.
 
 ## Tokens (em `src/index.css`; nunca cor fixa)
 
@@ -56,6 +59,9 @@ Regenerar capturas: `node scripts/design-capturas.mjs`.
 | Vermelho (atrasado, vencendo, erro, acima do orçado) | `text-danger`, `bg-danger-soft text-danger-soft-foreground` |
 | Cinza (planejado, rascunho, sem dado) | `text-neutral`, `bg-neutral-soft text-neutral-soft-foreground` |
 | Gráficos (material, mão de obra, equipamento, acumulado, outros) | `var(--chart-1..5)` |
+
+Textos com data: use os helpers de `shared/lib/dates.ts`. Mês em **título** = `formatMonthYearTitle`
+("Setembro de 2026"); nunca a classe `capitalize` (deixa "De" maiúsculo). Em frase, `formatMonthYear` (minúsculo).
 
 Raios: card `rounded-xl` (12px); botão, input, KPI, alerta `rounded-md` (8px); badge `rounded-full`.
 Tipografia (fonte do sistema, base 14px): título de página `text-lg font-medium`; título de card 13px
@@ -96,14 +102,20 @@ Mapas de rótulo e de cor ficam no `constants.ts` da feature (ex.: `OBRA_STATUS_
   `text-subtle-foreground` só em texto grande/decorativo.
 - Bordas de 1px (o protótipo usa 0,5px) e ícones Lucide no lugar de Tabler.
 - Tema escuro segue o sistema operacional (`prefers-color-scheme`), como no protótipo.
+- **Hover da sidebar** (pedido do Guilherme, 18/10): fundo escuro e texto claro (`--sidebar-hover`, verde no bloco
+  da empresa com `--sidebar-hover-empresa`). O protótipo usa cinza claro; não "corrija" de volta.
 
 ## Checklist visual (o design-reviewer usa esta lista)
 
-1. Moldura: tela dentro do `AppShell`, começa com `PageSection`, item ativo certo na sidebar.
+1. Moldura: tela dentro do `AppShell`, começa com `PageSection`, item ativo certo na sidebar, "← Minhas obras"
+   presente (telas da obra).
 2. Mesma composição da captura de referência: ordem de alertas → KPIs → cards/tabelas.
 3. Componentes da tabela acima (nada de HTML estilizado à mão para card, badge, tabela, aba, alerta).
 4. Cores só por token e pelo mapa de status; nenhuma cor fixa (`blue-600`, `#185FA5`).
 5. Tipografia e raios da seção Tokens; números alinhados à direita em tabelas de valores.
 6. Estados carregando/vazio/erro com a mesma moldura e o mesmo visual (Skeleton, vazio tracejado, `ErrorState`).
-7. Desktop web: confira em 1440px e 1280px (notebook) e no tema escuro. **Sem mobile** (SPEC §10: sistema
+7. Estados de interação: passe o mouse nos itens da sidebar e nos botões (hover) e navegue com Tab (foco
+   visível). Captura estática não mostra isso: confira no código as classes `hover:`/`focus-visible:`.
+8. Datas em título no formato "Setembro de 2026" (sem "De" maiúsculo).
+9. Desktop web: confira em 1440px e 1280px (notebook) e no tema escuro. **Sem mobile** (SPEC §10: sistema
    desktop-only) — não reporte nem corrija quebra em larguras de celular.

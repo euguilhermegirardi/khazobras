@@ -126,6 +126,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Título de mês ("Setembro de 2026"): `formatMonthYearTitle` em `shared/lib/dates.ts` (o CSS `capitalize`
   deixava "De" maiúsculo).
 
+- **Achado da revisão humana vira ajuste no harness** (regra, skill, agente ou checklist do reviewer), não só correção
+  de código. Regra que já existia e passou mesmo assim → repetir no checklist de quem executa e no critério de
+  quem revisa. Primeira aplicação (18/10, Relatório mensal): filtro de status no SQL, `EnsureAccessAsync` mesmo em
+  endpoint só de admin, piso de severidade do security-reviewer, navegação comum no `AppShell`, título de mês,
+  hover/foco no checklist visual.
+
 ## Registro
 
 - 2026-10-18 — `feat/ajustes-relatorio-shell`: feat: voltar ao hub em toda tela da obra, hover escuro na sidebar, ajustes do relatório mensal. Arquivos: backend (4), testes backend (1), front/app (4), features/relatorio-mensal (1), front (4).
