@@ -7,27 +7,27 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
 
 0. **Branch**: `git checkout -b feat/<tela>` a partir da `main` atualizada. Nunca na `main`.
 1. **Escopo**: ler `docs/PLAN-09-frontend.md` (ordem e pendências), a tela em `docs/SPEC.md`
-   (§5 cliente / §6 admin) e `frontend/CLAUDE.md`. A feature `src/features/obras/` é o molde.
+   (§5 cliente / §6 admin) e `frontend/CLAUDE.md`. O módulo `src/modules/obras/` é o molde.
    Definir: quem acessa (role), o que lê, o que escreve (cliente: só aprovar medição).
 2. **Contrato**: localizar endpoints em `backend/src/KhazObras.Api/Program.cs` e DTOs em
    `Application`. Se faltar endpoint ou o response vazar campo interno para o cliente →
    parar e acionar `backend-gap-filler`.
-3. **Feature** em `src/features/<modulo>/`:
-   - Tipos: `src/shared/interfaces/<dominio>.ts` espelha o DTO (enums PascalCase na resposta; snake_case no request).
+3. **Módulo** em `src/modules/<modulo>/`:
+   - Tipos: `src/interfaces/<dominio>.ts` espelha o DTO (enums PascalCase na resposta; snake_case no request).
    - Componentes: um por arquivo, só a própria interface de props, ordem da regra `.claude/rules/frontend-componentes.md`.
    - `api.ts`: funções sobre `apiClient`; sem `fetch` solto.
    - `hooks.ts`: `useQuery`/`useMutation` com chaves estáveis (`['obra', obraId, 'medicoes', page]`);
      mutação invalida as chaves afetadas.
    - `components/` e `pages/`: página fina, lógica em hooks.
    - Aparência: `.claude/rules/frontend-design.md` + a captura de referência da tela em `docs/design/capturas/`
-     (abra com Read antes de montar). Item da sidebar em `src/app/navigation.ts`, na ordem do SPEC.
-   - UI: componentes de `src/shared/ui/` (shadcn/ui) e `src/shared/components/` (`KpiCard`, `ProgressBar`) primeiro; faltou um → `npx shadcn@latest add <nome>`
+     (abra com Read antes de montar). Item da sidebar em `src/layouts/navigation.ts`, na ordem do SPEC.
+   - UI: componentes de `src/components/ui/` (shadcn/ui) e `src/components/` (`KpiCard`, `ProgressBar`) primeiro; faltou um → `npx shadcn@latest add <nome>`
      (nunca recriar à mão; sem acesso ao registro do shadcn, pare e registre a pendência). Cores só por tokens do tema (`text-muted-foreground`, `bg-destructive`...),
-     nunca cor fixa. O Hub (`features/obras`) é o exemplo.
-4. **Estados**: carregando (`Skeleton` de `shared/ui`, dentro de `role="status"` com texto `sr-only`), vazio (mensagem útil), erro (com `requestId` em 500;
+     nunca cor fixa. O Hub (`modules/obras`) é o exemplo.
+4. **Estados**: carregando (`Skeleton` de `components/ui`, dentro de `role="status"` com texto `sr-only`), vazio (mensagem útil), erro (com `requestId` em 500;
    403 → sem permissão; 409 → mensagem da transição), sucesso.
 5. **Rota**: registrar com guarda de role dentro do layout certo (`ClientLayout` / `AdminLayout`) e
-   o item da sidebar em `src/app/navigation.ts` (bloco obra ou empresa), na ordem do SPEC.
+   o item da sidebar em `src/layouts/navigation.ts` (bloco obra ou empresa), na ordem do SPEC.
 6. **Formulários** (admin): React Hook Form + Zod, espelhando as regras do validator do backend;
    erros do servidor (400) mapeados nos campos.
 7. **Visão cliente**: linguagem simples, sem termos técnicos, só valores previstos/contratados.

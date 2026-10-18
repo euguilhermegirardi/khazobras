@@ -10,7 +10,7 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 - React Router 7 (rotas com guarda por role) — pacote `react-router-dom`
 - TanStack Query (dados do servidor) — sem Redux; estado local com `useState`/`useReducer`
 - React Hook Form + Zod (formulários)
-- Tailwind CSS 4 + **shadcn/ui** (componentes acessíveis, código no repositório em `src/shared/ui/`)
+- Tailwind CSS 4 + **shadcn/ui** (componentes acessíveis, código no repositório em `src/components/ui/`)
 - Vitest + Testing Library + MSW (unit/integração); Playwright (e2e dos fluxos críticos)
 - Gráficos (Dashboard/Curva S): Recharts, ainda não instalado — adicionar ao construir o Dashboard
 
@@ -18,34 +18,41 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 
 ```
 frontend/src/
-  app/            # providers, router, layouts (ClientLayout, AdminLayout), shell/ (sidebar+topbar), navigation.ts
-  features/<mod>/ # um diretório por módulo: api.ts, hooks.ts, constants.ts, components/, pages/
-  shared/         # interfaces/ (tipos da API), ui/ (shadcn), components/ (ErrorState, PageSection),
-                  # auth/ (sessão, useAuth), lib/ (apiClient, formatters, utils), hooks/
+  modules/<mod>/  # uma pasta por tela/módulo: api.ts, hooks.ts, constants.ts, components/, pages/
+  components/     # reutilizáveis entre módulos (PageSection, ErrorState, KpiCard, ProgressBar)
+    ui/           # base do shadcn/ui (button, card, badge, table, tabs, alert, skeleton)
+  interfaces/     # tipos da API (espelham os sealed record do backend)
+  utils/          # funções puras: dates, format, cn
+  services/       # apiClient (fetch + Bearer + erros) e session (sessionStorage)
+  auth/           # AuthContext, useAuth, roles, homePath, login
+  hooks/          # hooks reutilizáveis entre módulos (criar quando o primeiro aparecer)
+  layouts/        # ClientLayout/AdminLayout (RoleLayouts.tsx), shell/ (sidebar + topbar), navigation.ts
+  routes/         # AppRoutes, ProtectedRoute, páginas genéricas (sem permissão, não encontrada)
   test/           # setup, server MSW, helpers (handlers ficam dentro de cada teste)
+  main.tsx  providers.tsx  index.css
 ```
 
-Direção das dependências: `app → features → shared`. Uma feature nunca importa de outra feature; o que for
-comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shared/lib/`).
+Direção das dependências: `routes → layouts / modules → base` (base = components, interfaces, utils, services,
+auth, hooks). Um módulo nunca importa de outro módulo; o que for comum sobe para a base. O lint cobra.
 
 ## Componentes (shadcn/ui)
 
 - **Aparência = protótipo do engenheiro** (`docs/design/`): guia em `.claude/rules/frontend-design.md`.
-- Componentes base em `src/shared/ui/` (`button`, `card`, `badge`, `skeleton`, `table`, `tabs`, `alert`) e padrões em
-  `src/shared/components/` (`PageSection`, `ErrorState`, `KpiCard`, `ProgressBar`). Moldura (sidebar + topbar):
-  `src/app/shell/`, itens em `src/app/navigation.ts`. Sempre usar antes de criar HTML estilizado à mão.
-  Feature de referência: `features/obras` (Hub).
+- Componentes base em `src/components/ui/` (`button`, `card`, `badge`, `skeleton`, `table`, `tabs`, `alert`) e padrões em
+  `src/components/` (`PageSection`, `ErrorState`, `KpiCard`, `ProgressBar`). Moldura (sidebar + topbar):
+  `src/layouts/shell/`, itens em `src/layouts/navigation.ts`. Sempre usar antes de criar HTML estilizado à mão.
+  Módulo de referência: `modules/obras` (Hub).
 - Componente novo: `npx shadcn@latest add <nome>` (config em `components.json`). Não editar os componentes
   base sem motivo; variação de uso vai por `className`/`variant`.
 - Cores só por tokens do tema (`bg-card`, `text-muted-foreground`, `bg-success-soft`, `text-danger`...),
   nunca cor fixa (`slate-500`, `#185FA5`). Tema (copiado do protótipo) em `src/index.css`.
-- `cn()` de `@/shared/lib/utils` para juntar classes.
+- `cn()` de `@/utils/cn` para juntar classes.
 
 ## Contrato com a API
 
 - Login: `POST /auth/login` → `{ token, expiresAt, userId, name, email, role }`; roles `Master`, `Admin`, `Client`.
 - Base URL vem de `import.meta.env.VITE_API_URL`. Nunca hardcode.
-- `apiClient` único (`shared/lib/apiClient.ts`): injeta `Authorization: Bearer`, trata 401 (logout +
+- `apiClient` único (`services/apiClient.ts`): injeta `Authorization: Bearer`, trata 401 (logout +
   redirect para login), 403 (tela "sem permissão"), 409 (transição inválida → mensagem ao usuário),
   500 (`{ requestId, message }` → mostrar o `requestId` para suporte).
 - Listagens: `{ totalItems, pageIndex, pageSize, items }`, `pageIndex` base 0.
@@ -54,8 +61,8 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
 - Dinheiro: `decimal` no backend. No front, formatar com `Intl.NumberFormat('pt-BR', {style:'currency',currency:'BRL'})`.
   Nunca fazer aritmética de dinheiro com `number` para decidir regra de negócio — o backend calcula.
 - Datas `DATE` chegam como `yyyy-MM-dd`: tratar como data local, **não** passar por `new Date(str)` sem
-  cuidado (fuso de São Paulo vira dia anterior). Usar helper em `shared/lib/dates.ts`.
-- Tipos da API ficam em `src/shared/interfaces/<dominio>.ts`, espelhando os `sealed record` do backend. Ao mudar
+  cuidado (fuso de São Paulo vira dia anterior). Usar helper em `utils/dates.ts`.
+- Tipos da API ficam em `src/interfaces/<dominio>.ts`, espelhando os `sealed record` do backend. Ao mudar
   um DTO no backend, atualizar o tipo no mesmo PR.
 
 ## Segurança (inegociável — dados extremamente sensíveis)
@@ -88,13 +95,13 @@ comum sobe para `shared/` (ex.: sessão em `shared/auth/`, formatadores em `shar
 
 ## Padrões já estabelecidos (siga-os)
 
-- **Feature de referência:** `src/features/obras/` (`shared/interfaces/obra.ts` → `api.ts` → `hooks.ts` →
+- **Módulo de referência:** `src/modules/obras/` (`interfaces/obra.ts` → `api.ts` → `hooks.ts` →
   `components/` → `pages/`). Organização e ordem dentro do componente: `.claude/rules/frontend-componentes.md`.
 - **Lint explícito:** `frontend/.oxlintrc.json` lista cada regra com o porquê. Mudou regra? Registrar no PLAN-09.
 - Página reutilizável entre visões recebe o destino por prop (`ObraHubPage obraPath={...}`), em vez de
   duplicar a tela para cliente e admin.
 - Erros de API: `ApiError` (`kind`, `requestId`); mostre `requestId` nos 500 e ofereça "Tentar novamente".
-- Rotas novas entram em `src/app/AppRoutes.tsx` dentro da guarda do papel certo.
+- Rotas novas entram em `src/routes/AppRoutes.tsx` dentro da guarda do papel certo.
 - Testes: ver `.claude/rules/frontend-testes.md`.
 - Atualizou uma tela? Atualize `docs/PLAN-09-frontend.md` (tabela + registro).
 

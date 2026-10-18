@@ -20,7 +20,7 @@
 ## Pendências antes da próxima tela
 
 - [x] Biblioteca de componentes decidida: **shadcn/ui** (ver Decisões).
-- [x] Navbar do cliente: moldura sidebar + topbar em `src/app/shell/` (itens em `src/app/navigation.ts`).
+- [x] Navbar do cliente: moldura sidebar + topbar em `src/layouts/shell/` (itens em `src/layouts/navigation.ts`).
 
 ## Telas do cliente (SPEC §5) — ordem sugerida
 
@@ -64,7 +64,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 ## Decisões
 
 - Token em `sessionStorage` (V1). Sem refresh; sessão expira em 8h.
-- Componentes: **shadcn/ui** (Tailwind 4, tema por variáveis CSS em `src/index.css`), código em `src/shared/ui/`.
+- Componentes: **shadcn/ui** (Tailwind 4, tema por variáveis CSS em `src/index.css`), código em `src/components/ui/`.
   Instalados: Button, Card, Badge, Skeleton, Table, Tabs, Alert. Recharts entra com o Dashboard.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright em **Chromium** (instalado com o Fechamento, `frontend/e2e/*.e2e.ts`). Era WebKit, mas o Playwright 1.64
@@ -73,7 +73,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.
 - **Design = protótipo do engenheiro** (`docs/design/referencia.html`, anonimizado, + `capturas/`): tema copiado em
   `src/index.css` (claro/escuro pelo sistema, cores semânticas info/success/warning/danger/neutral), moldura
-  sidebar+topbar em `src/app/shell/` (itens em `src/app/navigation.ts`), componentes `table`/`tabs`/`alert` +
+  sidebar+topbar em `src/layouts/shell/` (itens em `src/layouts/navigation.ts`), componentes `table`/`tabs`/`alert` +
   `KpiCard`/`ProgressBar`. Guia: `.claude/rules/frontend-design.md`. Do protótipo vem só a aparência; conteúdo é do SPEC.
 - **Só desktop web** (SPEC §10): sem layout mobile; larguras de referência 1440px e 1280px. (O guia de design
   chegou a pedir 390px por engano; corrigido após a rodada supervisionada do Fechamento.)
@@ -88,12 +88,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Fila em `noite.fila`. Guia: `docs/NOITE.md`.
 - Entrega de tela autônoma pela skill `ciclo-tela`: builder ↔ tester em loop (tester nunca corrige produção,
   builder nunca mexe nos testes do tester), máx. 3 rodadas, escala ao usuário em divergência/sem progresso.
-- Interfaces/tipos da API em `src/shared/interfaces/`; componente só tem a interface das próprias props; um
+- Interfaces/tipos da API em `src/interfaces/`; componente só tem a interface das próprias props; um
   componente por arquivo; ordem fixa dentro do componente (`.claude/rules/frontend-componentes.md`).
-- Componentes e funções internas como `const` + arrow; utilitários em `shared/lib` como `function` (lint cobra).
+- Componentes e funções internas como `const` + arrow; utilitários (`utils/`) e serviços (`services/`) como `function` (lint cobra).
 - Lint explícito em `frontend/.oxlintrc.json` (oxlint), com segurança (`no-danger`, sem `localStorage`), a11y e
-  fronteiras de import (feature ↛ feature, shared ↛ features/app).
-- Sessão/auth em `src/shared/auth/` (usada por várias telas); `features/auth/` só tem a tela de login.
+  fronteiras de import (módulo ↛ módulo; base ↛ modules/layouts/routes; layouts ↛ modules/routes).
+- Sessão/auth em `src/auth/` (usada por várias telas); `modules/auth/` só tem a tela de login.
 - Node 20.19+ (ou 22.12+) por causa do Vite 8.
 - Uma branch por tela (`feat/<tela>`); nunca commitar direto na `main`.
 - Atualização do plano é travada no commit (hook versionado) e o Registro é gerado do git (`plano:registro`).
@@ -123,7 +123,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
-- Título de mês ("Setembro de 2026"): `formatMonthYearTitle` em `shared/lib/dates.ts` (o CSS `capitalize`
+- Título de mês ("Setembro de 2026"): `formatMonthYearTitle` em `utils/dates.ts` (o CSS `capitalize`
   deixava "De" maiúsculo).
 
 - **Achado da revisão humana vira ajuste no harness** (regra, skill, agente ou checklist do reviewer), não só correção
@@ -131,6 +131,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   quem revisa. Primeira aplicação (18/10, Relatório mensal): filtro de status no SQL, `EnsureAccessAsync` mesmo em
   endpoint só de admin, piso de severidade do security-reviewer, navegação comum no `AppShell`, título de mês,
   hover/foco no checklist visual.
+
+- **Estrutura de pastas = modelo "por módulos"** (escolha do Guilherme, 18/10): `src/modules/<tela>/` + base plana na
+  raiz de `src/` (`components/` com `ui/` do shadcn, `interfaces/`, `utils/`, `services/`, `auth/`, `hooks/`) +
+  `layouts/` (shell e navegação) + `routes/`. Substitui `app/` + `features/` + `shared/`. Fronteiras no `.oxlintrc.json`.
 
 ## Registro
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Trava de commit: mudança que altera o estado do produto precisa levar o PLAN-09 junto.
-# Dispara quando entram no commit: telas (frontend/src/features, exceto testes), rotas do front
-# (AppRoutes.tsx), endpoints (Program.cs) ou scripts de banco (database/schema).
+# Dispara quando entram no commit: telas (frontend/src/modules, exceto testes), rotas do front
+# (routes/AppRoutes.tsx), endpoints (Program.cs) ou scripts de banco (database/schema).
 # Liberado: merge commits, branches wip/*, e SKIP_PLAN_CHECK=1 (uso consciente).
 set -euo pipefail
 
@@ -16,7 +16,7 @@ case "$branch" in wip/*) exit 0 ;; esac
 staged="$(git diff --cached --name-only --diff-filter=ACMRD)"
 
 gatilhos="$(printf '%s\n' "$staged" | grep -E \
-  '^(frontend/src/features/|frontend/src/app/AppRoutes\.tsx$|backend/src/KhazObras\.Api/Program\.cs$|database/schema/)' \
+  '^(frontend/src/modules/|frontend/src/routes/AppRoutes\.tsx$|backend/src/KhazObras\.Api/Program\.cs$|database/schema/)' \
   | grep -vE '\.test\.tsx?$' || true)"
 
 [ -z "$gatilhos" ] && exit 0

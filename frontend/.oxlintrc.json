@@ -12,7 +12,7 @@
     // --- Segurança (frontend/CLAUDE.md, seção Segurança) ---
     "react/no-danger": "error",                  // proíbe dangerouslySetInnerHTML (XSS)
     "no-restricted-globals": ["error",
-      { "name": "localStorage", "message": "Token/sessão só em sessionStorage (shared/lib/session.ts)." }],
+      { "name": "localStorage", "message": "Token/sessão só em sessionStorage (services/session.ts)." }],
 
     // --- TypeScript ---
     "typescript/no-explicit-any": "error",       // use unknown + validação, nunca any
@@ -30,27 +30,35 @@
   "overrides": [
     {
       // Componentes e telas: tudo como const + arrow function (componente, handlers, helpers internos).
-      "files": ["src/app/**/*.tsx", "src/features/**/*.tsx", "src/shared/components/**/*.tsx"],
+      "files": ["src/modules/**/*.tsx", "src/components/*.tsx", "src/layouts/**/*.tsx", "src/routes/**/*.tsx", "src/providers.tsx"],
       "rules": { "func-style": ["error", "expression"] }
     },
     {
-      // Funções utilitárias puras: `function` nomeada.
-      "files": ["src/shared/lib/**/*.ts"],
+      // Funções utilitárias e serviços puros: `function` nomeada.
+      "files": ["src/utils/**/*.ts", "src/services/**/*.ts"],
       "rules": { "func-style": ["error", "declaration", { "allowArrowFunctions": false }] }
     },
     {
-      // Uma feature nunca importa de outra; o comum vive em shared/. (Arquivos da própria feature: import relativo.)
-      "files": ["src/features/**"],
+      // Um módulo nunca importa de outro; o comum vive na raiz de src/ (components, utils, interfaces...).
+      // Arquivos do próprio módulo: import relativo.
+      "files": ["src/modules/**"],
       "rules": { "no-restricted-imports": ["error", { "patterns": [
-        { "group": ["@/features/*", "@/features/**"], "message": "Feature não importa de outra feature: suba o código para src/shared/." },
-        { "group": ["@/app/*", "@/app/**"], "message": "features não dependem de app/ (direção: app → features → shared)." }
+        { "group": ["@/modules/*", "@/modules/**"], "message": "Módulo não importa de outro módulo: suba o código para src/components, src/utils, src/interfaces..." },
+        { "group": ["@/routes/*", "@/routes/**", "@/layouts/*", "@/layouts/**"], "message": "modules não dependem de routes/ nem de layouts/ (direção: routes → layouts/modules → base)." }
       ] }] }
     },
     {
-      // shared/ é a base: não conhece features nem app.
-      "files": ["src/shared/**"],
+      // Moldura (sidebar/topbar): não conhece telas nem rotas.
+      "files": ["src/layouts/**"],
       "rules": { "no-restricted-imports": ["error", { "patterns": [
-        { "group": ["@/features/*", "@/features/**", "@/app/*", "@/app/**"], "message": "shared/ não importa de features/ nem de app/." }
+        { "group": ["@/modules/*", "@/modules/**", "@/routes/*", "@/routes/**"], "message": "layouts/ não importa de modules/ nem de routes/." }
+      ] }] }
+    },
+    {
+      // Base (components, interfaces, utils, services, auth, hooks): não conhece módulos, rotas nem layouts.
+      "files": ["src/components/**", "src/interfaces/**", "src/utils/**", "src/services/**", "src/auth/**", "src/hooks/**"],
+      "rules": { "no-restricted-imports": ["error", { "patterns": [
+        { "group": ["@/modules/*", "@/modules/**", "@/routes/*", "@/routes/**", "@/layouts/*", "@/layouts/**"], "message": "A base de src/ não importa de modules/, routes/ nem layouts/." }
       ] }] }
     },
     {

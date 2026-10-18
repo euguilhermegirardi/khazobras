@@ -37,8 +37,8 @@ files.delete('')
 
 const area = (file) => {
   let match
-  if ((match = file.match(/^frontend\/src\/features\/([^/]+)\//))) return `features/${match[1]}`
-  if (file.startsWith('frontend/src/app/')) return 'front/app'
+  if ((match = file.match(/^frontend\/src\/modules\/([^/]+)\//))) return `modules/${match[1]}`
+  if (file.startsWith('frontend/src/routes/') || file.startsWith('frontend/src/layouts/')) return 'front/rotas-layouts'
   if (file.startsWith('frontend/')) return 'front'
   if (file.startsWith('backend/src/')) return 'backend'
   if (file.startsWith('backend/tests/')) return 'testes backend'

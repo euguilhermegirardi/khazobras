@@ -6,17 +6,19 @@ paths:
 
 # Componentes e arquivos do frontend
 
-Exemplo completo: `src/features/obras/pages/ObraHubPage.tsx` e `components/ObraCard.tsx`.
+Exemplo completo: `src/modules/obras/pages/ObraHubPage.tsx` e `components/ObraCard.tsx`.
 
 ## Onde fica cada coisa
 
-- **Interfaces/tipos de API e domínio:** `src/shared/interfaces/<dominio>.ts` (`obra.ts`, `auth.ts`, `paged.ts`).
+- **Interfaces/tipos de API e domínio:** `src/interfaces/<dominio>.ts` (`obra.ts`, `auth.ts`, `paged.ts`).
   Espelham os `sealed record` do backend; mudou o DTO, muda aqui no mesmo PR.
 - **No arquivo do componente:** só a interface das props dele (`interface ObraCardProps`). Nada de outros tipos.
-- **Um componente por arquivo.** Peças só da feature: `features/<mod>/components/`; reutilizáveis entre telas:
-  `src/shared/components/` (ex.: `ErrorState`, `PageSection`); base do shadcn: `src/shared/ui/`.
-- **Constantes da feature** (mapas de rótulo etc.): `features/<mod>/constants.ts`.
-- **Funções utilitárias puras:** `src/shared/lib/*.ts`, declaradas com `function` (o lint cobra).
+- **Um componente por arquivo.** Peças só do módulo: `modules/<mod>/components/`; reutilizáveis entre telas:
+  `src/components/` (ex.: `ErrorState`, `PageSection`); base do shadcn: `src/components/ui/`.
+- **Hooks reutilizáveis entre módulos:** `src/hooks/`. Hooks de dados de um módulo: `modules/<mod>/hooks.ts`.
+- **Constantes do módulo** (mapas de rótulo etc.): `modules/<mod>/constants.ts`.
+- **Funções utilitárias puras:** `src/utils/*.ts`; acesso a API/sessão: `src/services/*.ts`. Ambos declarados com
+  `function` (o lint cobra).
 
 ## Ordem dentro do componente
 
@@ -47,11 +49,11 @@ export const Xxx = ({ ... }: XxxProps) => {   // componente sempre const + arrow
 - Hooks importados pelo nome: `import { useEffect, useState } from 'react'` (nunca `React.useEffect`).
 - Nenhum hook depois de um `return` antecipado (regra do React; o lint `rules-of-hooks` cobra).
 - `const` com arrow vs `function`: dentro de componentes, arrow (não sofre hoisting, força leitura de cima
-  para baixo); em `shared/lib`, `function` nomeada.
+  para baixo); em `utils/` e `services/`, `function` nomeada.
 
 ## O que o lint cobra sozinho (`frontend/.oxlintrc.json`)
 
 `rules-of-hooks`, `exhaustive-deps`, `no-danger` (sem `dangerouslySetInnerHTML`), `localStorage` proibido,
 `no-explicit-any`, `import type`, `===`, sem `console`, `alt` e `label` obrigatórios, `func-style` (arrow em
-componentes, `function` em `shared/lib`), feature não importa de outra feature, `shared/` não importa de
-`features/`/`app/`. A **ordem** das seções acima o lint não cobra: siga o exemplo.
+componentes, `function` em `utils/`/`services/`), módulo não importa de outro módulo, a base (`components`,
+`interfaces`, `utils`, `services`, `auth`, `hooks`) não importa de `modules/`, `layouts/` nem `routes/`. A **ordem** das seções acima o lint não cobra: siga o exemplo.
