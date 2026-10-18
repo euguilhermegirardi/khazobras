@@ -8,6 +8,7 @@ import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDeta
 import { FechamentoPage } from '@/modules/fechamento/pages/FechamentoPage'
 import { FinanceiroPage } from '@/modules/financeiro/pages/FinanceiroPage'
 import { ObraHubPage } from '@/modules/obras/pages/ObraHubPage'
+import { ProjetosPage } from '@/modules/projetos/pages/ProjetosPage'
 import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage'
 import { RelatorioMensalPage } from '@/modules/relatorio-mensal/pages/RelatorioMensalPage'
 import { AdminLayout, ClientLayout } from '@/layouts/RoleLayouts'
@@ -41,7 +42,8 @@ export const AppRoutes = () => {
             element={<FechamentoDetalhePage listaPath={(obraId) => `/cliente/obras/${obraId}/fechamento`} />}
           />
           <Route path="/cliente/obras/:obraId/financeiro" element={<FinanceiroPage />} />
-          <Route path="/cliente/obras/:obraId/relatorio-fotografico" element={<RelatorioFotograficoPage />} />
+          <Route path="/cliente/obras/:obraId/projetos" element={<ProjetosPage />} />
+          <Route path="/cliente/obras/:obraId/relatorio-fotografico"element={<RelatorioFotograficoPage />} />
           <Route path="/cliente/obras/:obraId/relatorio-mensal" element={<RelatorioMensalPage />} />
         </Route>
       </Route>

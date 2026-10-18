@@ -32,7 +32,7 @@
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas` (detalhe preso à obra no SQL); falta atualizar status/datas reais e % concluído | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, sem %; 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
-| 7 | Projetos | 🟨 listagem e download pelo cliente ok | ⬜ | lacuna do download resolvida (ver Decisões) |
+| 7 | Projetos | ✅ `GET /obras/{id}/projetos` + `GET /projetos/{id}/download` (presos à obra) | 🟨 | `feat/projetos` (empilhada sobre `feat/cronograma`). Cards por etapa, Visualizar (PDF/imagem) e Baixar; falta tester, design e segurança. **Backend não compilado na nuvem.** |
 | 8 | Contratos | ❌ sem endpoints | ⬜ | lacuna: módulo Contratos/Pagamentos |
 | 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
 
@@ -189,6 +189,22 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   rolável é `role="region"` rotulada. Hoje é fixado na montagem da página (`useState`). Tipo `EtapaCronograma extends Etapa`
   (`interfaces/etapa.ts`); chave de cache própria `['obra', obraId, 'cronograma']`. Helpers novos em `utils/dates.ts`:
   `formatMonthYearShort`, `monthIndex`, `monthIndexToDateOnly`, `monthPosition`, `dayFractionOfMonth` (com teste).
+- Projetos (cliente, front): rota `/cliente/obras/:obraId/projetos`, item "Projetos" (ícone `FolderOpen`) como último da sidebar
+  (depois de "Relatório mensal", ordem do SPEC §5 item 9). Só projetos técnicos: **sem abas** Todos/Projetos/Contratos/Fotos
+  (o SPEC não tem "Documentos" no navbar do cliente), sem área de upload, sem botão de escrita. Um `Card` por etapa (título =
+  nome da etapa via `GET /obras/{id}/etapas`) na ordem do backend; sem etapa = card final "Documentos gerais"; etapa que não
+  pôde ser nomeada (etapas falharam) = "Outros documentos" (erro de etapas não derruba a tela; enquanto carregam, a tela
+  mostra o Skeleton para o título não piscar). Tabela: Nome (ícone lucide por extensão: `FileText` pdf, `Image` imagens,
+  `FileSpreadsheet` xls/xlsx, `File` outros), Tipo (badge neutro com `tipoDocumento`, "—" se null), Enviado em (dd/mm/aaaa),
+  Ações. Sem coluna Tamanho (o backend não devolve). Ações: **Baixar** sempre (`apiDownload` -> `utils/download.saveBlob`) e
+  **Visualizar** só para PDF e imagens (decidido pela extensão de `nome`): o blob autenticado vira object URL aberto em **nova
+  aba** (`window.open(url, '_blank', 'noopener')`, novo `utils/download.openBlobInNewTab`, URL revogado após 60 s). Escolhi
+  nova aba (e não `ImageDialog`) para PDF e imagem usarem o mesmo caminho e o leitor nativo do navegador; nunca URL do bucket.
+  Limitação: se o navegador bloquear pop-up, nada abre (com `noopener` o `window.open` sempre devolve `null`). Altura da linha
+  fixa (`h-7`) com ou sem "Visualizar". Durante a ação os botões daquele item ficam desabilitados; erro (403 = sem permissão)
+  vira `Alert` sem derrubar a lista. Tipo `ProjetoDocumento` (`interfaces/projeto.ts`). Mudança na base: `useEtapas` saiu de
+  `modules/relatorio-fotografico` para `hooks/useEtapas.ts` (mesma chave `['obra', id, 'etapas']`), porque Projetos também o usa
+  (módulo não importa módulo). Agrupamento puro em `modules/projetos/agrupar.ts`.
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
@@ -207,6 +223,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-18 — `feat/projetos`: fix(projetos): download preso a obra e liberado ao cliente, upload valida etapa. Arquivos: backend (4), testes backend (2).
 - 2026-10-18 — `feat/cronograma`: fix(etapas): detalhe preso a obra, acesso antes da validacao no POST, ordenacao da lista; feat(cronograma): tela do cliente com KPIs e linha do tempo mensal das etapas; test: cronograma (vitest, e2e e mocks de captura); fix(cronograma): meses de largura flexível, linhas mais altas, Hoje e período realizado com a mesma cor da legenda; harness: checklist visual cobre respiro de texto, legenda igual ao elemento e timeline cabendo no card; docs: capturas do cronograma (claro, escuro, 1280); test: cronograma - testes unitarios de timeline (barBox, todayLeft, buildRange); docs: relatório da manhã do Cronograma; harness: plano:registro com --base para branch empilhada. Arquivos: infra (3), backend (4), testes backend (2), docs (4), front (5), front/rotas-layouts (2), modules/cronograma (11).
 - 2026-10-18 — `feat/financeiro`: fix(financeiro): download de anexo na mesma regua do download de foto; feat(financeiro): tela do cliente com lançamentos paginados e download de comprovante; docs: registro do financeiro; test: financeiro (cliente) - vitest, e2e e mocks de captura; docs: capturas do financeiro (claro, escuro, 1280); fix(financeiro): detalhe e visibilidade presos a obra, paginacao validada, anexos em lote; fix(financeiro): altura uniforme da célula de comprovante; espaço faltando na rota; docs: relatório da manhã do Financeiro; harness: varrer o módulo no gap-filler, altura de linha no checklist visual. Arquivos: infra (2), backend (4), testes backend (4), docs (4), front (4), front/rotas-layouts (2), modules/financeiro (8).
 - 2026-10-18 — `feat/relatorio-fotografico`: feat(backend): download autenticado de fotos do relatório fotográfico; feat(relatorio-fotografico): tela do cliente com tabs Mensal e Etapa; chore(captura): mocks de imagem e chave com curinga no capturar-tela; test: relatorio-fotografico (unitários, e2e e mocks de captura); fix(relatorio-fotografico): overlay do diálogo escuro nos dois temas; docs: capturas do relatório fotográfico (claro, escuro, 1280); fix(backend): download de foto preso à obra no SQL, upload só de imagem, nome fixo; fix(api-client): nome de arquivo malformado não derruba o download; docs: relatório da manhã do Relatório fotográfico, PLAN-09 e npm run e2e. Arquivos: infra (2), backend (4), testes backend (2), docs (4), front (10), front/rotas-layouts (2), modules/relatorio-fotografico (8).
