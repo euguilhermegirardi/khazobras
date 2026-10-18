@@ -3,6 +3,7 @@ import { homePathFor } from '@/auth/homePath'
 import { useAuth } from '@/auth/useAuth'
 import { LoginPage } from '@/modules/auth/LoginPage'
 import { ADMIN_ROLES, CLIENT_ROLES } from '@/auth/roles'
+import { CronogramaPage } from '@/modules/cronograma/pages/CronogramaPage'
 import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDetalhePage'
 import { FechamentoPage } from '@/modules/fechamento/pages/FechamentoPage'
 import { FinanceiroPage } from '@/modules/financeiro/pages/FinanceiroPage'
@@ -30,6 +31,7 @@ export const AppRoutes = () => {
         <Route element={<ClientLayout />}>
           <Route path="/cliente" element={<ObraHubPage obraPath={(id) => `/cliente/obras/${id}`} />} />
           <Route path="/cliente/obras/:obraId" element={<ClientObraPage />} />
+          <Route path="/cliente/obras/:obraId/cronograma" element={<CronogramaPage />} />
           <Route
             path="/cliente/obras/:obraId/fechamento"
             element={<FechamentoPage medicaoPath={(obraId, id) => `/cliente/obras/${obraId}/fechamento/${id}`} />}

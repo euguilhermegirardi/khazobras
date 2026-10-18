@@ -1,4 +1,4 @@
-import { Building2, Camera, FileText, LayoutDashboard, LayoutGrid, type LucideIcon, Ruler, Wallet } from 'lucide-react'
+import { Building2, CalendarDays, Camera, FileText, LayoutDashboard, LayoutGrid, type LucideIcon, Ruler, Wallet } from 'lucide-react'
 
 /**
  * Itens da sidebar por visão. Ordem e nomes: SPEC §5 (cliente) e §6 (admin).
@@ -27,6 +27,7 @@ export const CLIENT_NAV: NavConfig = {
   hub: { label: 'Minhas obras', to: '/cliente', icon: LayoutGrid, end: true },
   obra: [
     { label: 'Dashboard', to: '/cliente/obras/:obraId', icon: LayoutDashboard, end: true },
+    { label: 'Cronograma', to: '/cliente/obras/:obraId/cronograma', icon: CalendarDays },
     { label: 'Fechamento', to: '/cliente/obras/:obraId/fechamento', icon: Ruler },
     { label: 'Financeiro', to: '/cliente/obras/:obraId/financeiro', icon: Wallet },
     { label: 'Relatório fotográfico', to: '/cliente/obras/:obraId/relatorio-fotografico', icon: Camera },
