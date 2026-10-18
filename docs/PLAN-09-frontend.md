@@ -29,7 +29,7 @@
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
-| 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | 🟨 em construção | branch `feat/relatorio-fotografico`; backend escrito sem .NET, não compilado. Front escrito (tabs Mensal/Etapa, grade de fotos, ampliar); falta tester, design e security |
+| 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
 | 7 | Projetos | 🟨 listagem ok; download pelo cliente bloqueado | ⬜ | lacuna: liberar download ao cliente da obra |
@@ -55,6 +55,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
+- Downloads fora da régua (security-reviewer, 18/10): `GET /projetos/{id}/download` sem `EnsureAccessAsync` (e baixa do R2
+  antes de checar o perfil) e `/financeiro/anexos/{id}/download` com a segunda query só por id. Corrigir com o padrão do
+  download de foto (resolve `obra_id` → `EnsureAccessAsync` → `WHERE id = @Id AND obra_id = @ObraId`) antes das telas
+  Projetos e Financeiro.
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
