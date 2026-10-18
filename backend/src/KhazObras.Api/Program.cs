@@ -254,12 +254,6 @@ app.MapGet("/obras", async (ObraService obraService, ObraAccessService accessSer
 
 app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapaRequest> validator, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var validation = await validator.ValidateAsync(request);
-    if (!validation.IsValid)
-    {
-        return Results.ValidationProblem(validation.ToDictionary());
-    }
-
     try
     {
         await accessService.EnsureAccessAsync(principal, request.ObraId);
@@ -267,6 +261,12 @@ app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapa
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
     }
 
     var result = await etapaService.CreateAsync(request);
@@ -278,22 +278,23 @@ app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapa
 
 app.MapGet("/etapas/{id:guid}", async (Guid id, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var result = await etapaService.GetByIdAsync(id);
-    if (result is null)
+    var obraId = await etapaService.ResolveEtapaAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, result.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
-    return Results.Ok(result);
+    var result = await etapaService.GetByIdAndObraAsync(id, obraId.Value);
+    return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization()
 .WithName("GetEtapaById")

@@ -145,6 +145,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   oculto = 404). Listagem valida `pageIndex >= 0` e `pageSize` 1..100 (400 `{ message }`), offset em `long` e anexos da página
   numa consulta só (`ANY(@Ids)`). Download de comprovante envia `X-Content-Type-Options: nosniff`. Testes:
   `Http/FinanceiroLancamentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
+- Etapas, varredura do módulo (18/10, antes do Cronograma): `GET /etapas/{id}` resolve `obra_id` → `EnsureAccessAsync` →
+  `WHERE id = @Id AND obra_id = @ObraId`; `POST /etapas` checa acesso à obra antes de validar o corpo; a lista ordena por
+  `ordem, data_inicio_prevista NULLS LAST`. `EtapaResponse` não expõe nada interno. "% concluído" segue como lacuna (sem
+  schema novo). Testes: `Http/EtapaAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
 - Relatório fotográfico (cliente, front): rota `/cliente/obras/:obraId/relatorio-fotografico`, item na sidebar antes de
   "Relatório mensal" (SPEC §5: item 7 vem antes do 8). Tabs Mensal/Etapa filtram `tipo` no front (o backend devolve tudo
   num array). Mensal: título = `formatMonthYearTitle(competencia)`, ordenado por competência desc; Etapa: título = nome da
