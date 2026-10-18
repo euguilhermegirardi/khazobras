@@ -29,6 +29,11 @@ Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da ra
 - Todo filtro de visibilidade no SQL (defense in depth): dono, obra **e status**. Nunca buscar tudo e filtrar
   em memória no service.
 - `EnsureAccessAsync` em todo endpoint que recebe id de algo de uma obra, **inclusive os só de Admin/Master**.
+- Padrão para id de algo de uma obra: resolver só o `obra_id` → `EnsureAccessAsync` → ler/gravar com
+  `AND obra_id = @ObraId` (+ visibilidade do cliente no SQL) → só então R2. Validação de parâmetros depois do acesso.
+- **Varra o módulo inteiro.** Mexeu num endpoint? Confira os outros endpoints com escopo de obra do mesmo módulo
+  contra esse padrão e corrija junto (com teste). O security-reviewer bloqueia achado preexistente do mesmo
+  módulo (Financeiro, 18/10: PATCH de visibilidade e detalhe passaram porque só o download foi pedido).
 - Enums do Postgres com cast explícito (`@Status::obra_status`, `::jsonb`).
 - Dinheiro em `decimal`. Logs com message templates. `CancellationToken` onde couber.
 - Códigos: 201 criação, 204 sem corpo, 200 com corpo, 409 transição inválida, 403, 404.
