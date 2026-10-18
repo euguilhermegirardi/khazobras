@@ -19,13 +19,13 @@ export const ProjetosEtapaCard = ({ titulo, projetos, ocupadoId, onAcao }: Proje
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead>Nome</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Enviado em</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="w-[40%]">Nome</TableHead>
+            <TableHead className="w-[20%]">Tipo</TableHead>
+            <TableHead className="w-[15%]">Enviado em</TableHead>
+            <TableHead className="w-[25%] text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
