@@ -564,28 +564,25 @@ app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFil
 
 app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var owner = await financeiroService.ResolveAnexoAsync(anexoId);
-    if (owner is null)
+    var obraId = await financeiroService.ResolveAnexoAsync(anexoId);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, owner.Value.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
-    // Cliente so baixa comprovante de lancamento que o admin liberou.
-    if (!accessService.IsAdminOrMaster(principal) && !owner.Value.VisivelCliente)
-    {
-        return Results.NotFound();
-    }
-
-    var result = await financeiroService.DownloadAnexoAsync(anexoId);
+    // Cliente so baixa comprovante de lancamento liberado da propria obra: o filtro (anexo + obra + visibilidade)
+    // e feito no SQL; lancamento oculto = 404. So depois disso o arquivo e lido do R2.
+    var somenteVisiveisCliente = !accessService.IsAdminOrMaster(principal);
+    var result = await financeiroService.DownloadAnexoAsync(anexoId, obraId.Value, somenteVisiveisCliente);
     if (result is null)
     {
         return Results.NotFound();

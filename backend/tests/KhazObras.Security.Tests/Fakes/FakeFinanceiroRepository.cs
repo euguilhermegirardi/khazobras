@@ -53,9 +53,22 @@ public sealed class FakeFinanceiroRepository : IFinanceiroLancamentoRepository
         return Task.FromResult(anexo);
     }
 
-    public Task<FinanceiroLancamentoAnexo?> GetAnexoByIdAsync(Guid anexoId)
+    public Task<Guid?> GetObraIdByAnexoIdAsync(Guid anexoId)
     {
         var anexo = _anexos.FirstOrDefault(a => a.Id == anexoId);
-        return Task.FromResult(anexo);
+        var lancamento = anexo is null ? null : _lancamentos.FirstOrDefault(l => l.Id == anexo.LancamentoId);
+        return Task.FromResult<Guid?>(lancamento?.ObraId);
+    }
+
+    public Task<FinanceiroLancamentoAnexo?> GetAnexoByIdAndObraAsync(Guid anexoId, Guid obraId, bool somenteVisiveisCliente)
+    {
+        var anexo = _anexos.FirstOrDefault(a => a.Id == anexoId);
+        var lancamento = anexo is null ? null : _lancamentos.FirstOrDefault(l => l.Id == anexo.LancamentoId);
+        if (anexo is null || lancamento is null || lancamento.ObraId != obraId || (somenteVisiveisCliente && !lancamento.VisivelCliente))
+        {
+            return Task.FromResult<FinanceiroLancamentoAnexo?>(null);
+        }
+
+        return Task.FromResult<FinanceiroLancamentoAnexo?>(anexo);
     }
 }

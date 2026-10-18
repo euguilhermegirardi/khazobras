@@ -148,8 +148,7 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
         var owner = await _service.ResolveAnexoAsync(anexo.Id);
 
         Assert.NotNull(owner);
-        Assert.Equal(ObraId, owner.Value.ObraId);
-        Assert.True(owner.Value.VisivelCliente);
+        Assert.Equal(ObraId, owner.Value);
         Assert.Null(await _service.ResolveAnexoAsync(Guid.NewGuid()));
     }
 
@@ -168,8 +167,8 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
         });
         var owner = await _service.ResolveAnexoAsync(anexo.Id);
 
-        await ObraAccessService.EnsureAccessAsync(Principal("Client", ClientUserId), owner!.Value.ObraId);
+        await ObraAccessService.EnsureAccessAsync(Principal("Client", ClientUserId), owner!.Value);
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
-            ObraAccessService.EnsureAccessAsync(Principal("Client", AnotherClientUserId), owner.Value.ObraId));
+            ObraAccessService.EnsureAccessAsync(Principal("Client", AnotherClientUserId), owner.Value));
     }
 }

@@ -9,5 +9,6 @@ public interface IFinanceiroLancamentoRepository
     Task<(IReadOnlyList<FinanceiroLancamento> Items, int TotalItems)> GetPagedByObraIdAsync(Guid obraId, int pageIndex, int pageSize, bool somenteVisiveisCliente = false);
     Task SetVisibilidadeClienteAsync(Guid id, bool visivelCliente);
     Task<FinanceiroLancamentoAnexo> AddAnexoAsync(FinanceiroLancamentoAnexo anexo);
-    Task<FinanceiroLancamentoAnexo?> GetAnexoByIdAsync(Guid anexoId);
+    Task<Guid?> GetObraIdByAnexoIdAsync(Guid anexoId);
+    Task<FinanceiroLancamentoAnexo?> GetAnexoByIdAndObraAsync(Guid anexoId, Guid obraId, bool somenteVisiveisCliente);
 }

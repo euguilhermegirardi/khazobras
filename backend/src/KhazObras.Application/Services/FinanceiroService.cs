@@ -85,25 +85,16 @@ public sealed class FinanceiroService
         return ToResponse(lancamento, lancamento.Anexos);
     }
 
-    /// <summary>Resolve a obra e a visibilidade do lancamento dono do anexo, para o controle de acesso no endpoint.</summary>
-    public async Task<(Guid ObraId, bool VisivelCliente)?> ResolveAnexoAsync(Guid anexoId)
-    {
-        var anexo = await _lancamentoRepository.GetAnexoByIdAsync(anexoId);
-        if (anexo is null)
-        {
-            return null;
-        }
-
-        var lancamento = await _lancamentoRepository.GetByIdAsync(anexo.LancamentoId);
-        return lancamento is null ? null : (lancamento.ObraId, lancamento.VisivelCliente);
-    }
+    /// <summary>Resolve so a obra do lancamento dono do anexo (query enxuta); o endpoint valida o acesso a ela antes do download.</summary>
+    public Task<Guid?> ResolveAnexoAsync(Guid anexoId) => _lancamentoRepository.GetObraIdByAnexoIdAsync(anexoId);
 
     public async Task<FinanceiroAnexoResponse> UploadAnexoAsync(Guid lancamentoId, Stream content, string fileName, string contentType, long tamanhoBytes)
     {
         var lancamento = await _lancamentoRepository.GetByIdAsync(lancamentoId)
             ?? throw new InvalidOperationException("Lancamento nao encontrado.");
 
-        var storageKey = $"obras/{lancamento.ObraId}/financeiro/{lancamentoId}/{Guid.NewGuid()}-{fileName}";
+        // Chave nova: .../{guid}{ext}, sem o nome original (que segue em NomeArquivo). Chaves antigas {guid}-{nome} continuam legiveis.
+        var storageKey = $"obras/{lancamento.ObraId}/financeiro/{lancamentoId}/{Guid.NewGuid()}{SafeExtension(fileName)}";
         await _storageService.UploadAsync(storageKey, content, contentType);
 
         var anexo = new FinanceiroLancamentoAnexo
@@ -121,9 +112,13 @@ public sealed class FinanceiroService
         return new FinanceiroAnexoResponse(created.Id, created.NomeArquivo, created.ContentType, created.TamanhoBytes, created.UploadedAt);
     }
 
-    public async Task<(Stream Content, string FileName, string? ContentType)?> DownloadAnexoAsync(Guid anexoId)
+    /// <summary>
+    /// Devolve null se o anexo nao existir, nao pertencer a obra informada (a mesma que foi autorizada) ou, para o
+    /// cliente (<paramref name="somenteVisiveisCliente"/>), se o lancamento nao estiver liberado. Tudo filtrado no SQL.
+    /// </summary>
+    public async Task<(Stream Content, string FileName, string? ContentType)?> DownloadAnexoAsync(Guid anexoId, Guid obraId, bool somenteVisiveisCliente)
     {
-        var anexo = await _lancamentoRepository.GetAnexoByIdAsync(anexoId);
+        var anexo = await _lancamentoRepository.GetAnexoByIdAndObraAsync(anexoId, obraId, somenteVisiveisCliente);
         if (anexo is null)
         {
             return null;
@@ -131,6 +126,12 @@ public sealed class FinanceiroService
 
         var stream = await _storageService.DownloadAsync(anexo.StorageKey);
         return (stream, anexo.NomeArquivo, anexo.ContentType);
+    }
+
+    private static string SafeExtension(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension.Length is > 1 and <= 8 && extension.Skip(1).All(char.IsAsciiLetterOrDigit) ? extension : string.Empty;
     }
 
     private static ItemTipo ParseCategoria(string categoria) => categoria.ToLowerInvariant() switch

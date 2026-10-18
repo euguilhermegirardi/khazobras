@@ -119,18 +119,38 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         return anexo;
     }
 
-    public async Task<FinanceiroLancamentoAnexo?> GetAnexoByIdAsync(Guid anexoId)
+    public async Task<Guid?> GetObraIdByAnexoIdAsync(Guid anexoId)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = @"
-            SELECT id, lancamento_id AS LancamentoId, nome_arquivo AS NomeArquivo,
-                   storage_key AS StorageKey, content_type AS ContentType,
-                   tamanho_bytes AS TamanhoBytes, uploaded_at AS UploadedAt
-            FROM financeiro_lancamento_anexos
-            WHERE id = @AnexoId";
+            SELECT l.obra_id
+            FROM financeiro_lancamento_anexos a
+            JOIN financeiro_lancamentos l ON l.id = a.lancamento_id
+            WHERE a.id = @AnexoId";
 
-        return await connection.QuerySingleOrDefaultAsync<FinanceiroLancamentoAnexo>(sql, new { AnexoId = anexoId });
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(sql, new { AnexoId = anexoId });
+    }
+
+    public async Task<FinanceiroLancamentoAnexo?> GetAnexoByIdAndObraAsync(Guid anexoId, Guid obraId, bool somenteVisiveisCliente)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT a.id, a.lancamento_id AS LancamentoId, a.nome_arquivo AS NomeArquivo,
+                   a.storage_key AS StorageKey, a.content_type AS ContentType,
+                   a.tamanho_bytes AS TamanhoBytes, a.uploaded_at AS UploadedAt
+            FROM financeiro_lancamento_anexos a
+            JOIN financeiro_lancamentos l ON l.id = a.lancamento_id
+            WHERE a.id = @AnexoId AND l.obra_id = @ObraId
+              AND (@SomenteVisiveisCliente = FALSE OR l.visivel_cliente = TRUE)";
+
+        return await connection.QuerySingleOrDefaultAsync<FinanceiroLancamentoAnexo>(sql, new
+        {
+            AnexoId = anexoId,
+            ObraId = obraId,
+            SomenteVisiveisCliente = somenteVisiveisCliente
+        });
     }
 
     private static async Task<IEnumerable<FinanceiroLancamentoAnexo>> GetAnexosAsync(System.Data.IDbConnection connection, Guid lancamentoId)
