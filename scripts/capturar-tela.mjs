@@ -5,6 +5,8 @@
 //   --so-uma  → só a captura indicada em --saida (com --tema/--largura), sem as variantes.
 // Se o front não estiver no ar em --base, o script sobe `npm run dev` em frontend/, espera e derruba no fim.
 // mocks: JSON { "GET /obras": <corpo>, "GET /obras/123/medicoes": { "status": 500, "body": {...} } }
+//   Imagem (ex.: foto baixada pela API): "GET /fotos/f1/arquivo": { "imagem": true } → PNG sintético.
+//   Chave com * casa qualquer trecho: "GET /fotos/*/arquivo".
 // Requer Playwright (`@playwright/test`, instalado com o e2e). Dados sintéticos apenas.
 import { createRequire } from 'node:module'
 import { readFileSync, mkdirSync } from 'node:fs'
@@ -78,6 +80,13 @@ const channel = process.env.PW_CHANNEL || (macOS13 ? 'chrome' : undefined)
 const opcoes = channel ? { channel } : {}
 if (process.env.PW_CHROMIUM_PATH) opcoes.executablePath = process.env.PW_CHROMIUM_PATH
 const naoMockadas = new Set()
+// PNG sintético 16x12 cinza-azulado (serve de foto nos mocks).
+const PNG_SINTETICO = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAABAAAAAMCAIAAADkharWAAAAFUlEQVR42mPYsO8oSYhhVMOoBuwIAPxoplBOylVDAAAAAElFTkSuQmCC', 'base64')
+const acharMock = (chave) => {
+  if (mocks[chave] !== undefined) return mocks[chave]
+  const curinga = Object.keys(mocks).find((k) => k.includes('*') && new RegExp(`^${k.split('*').map((p) => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('[^/]+')}$`).test(chave))
+  return curinga === undefined ? undefined : mocks[curinga]
+}
 
 try {
   const browser = await chromium.launch(opcoes)
@@ -86,7 +95,10 @@ try {
     await page.route(`${api}/**`, (route) => {
       const url = new URL(route.request().url())
       const chave = `${route.request().method()} ${url.pathname}`
-      const mock = mocks[chave]
+      const mock = acharMock(chave)
+      if (mock && typeof mock === 'object' && mock.imagem === true) {
+        return route.fulfill({ status: 200, contentType: 'image/png', body: PNG_SINTETICO })
+      }
       if (mock === undefined) {
         naoMockadas.add(chave)
         return route.fulfill({ status: 501, json: { message: `sem mock: ${chave}` } })
