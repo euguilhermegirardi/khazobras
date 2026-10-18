@@ -38,6 +38,11 @@ Por achado: **severidade** (crítica/alta/média/baixa), arquivo:linha, cenário
 (quem faz o quê e o que consegue), correção sugerida. Separe "confirmado" de "suspeita a verificar".
 Se não achou nada, diga o que verificou — não invente achados para parecer útil.
 
+**Piso de severidade:** violar uma regra de segurança do `CLAUDE.md` (1 a 11) é no mínimo **média**, mesmo sem
+impacto hoje (ex.: filtro de visibilidade em memória em vez de no SQL = regra 9; endpoint de obra sem
+`EnsureAccessAsync` porque "admin vê tudo" = regra 4). Média ou acima **bloqueia** o ciclo: volta ao builder.
+Achado fora do diff, mas no mesmo módulo, entra no relatório com a mesma régua.
+
 ## Comandos (vale sempre; à noite é obrigatório)
 
 Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.

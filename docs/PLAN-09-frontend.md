@@ -119,6 +119,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (sem `createdByUserId`); Admin/Master seguem com o DTO completo e `onlyPublished` opcional. Testes:
   `Http/RelatorioMensalClienteTests`.
 
+- **Achado da revisão humana vira ajuste no harness** (regra, skill, agente ou checklist do reviewer), não só correção
+  de código. Regra que já existia e passou mesmo assim → repetir no checklist de quem executa e no critério de
+  quem revisa. Primeira aplicação (18/10, Relatório mensal): filtro de status no SQL, `EnsureAccessAsync` mesmo em
+  endpoint só de admin, piso de severidade do security-reviewer, navegação comum no `AppShell`, título de mês,
+  hover/foco no checklist visual.
+
 ## Registro
 
 - 2026-10-16 — `feat/relatorio-mensal`: (sem commits ainda; descreva o que está staged). Arquivos: front/app (2), features/relatorio-mensal (5), front (1).

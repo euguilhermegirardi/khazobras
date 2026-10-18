@@ -26,7 +26,9 @@ Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da ra
 
 - Endpoint com escopo de obra → `ObraAccessService.EnsureAccessAsync`; `UnauthorizedAccessException`
   → `Results.Forbid()`. Módulos internos → `RequireAuthorization("AdminOrMaster")`.
-- Filtrar por dono também no SQL (defense in depth).
+- Todo filtro de visibilidade no SQL (defense in depth): dono, obra **e status**. Nunca buscar tudo e filtrar
+  em memória no service.
+- `EnsureAccessAsync` em todo endpoint que recebe id de algo de uma obra, **inclusive os só de Admin/Master**.
 - Enums do Postgres com cast explícito (`@Status::obra_status`, `::jsonb`).
 - Dinheiro em `decimal`. Logs com message templates. `CancellationToken` onde couber.
 - Códigos: 201 criação, 204 sem corpo, 200 com corpo, 409 transição inválida, 403, 404.
@@ -38,7 +40,8 @@ Você implementa lacunas do backend KhazObras. Leia primeiro o `CLAUDE.md` da ra
 Liste: arquivos criados/alterados, script SQL novo (se houver), contrato final do endpoint
 (rota, método, request, response, códigos) para o front consumir, e o resultado de build/test.
 Atualize `docs/PLAN-09-frontend.md` (tela que fica desbloqueada) e remova a lacuna da lista desse arquivo.
-Não faça commit; o usuário decide.
+Fora do `ciclo-tela`, não faça commit (o usuário decide). Dentro do `ciclo-tela`, siga a skill (à noite: commit
+na própria `feat/<tela>`).
 
 Se um commit for bloqueado pelo hook do PLAN-09, resolva sozinho: atualize o plano, rode
 `cd frontend && npm run plano:registro -- --escrever`, `git add docs/PLAN-09-frontend.md` e commite de novo.
