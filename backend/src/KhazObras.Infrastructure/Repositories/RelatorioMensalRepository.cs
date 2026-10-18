@@ -68,6 +68,37 @@ public sealed class RelatorioMensalRepository : IRelatorioMensalRepository
         return rows.Select(r => r.ToEntity()).ToList();
     }
 
+    public async Task<RelatorioMensal?> GetPublishedByIdAsync(Guid id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT id, obra_id AS ObraId, competencia, conteudo, status,
+                   published_at AS PublishedAt, created_by_user_id AS CreatedByUserId,
+                   created_at AS CreatedAt, updated_at AS UpdatedAt
+            FROM relatorios_mensais
+            WHERE id = @Id AND status = 'published'::relatorio_mensal_status";
+
+        var row = await connection.QuerySingleOrDefaultAsync<RelatorioMensalRow>(sql, new { Id = id });
+        return row?.ToEntity();
+    }
+
+    public async Task<IReadOnlyList<RelatorioMensal>> GetPublishedByObraIdAsync(Guid obraId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT id, obra_id AS ObraId, competencia, conteudo, status,
+                   published_at AS PublishedAt, created_by_user_id AS CreatedByUserId,
+                   created_at AS CreatedAt, updated_at AS UpdatedAt
+            FROM relatorios_mensais
+            WHERE obra_id = @ObraId AND status = 'published'::relatorio_mensal_status
+            ORDER BY competencia DESC";
+
+        var rows = await connection.QueryAsync<RelatorioMensalRow>(sql, new { ObraId = obraId });
+        return rows.Select(r => r.ToEntity()).ToList();
+    }
+
     public async Task PublishAsync(Guid id, DateTime publishedAt)
     {
         using var connection = _connectionFactory.CreateConnection();

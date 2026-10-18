@@ -24,6 +24,12 @@ export function formatMonthYear(value: string): string {
   return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(parseDateOnly(value))
 }
 
+/** "Junho de 2025": mesmo formato, só a primeira letra maiúscula (para títulos). */
+export function formatMonthYearTitle(value: string): string {
+  const texto = formatMonthYear(value)
+  return texto.charAt(0).toUpperCase() + texto.slice(1)
+}
+
 /** Data (dd/MM/aaaa) de um instante com fuso (TIMESTAMPTZ, ISO 8601), no fuso do navegador. */
 export function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat('pt-BR').format(new Date(value))

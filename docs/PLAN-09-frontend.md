@@ -28,7 +28,7 @@
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
-| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | 🟨 | `feat/relatorio-mensal`. Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Tester verde, segurança sem achados; parado no design (sem captura: Bash negado ao design-reviewer na noite). B4/B5 resolvidas no backend. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
+| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
@@ -118,6 +118,13 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   só devolve `published`; `GET /relatorios-mensais/{id}` de rascunho = 404. O cliente recebe `RelatorioMensalClienteResponse`
   (sem `createdByUserId`); Admin/Master seguem com o DTO completo e `onlyPublished` opcional. Testes:
   `Http/RelatorioMensalClienteTests`.
+  Filtro `status = 'published'` também no SQL (`GetPublished...Async` no repositório, defense in depth).
+  `POST /relatorios-mensais/{id}/publish` passou a chamar `EnsureAccessAsync` (regra 4).
+- Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
+  Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
+  `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
+- Título de mês ("Setembro de 2026"): `formatMonthYearTitle` em `shared/lib/dates.ts` (o CSS `capitalize`
+  deixava "De" maiúsculo).
 
 ## Registro
 
