@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { fakeSession } from '@/test/helpers'
 import { API, server } from '@/test/server'
-import { ApiError, apiRequest } from './apiClient'
+import { ApiError, apiDownload, apiRequest } from './apiClient'
 import { loadSession, saveSession } from './session'
 
 async function failure(path: string): Promise<ApiError> {
@@ -71,5 +71,21 @@ describe('apiClient', () => {
   it('204 devolve undefined', async () => {
     server.use(http.post(`${API}/x`, () => new HttpResponse(null, { status: 204 })))
     expect(await apiRequest('/x', { method: 'POST', body: {} })).toBeUndefined()
+  })
+
+  it('download decodifica o nome de arquivo do Content-Disposition', async () => {
+    server.use(
+      http.get(`${API}/f`, () => new HttpResponse('x', { headers: { 'Content-Disposition': "attachment; filename*=UTF-8''obra%20a.jpg" } })),
+    )
+    expect((await apiDownload('/f')).fileName).toBe('obra a.jpg')
+  })
+
+  it('download com nome malformado nao falha e devolve o valor cru', async () => {
+    server.use(
+      http.get(`${API}/f`, () => new HttpResponse('x', { headers: { 'Content-Disposition': "attachment; filename*=UTF-8''obra%20100%.jpg" } })),
+    )
+    const result = await apiDownload('/f')
+    expect(result.fileName).toBe('obra%20100%.jpg')
+    expect(result.blob.size).toBe(1)
   })
 })
