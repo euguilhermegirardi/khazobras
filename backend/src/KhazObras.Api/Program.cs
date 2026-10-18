@@ -784,6 +784,15 @@ app.MapPost("/relatorios-mensais/{id:guid}/publish", async (Guid id, RelatorioMe
 
     try
     {
+        await accessService.EnsureAccessAsync(principal, existing.ObraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    try
+    {
         var result = await service.PublishAsync(id);
         return Results.Ok(result);
     }

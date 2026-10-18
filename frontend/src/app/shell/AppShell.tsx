@@ -1,5 +1,5 @@
-import { Building, Building2, LogOut } from 'lucide-react'
-import { Outlet, useMatch } from 'react-router-dom'
+import { ArrowLeft, Building, Building2, LogOut } from 'lucide-react'
+import { Link, Outlet, useMatch } from 'react-router-dom'
 import { EMPRESA, type NavConfig } from '../navigation'
 import { SidebarBlock } from './SidebarBlock'
 import { SidebarLink } from './SidebarLink'
@@ -77,6 +77,15 @@ export const AppShell = ({ nav, obraRoute }: AppShellProps) => {
           </div>
         </header>
         <main className="flex-1 p-5">
+          {obraId && (
+            <Link
+              to={nav.hub.to}
+              className="mb-3 inline-flex items-center gap-1 text-[13px] text-info underline-offset-4 outline-none hover:underline focus-visible:underline"
+            >
+              <ArrowLeft aria-hidden className="size-3.5" />
+              {nav.hub.label}
+            </Link>
+          )}
           <Outlet />
         </main>
       </div>

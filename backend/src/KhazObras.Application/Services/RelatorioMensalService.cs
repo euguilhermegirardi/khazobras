@@ -47,18 +47,15 @@ public sealed class RelatorioMensalService
     /// <summary>Visão cliente por id: rascunho é tratado como inexistente (null).</summary>
     public async Task<RelatorioMensalClienteResponse?> GetPublishedByIdForClientAsync(Guid id)
     {
-        var relatorio = await _repository.GetByIdAsync(id);
-        return relatorio is null || relatorio.Status != "published" ? null : ToClienteResponse(relatorio);
+        var relatorio = await _repository.GetPublishedByIdAsync(id);
+        return relatorio is null ? null : ToClienteResponse(relatorio);
     }
 
     /// <summary>Visão cliente da lista: sempre só publicados, independentemente de parâmetros.</summary>
     public async Task<IReadOnlyList<RelatorioMensalClienteResponse>> GetPublishedByObraIdForClientAsync(Guid obraId)
     {
-        var relatorios = await _repository.GetByObraIdAsync(obraId);
-        return relatorios
-            .Where(r => r.ObraId == obraId && r.Status == "published")
-            .Select(ToClienteResponse)
-            .ToList();
+        var relatorios = await _repository.GetPublishedByObraIdAsync(obraId);
+        return relatorios.Select(ToClienteResponse).ToList();
     }
 
     public async Task<RelatorioMensalResponse> PublishAsync(Guid id)

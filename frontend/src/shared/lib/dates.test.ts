@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDateOnly, parseDateOnly, toDateOnly } from './dates'
+import { formatDateOnly, formatMonthYearTitle, parseDateOnly, toDateOnly } from './dates'
 
 describe('dates', () => {
   it('mantem o dia local (sem deslocar por fuso)', () => {
@@ -17,5 +17,9 @@ describe('dates', () => {
 
   it('rejeita data invalida', () => {
     expect(() => parseDateOnly('abc')).toThrow()
+  })
+
+  it('titulo do mes: so a primeira letra maiuscula ("de" continua minusculo)', () => {
+    expect(formatMonthYearTitle('2026-09-01')).toBe('Setembro de 2026')
   })
 })

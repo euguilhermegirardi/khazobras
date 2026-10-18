@@ -2,8 +2,7 @@
 export type RelatorioMensalStatus = 'draft' | 'published'
 
 /**
- * Espelha RelatorioMensalResponse, sem `createdByUserId` (id interno que o backend ainda devolve ao cliente;
- * ver PLAN-09). `competencia` é DATE ("yyyy-MM-dd"); `publishedAt`/`createdAt` são ISO 8601.
+ * Espelha RelatorioMensalClienteResponse (visão do cliente, sem `createdByUserId`). `competencia` é DATE ("yyyy-MM-dd"); `publishedAt`/`createdAt` são ISO 8601.
  * `conteudo` é texto puro: nunca renderizar como HTML.
  */
 export interface RelatorioMensal {

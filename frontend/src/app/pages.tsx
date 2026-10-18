@@ -1,13 +1,7 @@
 import { Link } from 'react-router-dom'
 
-export const ClientObraPage = () => (
-  <div>
-    <Link to="/cliente" className="text-sm underline">
-      ← Suas obras
-    </Link>
-    <h1 className="mt-2 text-xl font-semibold">Dashboard (em construção)</h1>
-  </div>
-)
+// O "← Minhas obras" de volta ao hub fica no AppShell (aparece em toda tela da obra).
+export const ClientObraPage = () => <h1 className="text-xl font-semibold">Dashboard (em construção)</h1>
 export const AdminDashboardPage = () => <h1 className="text-xl font-semibold">Dashboard (em construção)</h1>
 
 export const ForbiddenPage = () => (
