@@ -30,7 +30,7 @@
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
-| 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
+| 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | 🟨 | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
 | 7 | Projetos | 🟨 listagem ok; download pelo cliente bloqueado | ⬜ | lacuna: liberar download ao cliente da obra |
 | 8 | Contratos | ❌ sem endpoints | ⬜ | lacuna: módulo Contratos/Pagamentos |
@@ -150,6 +150,17 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   vai ao botão e volta ao gatilho), porque `@radix-ui/react-dialog` não está instalado; trocar por shadcn `dialog` quando
   o registro estiver acessível. Todas as miniaturas do relatório carregam de uma vez (sem lazy/paginação; V1).
   Tipos `Foto`/`RelatorioFotografico` (`interfaces/relatorioFotografico.ts`) e `Etapa` (`interfaces/etapa.ts`, só id/nome/ordem).
+- Financeiro (cliente, front): rota `/cliente/obras/:obraId/financeiro`, item "Financeiro" (ícone `Wallet`) na sidebar logo
+  depois de "Fechamento" (SPEC §5). V1 = só a visão **Lançamentos**, somente leitura (sem edição, checkbox, pagador, "Novo
+  lançamento"/"Importar"). **Sem "Resumo" e sem "Por categoria"**: "Valor contratado" depende de Contratos (lacuna) e
+  "Custo realizado" é custo real (regra 7); nenhum total chamado "custo" é exibido. Tabela: Data, Competência
+  (`formatMonthYearTitle`), Categoria (badge neutro: Mão de obra/Material/Equipamento), Descrição, Valor (BRL, direita,
+  `tabular-nums`), Comprovante (botão de clipe por anexo com `aria-label="Baixar comprovante <nome>"`; sem anexo = "—").
+  Download: `apiDownload` (Bearer -> blob) + `utils/download.saveBlob` (link temporário `download`, object URL revogado);
+  botão desabilitado enquanto baixa; erro aparece em `Alert` sem derrubar a tabela. Paginação do servidor (20 por página,
+  `keepPreviousData`): Anterior/Próxima, "Página X de Y", "N lançamentos". Sem filtro de mês (o backend não filtra por mês;
+  filtrar só a página atual enganaria). `categoria` chega em PascalCase (`ItemTipo.ToString()` => `MaoDeObra`); o mapa de
+  rótulos aceita também snake_case por segurança. Tipo `LancamentoCliente` omite `createdByUserId`/`visivelCliente`.
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
