@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, LayoutGrid, type LucideIcon, Ruler } from 'lucide-react'
+import { Building2, FileText, LayoutDashboard, LayoutGrid, type LucideIcon, Ruler } from 'lucide-react'
 
 /**
  * Itens da sidebar por visão. Ordem e nomes: SPEC §5 (cliente) e §6 (admin).
@@ -28,6 +28,7 @@ export const CLIENT_NAV: NavConfig = {
   obra: [
     { label: 'Dashboard', to: '/cliente/obras/:obraId', icon: LayoutDashboard, end: true },
     { label: 'Fechamento', to: '/cliente/obras/:obraId/fechamento', icon: Ruler },
+    { label: 'Relatório mensal', to: '/cliente/obras/:obraId/relatorio-mensal', icon: FileText },
   ],
   empresa: [],
 }
