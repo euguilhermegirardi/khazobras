@@ -24,6 +24,6 @@ A API precisa estar no ar (`dotnet run --project src/KhazObras.Api`, na pasta `b
 
 ## Estado
 
-Esqueleto pronto: cliente de API (`shared/lib/apiClient.ts`), sessão em `sessionStorage`, login,
+Esqueleto pronto: cliente de API (`services/apiClient.ts`), sessão em `sessionStorage`, login,
 guardas de rota por papel e layouts vazios de cliente e admin. As telas entram uma a uma, seguindo
 a skill `nova-tela-frontend`.

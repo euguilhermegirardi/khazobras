@@ -17,8 +17,8 @@ Copie do protótipo *como as coisas parecem*; nunca *o que existe* (navbar, vis�
 ## Antes de construir uma tela
 
 1. Ache a tela equivalente no protótipo (tabela abaixo) e **abra a captura** com a ferramenta Read.
-2. Monte com os componentes da lista "Padrão → componente". Faltou um padrão? Crie em `shared/components/`
-   seguindo o protótipo (e registre no PLAN-09), não estilize à mão dentro da feature.
+2. Monte com os componentes da lista "Padrão → componente". Faltou um padrão? Crie em `src/components/`
+   seguindo o protótipo (e registre no PLAN-09), não estilize à mão dentro do módulo.
 
 | Nossa tela | Captura de referência |
 |---|---|
@@ -37,10 +37,10 @@ Copie do protótipo *como as coisas parecem*; nunca *o que existe* (navbar, vis�
 
 Regenerar capturas: `node scripts/design-capturas.mjs`.
 
-## Estrutura (já pronta em `app/shell/`, não recriar)
+## Estrutura (já pronta em `layouts/shell/`, não recriar)
 
 - Sidebar branca 210px: logo "Khaz Obras", Hub no topo, **bloco da obra (azul)** e **bloco da empresa
-  (verde, só admin)**. Item novo: `app/navigation.ts`, na ordem do SPEC.
+  (verde, só admin)**. Item novo: `layouts/navigation.ts`, na ordem do SPEC.
 - Topbar branca fixa; conteúdo em fundo cinza (`bg-background`) com `p-5`.
 - Toda tela começa com `PageSection` (título 18px + descrição opcional + ações à direita).
 - **Navegação comum a várias telas mora no `AppShell`**, nunca dentro de uma página (ex.: o "← Minhas obras"
@@ -60,7 +60,7 @@ Regenerar capturas: `node scripts/design-capturas.mjs`.
 | Cinza (planejado, rascunho, sem dado) | `text-neutral`, `bg-neutral-soft text-neutral-soft-foreground` |
 | Gráficos (material, mão de obra, equipamento, acumulado, outros) | `var(--chart-1..5)` |
 
-Textos com data: use os helpers de `shared/lib/dates.ts`. Mês em **título** = `formatMonthYearTitle`
+Textos com data: use os helpers de `utils/dates.ts`. Mês em **título** = `formatMonthYearTitle`
 ("Setembro de 2026"); nunca a classe `capitalize` (deixa "De" maiúsculo). Em frase, `formatMonthYear` (minúsculo).
 
 Raios: card `rounded-xl` (12px); botão, input, KPI, alerta `rounded-md` (8px); badge `rounded-full`.
@@ -72,10 +72,10 @@ Espaçamento: `gap-3`/`gap-3.5` entre cards e KPIs; `mb-3.5` entre blocos.
 
 | Protótipo | Usar |
 |---|---|
-| `.card` + `.card-title` (com ícone) | `Card` + `CardTitle` (`shared/ui/card`) |
+| `.card` + `.card-title` (com ícone) | `Card` + `CardTitle` (`components/ui/card`) |
 | `.kpi-grid` / `.kpi.blue` etc. | `div.grid gap-3 sm:grid-cols-2 lg:grid-cols-4` + `KpiCard tone="info"` |
 | `.badge-green/amber/red/blue/gray` | `Badge variant="success\|warning\|danger\|info\|neutral"` |
-| `.bar-track/.bar-fill` + `.progress-label` | `ProgressBar` (`shared/components`) |
+| `.bar-track/.bar-fill` + `.progress-label` | `ProgressBar` (`components/`) |
 | `.alert-amber/red/blue` (faixa com ícone) | `Alert variant="warning\|danger\|info"` |
 | `.tab-bar/.tab` | `Tabs/TabsList/TabsTrigger/TabsContent` |
 | `table` / `th` / `td` | `Table/TableHeader/TableRow/TableHead/TableCell` dentro de um `Card` |
@@ -94,7 +94,7 @@ Espaçamento: `gap-3`/`gap-3.5` entre cards e KPIs; `mb-3.5` entre blocos.
 | `danger` | Atrasado, A vencer, Vencido, Recusada |
 | `neutral` | Aguardando, Rascunho, Sem início |
 
-Mapas de rótulo e de cor ficam no `constants.ts` da feature (ex.: `OBRA_STATUS_BADGE`).
+Mapas de rótulo e de cor ficam no `constants.ts` do módulo (ex.: `OBRA_STATUS_BADGE`).
 
 ## Diferenças deliberadas do protótipo
 

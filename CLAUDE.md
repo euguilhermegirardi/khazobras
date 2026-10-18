@@ -47,7 +47,7 @@ bash scripts/instalar-hooks.sh                                 # uma vez por clo
 
 ## Plano vivo e trava de commit
 
-Commit que mexe em telas (`frontend/src/features/**`, exceto testes), `AppRoutes.tsx`, `Program.cs` ou
+Commit que mexe em telas (`frontend/src/modules/**`, exceto testes), `routes/AppRoutes.tsx`, `Program.cs` ou
 `database/schema/**` é bloqueado pelo hook se `docs/PLAN-09-frontend.md` não estiver junto.
 **Se bloquear, o agente resolve sozinho, sem esperar o usuário**: atualiza status/lacunas/decisões a partir
 do `git diff --cached`, roda `cd frontend && npm run plano:registro -- --escrever` (uma linha por branch),
