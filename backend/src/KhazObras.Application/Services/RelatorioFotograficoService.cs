@@ -44,12 +44,13 @@ public sealed class RelatorioFotograficoService
         return relatorios.Select(r => ToResponse(r, r.Fotos)).ToList();
     }
 
-    public async Task<FotoResponse> UploadFotoAsync(Guid relatorioId, Stream content, string fileName, string contentType, DateOnly? dataFoto, string? descricao, int ordem)
+    public async Task<FotoResponse> UploadFotoAsync(Guid relatorioId, Stream content, string extension, string contentType, DateOnly? dataFoto, string? descricao, int ordem)
     {
         var relatorio = await _repository.GetByIdAsync(relatorioId)
             ?? throw new InvalidOperationException("Relatorio fotografico nao encontrado.");
 
-        var storageKey = $"obras/{relatorio.ObraId}/relatorios-fotograficos/{relatorioId}/{Guid.NewGuid()}-{fileName}";
+        // extension ja vem normalizada (minusculas, ex.: ".jpg") e restrita as permitidas pelo endpoint.
+        var storageKey = $"obras/{relatorio.ObraId}/relatorios-fotograficos/{relatorioId}/{Guid.NewGuid()}{extension}";
         await _storageService.UploadAsync(storageKey, content, contentType);
 
         var foto = new Foto
@@ -67,40 +68,29 @@ public sealed class RelatorioFotograficoService
         return new FotoResponse(created.Id, created.DataFoto, created.Descricao, created.Ordem, created.CreatedAt);
     }
 
-    public async Task<Guid?> ResolveFotoAsync(Guid fotoId)
+    // Resolve so a obra da foto (query enxuta); o endpoint valida o acesso a ela antes do download.
+    public Task<Guid?> ResolveFotoAsync(Guid fotoId) => _repository.GetObraIdByFotoIdAsync(fotoId);
+
+    // Devolve null se a foto nao existir OU nao pertencer a obra informada (a mesma obra que foi autorizada).
+    public async Task<(Stream Content, string FileName, string ContentType)?> DownloadFotoAsync(Guid fotoId, Guid obraId)
     {
-        var foto = await _repository.GetFotoByIdAsync(fotoId);
+        var foto = await _repository.GetFotoByIdAndObraAsync(fotoId, obraId);
         if (foto is null)
         {
             return null;
         }
 
-        var relatorio = await _repository.GetByIdAsync(foto.RelatorioFotograficoId);
-        return relatorio?.ObraId;
-    }
-
-    public async Task<(Stream Content, string FileName, string ContentType)?> DownloadFotoAsync(Guid fotoId)
-    {
-        var foto = await _repository.GetFotoByIdAsync(fotoId);
-        if (foto is null)
-        {
-            return null;
-        }
+        var extension = Path.GetExtension(foto.StorageKey).ToLowerInvariant();
+        var contentType = ContentTypeFromExtension(extension);
+        var fileName = contentType == "application/octet-stream" ? $"foto-{foto.Id}" : $"foto-{foto.Id}{extension}";
 
         var stream = await _storageService.DownloadAsync(foto.StorageKey);
-        return (stream, ExtractFileName(foto.StorageKey), ContentTypeFromFileName(foto.StorageKey));
+        return (stream, fileName, contentType);
     }
 
-    // A chave tem o formato obras/{obra}/relatorios-fotograficos/{relatorio}/{guid}-{nomeOriginal}.
-    private static string ExtractFileName(string storageKey)
-    {
-        var name = storageKey[(storageKey.LastIndexOf('/') + 1)..];
-        const int guidPrefixLength = 37; // 36 do Guid + '-'
-        return name.Length > guidPrefixLength && name[36] == '-' ? name[guidPrefixLength..] : name;
-    }
-
-    // Upload so aceita imagens (FileUploadValidator); o tipo vem da extensao gravada na chave.
-    private static string ContentTypeFromFileName(string fileName) => Path.GetExtension(fileName).ToLowerInvariant() switch
+    // Chaves novas: .../{guid}{ext}; chaves antigas: .../{guid}-{nomeOriginal}. Em ambas o tipo sai da extensao.
+    // O upload so aceita imagens (endpoint); o nome original nunca volta ao cliente.
+    private static string ContentTypeFromExtension(string extension) => extension switch
     {
         ".jpg" or ".jpeg" => "image/jpeg",
         ".png" => "image/png",

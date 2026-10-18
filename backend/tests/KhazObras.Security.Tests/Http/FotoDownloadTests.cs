@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using KhazObras.Application.Abstractions;
+using KhazObras.Application.Services;
 using KhazObras.Domain.Entities;
 using KhazObras.Domain.Enums;
 using KhazObras.Security.Tests.Fakes;
@@ -23,7 +24,7 @@ public sealed class FotoDownloadTests : IClassFixture<ApiFactory>
 
     public FotoDownloadTests(ApiFactory factory) => _factory = factory;
 
-    private sealed record Cenario(HttpClient Client, Guid ObraId, Guid ClienteId, Guid FotoId);
+    private sealed record Cenario(HttpClient Client, Guid ObraId, Guid ClienteId, Guid FotoId, Guid RelatorioId);
 
     private async Task<Cenario> CriarCenarioAsync()
     {
@@ -62,7 +63,7 @@ public sealed class FotoDownloadTests : IClassFixture<ApiFactory>
             }))
             .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
-        return new Cenario(client, obraId, clienteId, fotoId);
+        return new Cenario(client, obraId, clienteId, fotoId, relatorioId);
     }
 
     private static async Task<HttpResponseMessage> GetAsync(Cenario c, string url, UserRole? role, Guid? userId = null)
@@ -128,6 +129,89 @@ public sealed class FotoDownloadTests : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("image/jpeg", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Download_devolve_nome_fixo_sem_vazar_nome_original()
+    {
+        var c = await CriarCenarioAsync();
+
+        using var response = await GetAsync(c, $"/fotos/{c.FotoId}/arquivo", UserRole.Admin);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var disposition = response.Content.Headers.ContentDisposition;
+        Assert.Equal($"foto-{c.FotoId}.jpg", disposition?.FileName?.Trim('"'));
+        Assert.DoesNotContain("fachada", disposition?.ToString() ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task Service_nao_devolve_foto_quando_a_obra_nao_e_a_dela()
+    {
+        var relatorios = new FakeRelatorioFotograficoRepository();
+        var obraId = Guid.NewGuid();
+        var relatorioId = Guid.NewGuid();
+        var fotoId = Guid.NewGuid();
+        await relatorios.CreateAsync(new RelatorioFotografico
+        {
+            Id = relatorioId,
+            ObraId = obraId,
+            Tipo = "mensal",
+            Titulo = "Setembro",
+            CreatedAt = DateTime.UtcNow
+        });
+        await relatorios.AddFotoAsync(new Foto
+        {
+            Id = fotoId,
+            RelatorioFotograficoId = relatorioId,
+            StorageKey = $"obras/{obraId}/relatorios-fotograficos/{relatorioId}/{Guid.NewGuid()}.png",
+            CreatedAt = DateTime.UtcNow
+        });
+        var service = new RelatorioFotograficoService(relatorios, new FakeStorageService());
+
+        var daObraCerta = await service.DownloadFotoAsync(fotoId, obraId);
+        var daObraErrada = await service.DownloadFotoAsync(fotoId, Guid.NewGuid());
+
+        Assert.NotNull(daObraCerta);
+        Assert.Equal("image/png", daObraCerta!.Value.ContentType);
+        Assert.Null(daObraErrada);
+    }
+
+    [Fact]
+    public async Task Upload_de_pdf_valido_como_foto_retorna_400()
+    {
+        var c = await CriarCenarioAsync();
+        using var body = new MultipartFormDataContent();
+        var pdf = new ByteArrayContent("%PDF-1.4 conteudo"u8.ToArray());
+        pdf.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        body.Add(pdf, "file", "documento.pdf");
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/relatorios-fotograficos/{c.RelatorioId}/fotos") { Content = body };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TestTokens.For(UserRole.Admin));
+
+        using var response = await c.Client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Upload_de_imagem_grava_chave_sem_nome_original()
+    {
+        var c = await CriarCenarioAsync();
+        using var body = new MultipartFormDataContent();
+        var png = new ByteArrayContent([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]);
+        png.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+        body.Add(png, "file", "Minha Foto Secreta.PNG");
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/relatorios-fotograficos/{c.RelatorioId}/fotos") { Content = body };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", TestTokens.For(UserRole.Admin));
+
+        using var response = await c.Client.SendAsync(request);
+        var json = await response.Content.ReadAsStringAsync();
+        var novaFotoId = JsonDocument.Parse(json).RootElement.GetProperty("id").GetGuid();
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        using var download = await GetAsync(c, $"/fotos/{novaFotoId}/arquivo", UserRole.Admin);
+        Assert.Equal(HttpStatusCode.OK, download.StatusCode);
+        Assert.Equal("image/png", download.Content.Headers.ContentType?.MediaType);
+        Assert.Equal($"foto-{novaFotoId}.png", download.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
     }
 
     [Fact]

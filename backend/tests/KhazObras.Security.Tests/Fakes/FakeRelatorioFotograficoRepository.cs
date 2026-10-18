@@ -35,9 +35,18 @@ public sealed class FakeRelatorioFotograficoRepository : IRelatorioFotograficoRe
         return Task.FromResult(foto);
     }
 
-    public Task<Foto?> GetFotoByIdAsync(Guid id)
+    public Task<Guid?> GetObraIdByFotoIdAsync(Guid fotoId)
     {
-        var foto = _relatorios.SelectMany(r => r.Fotos).FirstOrDefault(f => f.Id == id);
+        var relatorio = _relatorios.FirstOrDefault(r => r.Fotos.Any(f => f.Id == fotoId));
+        return Task.FromResult<Guid?>(relatorio?.ObraId);
+    }
+
+    public Task<Foto?> GetFotoByIdAndObraAsync(Guid fotoId, Guid obraId)
+    {
+        var foto = _relatorios
+            .Where(r => r.ObraId == obraId)
+            .SelectMany(r => r.Fotos)
+            .FirstOrDefault(f => f.Id == fotoId);
         return Task.FromResult(foto);
     }
 }

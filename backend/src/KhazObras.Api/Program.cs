@@ -690,8 +690,18 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
         return Results.BadRequest(new { message = validationError });
     }
 
+    // O validador generico aceita PDF/Office; foto aceita apenas imagem (extensao + content-type).
+    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+    var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+    var imageContentTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
+    if (!imageExtensions.Contains(extension)
+        || !imageContentTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
+    {
+        return Results.BadRequest(new { message = "Foto deve ser uma imagem (jpg, jpeg, png, webp ou gif)." });
+    }
+
     using var stream = file.OpenReadStream();
-    var result = await service.UploadFotoAsync(id, stream, file.FileName, file.ContentType, dataFoto, descricao, ordem);
+    var result = await service.UploadFotoAsync(id, stream, extension, file.ContentType, dataFoto, descricao, ordem);
     return Results.Created($"/fotos/{result.Id}", result);
 })
 .DisableAntiforgery()
@@ -716,7 +726,7 @@ app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograf
         return Results.Forbid();
     }
 
-    var result = await service.DownloadFotoAsync(fotoId);
+    var result = await service.DownloadFotoAsync(fotoId, obraId.Value);
     if (result is null)
     {
         return Results.NotFound();

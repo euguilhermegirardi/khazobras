@@ -101,17 +101,31 @@ public sealed class RelatorioFotograficoRepository : IRelatorioFotograficoReposi
         return foto;
     }
 
-    public async Task<Foto?> GetFotoByIdAsync(Guid id)
+    public async Task<Guid?> GetObraIdByFotoIdAsync(Guid fotoId)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = @"
-            SELECT id, relatorio_fotografico_id AS RelatorioFotograficoId, storage_key AS StorageKey,
-                   data_foto AS DataFoto, descricao, ordem, created_at AS CreatedAt
-            FROM fotos
-            WHERE id = @Id";
+            SELECT r.obra_id
+            FROM fotos f
+            JOIN relatorios_fotograficos r ON r.id = f.relatorio_fotografico_id
+            WHERE f.id = @FotoId";
 
-        var row = await connection.QuerySingleOrDefaultAsync<FotoRow>(sql, new { Id = id });
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(sql, new { FotoId = fotoId });
+    }
+
+    public async Task<Foto?> GetFotoByIdAndObraAsync(Guid fotoId, Guid obraId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT f.id, f.relatorio_fotografico_id AS RelatorioFotograficoId, f.storage_key AS StorageKey,
+                   f.data_foto AS DataFoto, f.descricao, f.ordem, f.created_at AS CreatedAt
+            FROM fotos f
+            JOIN relatorios_fotograficos r ON r.id = f.relatorio_fotografico_id
+            WHERE f.id = @FotoId AND r.obra_id = @ObraId";
+
+        var row = await connection.QuerySingleOrDefaultAsync<FotoRow>(sql, new { FotoId = fotoId, ObraId = obraId });
         return row?.ToEntity();
     }
 
