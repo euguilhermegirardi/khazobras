@@ -6,6 +6,7 @@ import { ADMIN_ROLES, CLIENT_ROLES } from '@/auth/roles'
 import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDetalhePage'
 import { FechamentoPage } from '@/modules/fechamento/pages/FechamentoPage'
 import { ObraHubPage } from '@/modules/obras/pages/ObraHubPage'
+import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage'
 import { RelatorioMensalPage } from '@/modules/relatorio-mensal/pages/RelatorioMensalPage'
 import { AdminLayout, ClientLayout } from '@/layouts/RoleLayouts'
 import { AdminDashboardPage, ClientObraPage, ForbiddenPage, NotFoundPage } from './pages'
@@ -36,6 +37,7 @@ export const AppRoutes = () => {
             path="/cliente/obras/:obraId/fechamento/:medicaoId"
             element={<FechamentoDetalhePage listaPath={(obraId) => `/cliente/obras/${obraId}/fechamento`} />}
           />
+          <Route path="/cliente/obras/:obraId/relatorio-fotografico" element={<RelatorioFotograficoPage />} />
           <Route path="/cliente/obras/:obraId/relatorio-mensal" element={<RelatorioMensalPage />} />
         </Route>
       </Route>
