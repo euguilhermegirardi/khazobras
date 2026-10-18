@@ -18,6 +18,7 @@
 
   --background: #eeede9;
   --foreground: #1a1a18;
+  --overlay: rgb(26 26 24 / 0.8); /* fundo de modal: escuro nos dois temas */
   --card: #ffffff;
   --card-foreground: #1a1a18;
   --popover: #ffffff;
@@ -79,6 +80,7 @@
   :root {
     --background: #141412;
     --foreground: #e8e8e4;
+    --overlay: rgb(0 0 0 / 0.8);
     --card: #1e1e1c;
     --card-foreground: #e8e8e4;
     --popover: #1e1e1c;
@@ -144,6 +146,7 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-overlay: var(--overlay);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);

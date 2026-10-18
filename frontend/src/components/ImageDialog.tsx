@@ -42,7 +42,7 @@ export const ImageDialog = ({ src, alt, caption, onClose }: ImageDialogProps) =>
         type="button"
         tabIndex={-1}
         aria-hidden="true"
-        className="absolute inset-0 cursor-default bg-foreground/80"
+        className="absolute inset-0 cursor-default bg-overlay"
         onClick={onClose}
       />
       <div
