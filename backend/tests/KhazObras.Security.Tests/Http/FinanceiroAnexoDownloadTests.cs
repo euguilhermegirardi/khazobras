@@ -173,13 +173,14 @@ public sealed class FinanceiroAnexoDownloadTests : IClassFixture<ApiFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
         Assert.Single(c.Storage.Downloads);
+        Assert.Contains("nosniff", response.Headers.GetValues("X-Content-Type-Options"));
     }
 
     [Fact]
     public async Task Cliente_deixa_de_baixar_quando_o_admin_oculta_o_lancamento()
     {
         var c = await CriarCenarioAsync();
-        await c.Financeiro.SetVisibilidadeClienteAsync(c.LancamentoLiberadoId, false);
+        await c.Financeiro.SetVisibilidadeClienteAsync(c.LancamentoLiberadoId, c.ObraId, false);
 
         using var response = await GetAsync(c, $"/financeiro/anexos/{c.AnexoLiberadoId}/download", UserRole.Client, c.ClienteId);
 

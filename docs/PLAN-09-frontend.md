@@ -140,6 +140,11 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   lançamento oculto = 404; só então lê do R2). Upload novo grava `{guid}{ext}` sem o nome original (`NomeArquivo` segue no
   DTO e no `Content-Disposition`). Testes: `Http/FinanceiroAnexoDownloadTests`. Escrito na nuvem sem .NET: validar com
   `dotnet build` e `dotnet test`.
+- Financeiro, rodada 1 do security-reviewer (18/10): `GET /financeiro/lancamentos/{id}` e `PATCH .../visibilidade` agora
+  resolvem o `obra_id` → `EnsureAccessAsync` → consulta/UPDATE presos a `id + obra_id` (+ visibilidade no SQL para o cliente;
+  oculto = 404). Listagem valida `pageIndex >= 0` e `pageSize` 1..100 (400 `{ message }`), offset em `long` e anexos da página
+  numa consulta só (`ANY(@Ids)`). Download de comprovante envia `X-Content-Type-Options: nosniff`. Testes:
+  `Http/FinanceiroLancamentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
 - Relatório fotográfico (cliente, front): rota `/cliente/obras/:obraId/relatorio-fotografico`, item na sidebar antes de
   "Relatório mensal" (SPEC §5: item 7 vem antes do 8). Tabs Mensal/Etapa filtram `tipo` no front (o backend devolve tudo
   num array). Mensal: título = `formatMonthYearTitle(competencia)`, ordenado por competência desc; Etapa: título = nome da

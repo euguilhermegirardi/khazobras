@@ -117,11 +117,11 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
     {
         var lancamento = await SeedLancamentoAsync(ObraId, visivel: false);
 
-        var liberado = await _service.SetVisibilidadeClienteAsync(lancamento.Id, true);
+        var liberado = await _service.SetVisibilidadeClienteAsync(lancamento.Id, ObraId, true);
         Assert.True(liberado!.VisivelCliente);
         Assert.Single((await _service.GetPagedParaClienteByObraIdAsync(ObraId, 0, 20)).Items);
 
-        var oculto = await _service.SetVisibilidadeClienteAsync(lancamento.Id, false);
+        var oculto = await _service.SetVisibilidadeClienteAsync(lancamento.Id, ObraId, false);
         Assert.False(oculto!.VisivelCliente);
         Assert.Empty((await _service.GetPagedParaClienteByObraIdAsync(ObraId, 0, 20)).Items);
     }
@@ -129,7 +129,18 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
     [Fact]
     public async Task Alterar_visibilidade_de_lancamento_inexistente_retorna_null()
     {
-        Assert.Null(await _service.SetVisibilidadeClienteAsync(Guid.NewGuid(), true));
+        Assert.Null(await _service.SetVisibilidadeClienteAsync(Guid.NewGuid(), ObraId, true));
+    }
+
+    [Fact]
+    public async Task Alterar_visibilidade_com_obra_errada_nao_altera_nada()
+    {
+        var lancamento = await SeedLancamentoAsync(ObraId, visivel: false);
+
+        var resultado = await _service.SetVisibilidadeClienteAsync(lancamento.Id, Guid.NewGuid(), true);
+
+        Assert.Null(resultado);
+        Assert.False((await _service.GetByIdAsync(lancamento.Id))!.VisivelCliente);
     }
 
     [Fact]

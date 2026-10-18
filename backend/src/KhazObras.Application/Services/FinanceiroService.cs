@@ -72,17 +72,32 @@ public sealed class FinanceiroService
         return new PagedResult<FinanceiroLancamentoClienteResponse>(totalItems, pageIndex, pageSize, responses);
     }
 
-    public async Task<FinanceiroLancamentoResponse?> SetVisibilidadeClienteAsync(Guid id, bool visivelCliente)
+    /// <summary>Resolve so a obra do lancamento (query enxuta); o endpoint valida o acesso a ela antes de ler/alterar.</summary>
+    public Task<Guid?> ResolveLancamentoAsync(Guid id) => _lancamentoRepository.GetObraIdByIdAsync(id);
+
+    /// <summary>Visao completa (Admin/Master) numa consulta unica por id + obra.</summary>
+    public async Task<FinanceiroLancamentoResponse?> GetByIdAndObraAsync(Guid id, Guid obraId)
     {
-        var lancamento = await _lancamentoRepository.GetByIdAsync(id);
-        if (lancamento is null)
+        var lancamento = await _lancamentoRepository.GetByIdAndObraAsync(id, obraId, somenteVisiveisCliente: false);
+        return lancamento is null ? null : ToResponse(lancamento, lancamento.Anexos);
+    }
+
+    /// <summary>Visao do CLIENTE: id + obra + visibilidade filtrados no SQL; oculto ou de outra obra = null (404).</summary>
+    public async Task<FinanceiroLancamentoClienteResponse?> GetParaClienteByIdAndObraAsync(Guid id, Guid obraId)
+    {
+        var lancamento = await _lancamentoRepository.GetByIdAndObraAsync(id, obraId, somenteVisiveisCliente: true);
+        return lancamento is null ? null : ToClienteView(ToResponse(lancamento, lancamento.Anexos));
+    }
+
+    public async Task<FinanceiroLancamentoResponse?> SetVisibilidadeClienteAsync(Guid id, Guid obraId, bool visivelCliente)
+    {
+        var atualizado = await _lancamentoRepository.SetVisibilidadeClienteAsync(id, obraId, visivelCliente);
+        if (!atualizado)
         {
             return null;
         }
 
-        await _lancamentoRepository.SetVisibilidadeClienteAsync(id, visivelCliente);
-        lancamento.VisivelCliente = visivelCliente;
-        return ToResponse(lancamento, lancamento.Anexos);
+        return await GetByIdAndObraAsync(id, obraId);
     }
 
     /// <summary>Resolve so a obra do lancamento dono do anexo (query enxuta); o endpoint valida o acesso a ela antes do download.</summary>

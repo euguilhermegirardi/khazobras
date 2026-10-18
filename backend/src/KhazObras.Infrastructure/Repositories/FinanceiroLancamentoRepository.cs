@@ -84,27 +84,76 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         {
             ObraId = obraId,
             SomenteVisiveisCliente = somenteVisiveisCliente,
-            Offset = pageIndex * pageSize,
+            Offset = (long)pageIndex * pageSize,
             PageSize = pageSize
         });
 
-        var lancamentos = new List<FinanceiroLancamento>();
-        foreach (var row in rows)
+        var lancamentos = rows.Select(r => r.ToEntity()).ToList();
+
+        // Anexos da pagina inteira numa consulta so (sem N+1).
+        if (lancamentos.Count > 0)
         {
-            var lancamento = row.ToEntity();
-            lancamento.Anexos = (await GetAnexosAsync(connection, lancamento.Id)).ToList();
-            lancamentos.Add(lancamento);
+            const string anexosSql = @"
+                SELECT id, lancamento_id AS LancamentoId, nome_arquivo AS NomeArquivo,
+                       storage_key AS StorageKey, content_type AS ContentType,
+                       tamanho_bytes AS TamanhoBytes, uploaded_at AS UploadedAt
+                FROM financeiro_lancamento_anexos
+                WHERE lancamento_id = ANY(@Ids)";
+
+            var anexos = await connection.QueryAsync<FinanceiroLancamentoAnexo>(anexosSql, new { Ids = lancamentos.Select(l => l.Id).ToArray() });
+            var porLancamento = anexos.ToLookup(a => a.LancamentoId);
+            foreach (var lancamento in lancamentos)
+            {
+                lancamento.Anexos = porLancamento[lancamento.Id].ToList();
+            }
         }
 
         return (lancamentos, totalItems);
     }
 
-    public async Task SetVisibilidadeClienteAsync(Guid id, bool visivelCliente)
+    public async Task<Guid?> GetObraIdByIdAsync(Guid id)
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = "UPDATE financeiro_lancamentos SET visivel_cliente = @VisivelCliente WHERE id = @Id";
-        await connection.ExecuteAsync(sql, new { Id = id, VisivelCliente = visivelCliente });
+        const string sql = "SELECT obra_id FROM financeiro_lancamentos WHERE id = @Id";
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(sql, new { Id = id });
+    }
+
+    public async Task<FinanceiroLancamento?> GetByIdAndObraAsync(Guid id, Guid obraId, bool somenteVisiveisCliente)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT id, obra_id AS ObraId, categoria, descricao, valor,
+                   data_lancamento AS DataLancamento, mes_competencia AS MesCompetencia,
+                   created_by_user_id AS CreatedByUserId, visivel_cliente AS VisivelCliente, created_at AS CreatedAt
+            FROM financeiro_lancamentos
+            WHERE id = @Id AND obra_id = @ObraId
+              AND (@SomenteVisiveisCliente = FALSE OR visivel_cliente = TRUE)";
+
+        var row = await connection.QuerySingleOrDefaultAsync<LancamentoRow>(sql, new
+        {
+            Id = id,
+            ObraId = obraId,
+            SomenteVisiveisCliente = somenteVisiveisCliente
+        });
+        if (row is null)
+        {
+            return null;
+        }
+
+        var lancamento = row.ToEntity();
+        lancamento.Anexos = (await GetAnexosAsync(connection, id)).ToList();
+        return lancamento;
+    }
+
+    public async Task<bool> SetVisibilidadeClienteAsync(Guid id, Guid obraId, bool visivelCliente)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = "UPDATE financeiro_lancamentos SET visivel_cliente = @VisivelCliente WHERE id = @Id AND obra_id = @ObraId";
+        var afetadas = await connection.ExecuteAsync(sql, new { Id = id, ObraId = obraId, VisivelCliente = visivelCliente });
+        return afetadas > 0;
     }
 
     public async Task<FinanceiroLancamentoAnexo> AddAnexoAsync(FinanceiroLancamentoAnexo anexo)
