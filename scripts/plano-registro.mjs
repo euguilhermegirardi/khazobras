@@ -2,6 +2,7 @@
 // Monta a linha do "Registro" do docs/PLAN-09-frontend.md a partir do git (commits da branch + staged).
 // Uso (a partir de frontend/):  npm run plano:registro            -> só imprime
 //                                npm run plano:registro -- --escrever -> insere/atualiza a linha desta branch
+//                                ... -- --escrever --base feat/<anterior> -> branch empilhada: só o que é dela
 // Uma linha por branch: rodar de novo substitui a anterior (preserva "Pendente: ..." escrito à mão).
 import { execFileSync } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -22,7 +23,11 @@ if (!root) {
 }
 
 const branch = git('rev-parse', '--abbrev-ref', 'HEAD')
-const base = ['origin/main', 'main'].find((ref) => git('rev-parse', '--verify', '--quiet', ref)) ?? 'HEAD'
+const baseArg = process.argv.indexOf('--base')
+const base =
+  (baseArg > -1 && process.argv[baseArg + 1]) ||
+  ['origin/main', 'main'].find((ref) => git('rev-parse', '--verify', '--quiet', ref)) ||
+  'HEAD'
 
 const commits = git('log', '--no-merges', '--format=%s', `${base}..HEAD`)
   .split('\n')

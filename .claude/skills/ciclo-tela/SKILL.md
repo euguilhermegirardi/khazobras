@@ -99,7 +99,8 @@ Parou? O relatório explica onde, por quê e o que falta decidir; a branch fica 
 1. Suíte verde: `cd frontend && npm run lint && npm run typecheck && npm test`.
 2. `checagem-pre-commit`.
 3. `docs/PLAN-09-frontend.md` atualizado (status da tela, lacunas, decisões) e, com tudo commitado,
-   `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`.
+   `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`. Branch empilhada sobre outra
+   ainda não mesclada: acrescente `--base feat/<anterior>` (senão a linha herda os commits da anterior).
 4. (Fora do modo noturno) Push da branch e `gh pr create` para a `main`. Na descrição: o que a tela faz, endpoints consumidos,
    resultado da suíte e do e2e, capturas da tela (claro, escuro, notebook 1280px), **histórico do loop** (rodadas, falhas encontradas e como foram
    corrigidas), achados do security-reviewer, pendências e o link para o relatório da manhã.
