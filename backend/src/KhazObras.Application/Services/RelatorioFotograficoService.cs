@@ -67,6 +67,48 @@ public sealed class RelatorioFotograficoService
         return new FotoResponse(created.Id, created.DataFoto, created.Descricao, created.Ordem, created.CreatedAt);
     }
 
+    public async Task<Guid?> ResolveFotoAsync(Guid fotoId)
+    {
+        var foto = await _repository.GetFotoByIdAsync(fotoId);
+        if (foto is null)
+        {
+            return null;
+        }
+
+        var relatorio = await _repository.GetByIdAsync(foto.RelatorioFotograficoId);
+        return relatorio?.ObraId;
+    }
+
+    public async Task<(Stream Content, string FileName, string ContentType)?> DownloadFotoAsync(Guid fotoId)
+    {
+        var foto = await _repository.GetFotoByIdAsync(fotoId);
+        if (foto is null)
+        {
+            return null;
+        }
+
+        var stream = await _storageService.DownloadAsync(foto.StorageKey);
+        return (stream, ExtractFileName(foto.StorageKey), ContentTypeFromFileName(foto.StorageKey));
+    }
+
+    // A chave tem o formato obras/{obra}/relatorios-fotograficos/{relatorio}/{guid}-{nomeOriginal}.
+    private static string ExtractFileName(string storageKey)
+    {
+        var name = storageKey[(storageKey.LastIndexOf('/') + 1)..];
+        const int guidPrefixLength = 37; // 36 do Guid + '-'
+        return name.Length > guidPrefixLength && name[36] == '-' ? name[guidPrefixLength..] : name;
+    }
+
+    // Upload so aceita imagens (FileUploadValidator); o tipo vem da extensao gravada na chave.
+    private static string ContentTypeFromFileName(string fileName) => Path.GetExtension(fileName).ToLowerInvariant() switch
+    {
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".png" => "image/png",
+        ".webp" => "image/webp",
+        ".gif" => "image/gif",
+        _ => "application/octet-stream"
+    };
+
     private static RelatorioFotograficoResponse ToResponse(RelatorioFotografico r, List<Foto> fotos) => new(
         r.Id, r.ObraId, r.Tipo, r.EtapaId, r.Titulo, r.Competencia, r.CreatedAt,
         fotos.Select(f => new FotoResponse(f.Id, f.DataFoto, f.Descricao, f.Ordem, f.CreatedAt)).ToList());

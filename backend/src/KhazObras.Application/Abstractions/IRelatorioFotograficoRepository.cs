@@ -8,4 +8,5 @@ public interface IRelatorioFotograficoRepository
     Task<RelatorioFotografico?> GetByIdAsync(Guid id);
     Task<IReadOnlyList<RelatorioFotografico>> GetByObraIdAsync(Guid obraId);
     Task<Foto> AddFotoAsync(Foto foto);
+    Task<Foto?> GetFotoByIdAsync(Guid id);
 }

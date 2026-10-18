@@ -671,6 +671,15 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
         return Results.NotFound();
     }
 
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, relatorio.ObraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
     if (!accessService.IsAdminOrMaster(principal))
     {
         return Results.Forbid();
@@ -689,6 +698,36 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
 .RequireAuthorization("AdminOrMaster")
 .WithName("UploadFoto")
 .WithDescription("Adiciona foto a um relatório fotográfico (máx 10MB, validado por magic bytes)");
+
+app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveFotoAsync(fotoId);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var result = await service.DownloadFotoAsync(fotoId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    var (content, fileName, contentType) = result.Value;
+    return Results.File(content, contentType, fileName);
+})
+.RequireAuthorization()
+.WithName("DownloadFoto")
+.WithDescription("Baixa o arquivo de uma foto de relatório fotográfico (cliente: somente da própria obra)");
 
 app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, IValidator<CreateRelatorioMensalRequest> validator, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

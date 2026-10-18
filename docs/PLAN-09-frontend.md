@@ -29,7 +29,7 @@
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
-| 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` | ⬜ | |
+| 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ⬜ | branch `feat/relatorio-fotografico`; backend escrito sem .NET, não compilado |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
 | 7 | Projetos | 🟨 listagem ok; download pelo cliente bloqueado | ⬜ | lacuna: liberar download ao cliente da obra |
@@ -120,6 +120,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   `Http/RelatorioMensalClienteTests`.
   Filtro `status = 'published'` também no SQL (`GetPublished...Async` no repositório, defense in depth).
   `POST /relatorios-mensais/{id}/publish` passou a chamar `EnsureAccessAsync` (regra 4).
+- Relatório fotográfico, backend (18/10): `GET /fotos/{fotoId}/arquivo` (`RequireAuthorization` + `EnsureAccessAsync` pela obra do
+  relatório; 401/403/404) devolve a imagem pelo R2 via API, sem URL pública. A tabela `fotos` não guarda content type nem nome:
+  ambos saem da `storage_key` (`{guid}-{nome}`; tipo pela extensão jpg/png/webp/gif). `FotoResponse` não expõe `storage_key`,
+  então não precisou de DTO de visão cliente. `POST /relatorios-fotograficos/{id}/fotos` passou a chamar `EnsureAccessAsync`.
+  O front deve buscar a imagem com o token (fetch -> blob -> object URL), pois `<img src>` não envia `Authorization`.
+  Testes: `Http/FotoDownloadTests`. Escrito na nuvem sem .NET: validar com `dotnet build` e `dotnet test`.
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
