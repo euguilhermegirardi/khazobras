@@ -32,7 +32,7 @@
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas` (detalhe preso à obra no SQL); falta atualizar status/datas reais e % concluído | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, sem %; 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
-| 7 | Projetos | 🟨 listagem ok; download pelo cliente bloqueado | ⬜ | lacuna: liberar download ao cliente da obra |
+| 7 | Projetos | 🟨 listagem e download pelo cliente ok | ⬜ | lacuna do download resolvida (ver Decisões) |
 | 8 | Contratos | ❌ sem endpoints | ⬜ | lacuna: módulo Contratos/Pagamentos |
 | 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
 
@@ -55,10 +55,6 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   reduzido para a visão cliente, como no Financeiro (o front já ignora o campo); `GET /obras/{id}/medicoes` não é paginado
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
-- Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
-- Download fora da régua (security-reviewer, 18/10): `GET /projetos/{id}/download` sem `EnsureAccessAsync` (e baixa do R2
-  antes de checar o perfil). Corrigir com o padrão do download de foto (resolve `obra_id` → `EnsureAccessAsync` →
-  `WHERE id = @Id AND obra_id = @ObraId`) antes da tela Projetos.
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
@@ -133,8 +129,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Correção do security-reviewer (rodada 2): o download resolve só o `obra_id` da foto (`GetObraIdByFotoIdAsync`), valida acesso e
   busca o arquivo com `WHERE f.id = @FotoId AND r.obra_id = @ObraId` (`GetFotoByIdAndObraAsync`; obra errada = 404). Upload de
   foto aceita só jpg/jpeg/png/webp/gif (400 caso contrário); chave nova `{guid}{ext}` sem nome original (chaves antigas
-  `{guid}-{nome}` seguem legíveis); `Content-Disposition` fixo `foto-{fotoId}{ext}`. Backlog: mesmo padrão em
-  `GET /projetos/{id}/download`.
+  `{guid}-{nome}` seguem legíveis); `Content-Disposition` fixo `foto-{fotoId}{ext}`.
 - Financeiro, download de comprovante (18/10, correção do security-reviewer): `GET /financeiro/anexos/{id}/download` agora
   resolve só o `obra_id` (`GetObraIdByAnexoIdAsync`), valida `EnsureAccessAsync` e busca o anexo numa consulta única
   `WHERE a.id = @AnexoId AND l.obra_id = @ObraId AND (@SomenteVisiveisCliente = FALSE OR l.visivel_cliente)` (cliente com
@@ -146,6 +141,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   oculto = 404). Listagem valida `pageIndex >= 0` e `pageSize` 1..100 (400 `{ message }`), offset em `long` e anexos da página
   numa consulta só (`ANY(@Ids)`). Download de comprovante envia `X-Content-Type-Options: nosniff`. Testes:
   `Http/FinanceiroLancamentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
+- Projetos, backend (18/10): `GET /projetos/{id}/download` resolve `obra_id` → `EnsureAccessAsync` → `WHERE id AND obra_id` →
+  só então R2; liberado ao cliente da obra (outra obra 403, inexistente 404). `Content-Type` pela extensão, `nosniff`,
+  `Content-Disposition` com o nome do documento (nome vazio/com `/`, `\` ou controle → `projeto-{id}{ext}`). Upload: etapa
+  informada precisa ser da mesma obra (400, antes do R2), chave nova `{guid}{ext}`. Lista ordena por `etapas.ordem` (sem etapa
+  por último), depois `uploaded_at desc`, `nome`. O front busca com token (fetch → blob), como nas fotos. Testes:
+  `Http/ProjetoDocumentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
 - Etapas, varredura do módulo (18/10, antes do Cronograma): `GET /etapas/{id}` resolve `obra_id` → `EnsureAccessAsync` →
   `WHERE id = @Id AND obra_id = @ObraId`; `POST /etapas` checa acesso à obra antes de validar o corpo; a lista ordena por
   `ordem, data_inicio_prevista NULLS LAST`. `EtapaResponse` não expõe nada interno. "% concluído" segue como lacuna (sem
