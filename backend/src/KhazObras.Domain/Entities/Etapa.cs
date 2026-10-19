@@ -12,6 +12,7 @@ public sealed class Etapa
     public DateOnly? DataFimPrevista { get; set; }
     public DateOnly? DataFimReal { get; set; }
     public string Status { get; set; } = "nao_iniciada";
+    public decimal PercentualConcluido { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

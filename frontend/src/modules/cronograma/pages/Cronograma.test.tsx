@@ -20,6 +20,7 @@ const etapa = (over: Partial<EtapaCronograma> = {}): EtapaCronograma => ({
   dataInicioReal: null,
   dataFimReal: null,
   status: 'nao_iniciada',
+  percentualConcluido: 0,
   createdAt: '2026-01-10T12:00:00Z',
   ...over,
 });
@@ -33,6 +34,7 @@ const cenario = (): EtapaCronograma[] => [
     nome: 'Fundação',
     ordem: 1,
     status: 'concluida',
+    percentualConcluido: 100,
     dataInicioReal: '2026-03-02',
     dataFimReal: '2026-04-28',
   }),
@@ -41,6 +43,7 @@ const cenario = (): EtapaCronograma[] => [
     nome: 'Alvenaria',
     ordem: 2,
     status: 'em_andamento',
+    percentualConcluido: 40,
     dataInicioPrevista: '2026-05-01',
     dataFimPrevista: '2026-12-31',
     dataInicioReal: '2026-05-05',
@@ -109,15 +112,17 @@ describe('Cronograma (cliente)', () => {
     renderApp(ROTA, 'Client');
 
     expect(
-      await screen.findByRole('img', { name: 'Fundação: previsto de 01/03/2026 a 30/04/2026, Concluída' }),
+      await screen.findByRole('img', {
+        name: 'Fundação: previsto de 01/03/2026 a 30/04/2026, Concluída, 100% concluído',
+      }),
     ).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Fundação: realizado de 02/03/2026 a 28/04/2026' })).toBeInTheDocument();
     // dia 31 e virada de ano
     expect(
-      screen.getByRole('img', { name: 'Alvenaria: previsto de 01/05/2026 a 31/12/2026, Em andamento' }),
+      screen.getByRole('img', { name: 'Alvenaria: previsto de 01/05/2026 a 31/12/2026, Em andamento, 40% concluído' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('img', { name: 'Telhado: previsto de 01/01/2027 a 15/02/2027, Não iniciada' }),
+      screen.getByRole('img', { name: 'Telhado: previsto de 01/01/2027 a 15/02/2027, Não iniciada, 0% concluído' }),
     ).toBeInTheDocument();
     // só início real: sem barra real, com texto
     expect(screen.queryByRole('img', { name: /Alvenaria: realizado/ })).not.toBeInTheDocument();
@@ -222,7 +227,7 @@ describe('Cronograma (cliente)', () => {
   });
 
   describe('papéis', () => {
-    it('cliente não vê botão de escrita, porcentagem, Curva S nem termos internos', async () => {
+    it('cliente não vê botão de escrita, Curva S nem termos internos', async () => {
       server.use(getEtapas(cenario()));
       renderApp(ROTA, 'Client');
 
@@ -230,7 +235,37 @@ describe('Cronograma (cliente)', () => {
       const main = screen.getByRole('main');
       expect(within(main).queryByRole('button')).not.toBeInTheDocument();
       expect(within(main).queryByText(/curva s|\bSPI\b|\bCPI\b|custo real|margem/i)).not.toBeInTheDocument();
-      expect(within(main).queryByText(/%/)).not.toBeInTheDocument();
+    });
+
+    it('cliente vê o "N%" concluído ao lado de cada barra prevista (e nenhum outro %, como o peso)', async () => {
+      server.use(getEtapas(cenario()));
+      renderApp(ROTA, 'Client');
+
+      await screen.findByText('Etapas totais');
+      const regiao = screen.getByRole('region', { name: 'Linha do tempo das etapas' });
+      const fundacao = within(regiao).getByRole('img', { name: /Fundação: previsto/ }).parentElement as HTMLElement;
+      const alvenaria = within(regiao).getByRole('img', { name: /Alvenaria: previsto/ }).parentElement as HTMLElement;
+      const telhado = within(regiao).getByRole('img', { name: /Telhado: previsto/ }).parentElement as HTMLElement;
+      expect(within(fundacao).getByText('100%')).toBeInTheDocument();
+      expect(within(alvenaria).getByText('40%')).toBeInTheDocument();
+      expect(within(telhado).getByText('0%')).toBeInTheDocument();
+      // o peso (10 nas fixtures) não é exibido ao cliente
+      expect(within(screen.getByRole('main')).queryByText('10%')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('main')).queryByText(/peso/i)).not.toBeInTheDocument();
+    });
+
+    it('% fracionário é formatado em pt-BR (12,5%) no texto e no nome acessível', async () => {
+      server.use(
+        getEtapas([etapa({ status: 'em_andamento', percentualConcluido: 12.5, dataInicioReal: '2026-03-02' })]),
+      );
+      renderApp(ROTA, 'Client');
+
+      expect(
+        await screen.findByRole('img', {
+          name: 'Fundação: previsto de 01/03/2026 a 30/04/2026, Em andamento, 12,5% concluído',
+        }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('12,5%')).toBeInTheDocument();
     });
 
     it.each(['Admin', 'Master'] as const)('%s não entra na rota do cliente', async (role) => {

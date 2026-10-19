@@ -11,4 +11,5 @@ public sealed record EtapaResponse(
     DateOnly? DataFimPrevista,
     DateOnly? DataFimReal,
     string Status,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    decimal PercentualConcluido);

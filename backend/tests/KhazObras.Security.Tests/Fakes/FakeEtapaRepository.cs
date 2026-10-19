@@ -13,12 +13,6 @@ public sealed class FakeEtapaRepository : IEtapaRepository
         return Task.FromResult(etapa);
     }
 
-    public Task<Etapa?> GetByIdAsync(Guid id)
-    {
-        var etapa = _etapas.FirstOrDefault(e => e.Id == id);
-        return Task.FromResult(etapa);
-    }
-
     public Task<Guid?> GetObraIdByIdAsync(Guid id)
     {
         var etapa = _etapas.FirstOrDefault(e => e.Id == id);
@@ -41,5 +35,18 @@ public sealed class FakeEtapaRepository : IEtapaRepository
             .AsReadOnly();
 
         return Task.FromResult<IReadOnlyList<Etapa>>(etapas);
+    }
+
+    public Task<bool> UpdateAsync(Etapa etapa)
+    {
+        // Espelha o SQL: WHERE id = @Id AND obra_id = @ObraId
+        var index = _etapas.FindIndex(e => e.Id == etapa.Id && e.ObraId == etapa.ObraId);
+        if (index < 0)
+        {
+            return Task.FromResult(false);
+        }
+
+        _etapas[index] = etapa;
+        return Task.FromResult(true);
     }
 }

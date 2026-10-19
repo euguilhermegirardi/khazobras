@@ -7,6 +7,14 @@ namespace KhazObras.Infrastructure.Repositories;
 
 public sealed class EtapaRepository : IEtapaRepository
 {
+    private const string SelectColumns = @"
+            SELECT id, obra_id AS ObraId, nome, ordem, percentual_peso AS PercentualPeso,
+                   data_inicio_prevista AS DataInicioPrevista, data_inicio_real AS DataInicioReal,
+                   data_fim_prevista AS DataFimPrevista, data_fim_real AS DataFimReal,
+                   status, percentual_concluido AS PercentualConcluido,
+                   created_at AS CreatedAt, updated_at AS UpdatedAt
+            FROM etapas";
+
     private readonly IDbConnectionFactory _connectionFactory;
 
     public EtapaRepository(IDbConnectionFactory connectionFactory)
@@ -19,8 +27,8 @@ public sealed class EtapaRepository : IEtapaRepository
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = @"
-            INSERT INTO etapas (id, obra_id, nome, ordem, percentual_peso, data_inicio_prevista, data_fim_prevista, status, created_at, updated_at)
-            VALUES (@Id, @ObraId, @Nome, @Ordem, @PercentualPeso, @DataInicioPrevista, @DataFimPrevista, @Status, @CreatedAt, @UpdatedAt)";
+            INSERT INTO etapas (id, obra_id, nome, ordem, percentual_peso, data_inicio_prevista, data_fim_prevista, status, percentual_concluido, created_at, updated_at)
+            VALUES (@Id, @ObraId, @Nome, @Ordem, @PercentualPeso, @DataInicioPrevista, @DataFimPrevista, @Status, @PercentualConcluido, @CreatedAt, @UpdatedAt)";
 
         await connection.ExecuteAsync(sql, new
         {
@@ -32,6 +40,7 @@ public sealed class EtapaRepository : IEtapaRepository
             DataInicioPrevista = etapa.DataInicioPrevista?.ToDateTime(TimeOnly.MinValue),
             DataFimPrevista = etapa.DataFimPrevista?.ToDateTime(TimeOnly.MinValue),
             etapa.Status,
+            etapa.PercentualConcluido,
             etapa.CreatedAt,
             etapa.UpdatedAt
         });
@@ -39,20 +48,41 @@ public sealed class EtapaRepository : IEtapaRepository
         return etapa;
     }
 
-    public async Task<Etapa?> GetByIdAsync(Guid id)
+    public async Task<bool> UpdateAsync(Etapa etapa)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         const string sql = @"
-            SELECT id, obra_id AS ObraId, nome, ordem, percentual_peso AS PercentualPeso,
-                   data_inicio_prevista AS DataInicioPrevista, data_inicio_real AS DataInicioReal,
-                   data_fim_prevista AS DataFimPrevista, data_fim_real AS DataFimReal,
-                   status, created_at AS CreatedAt, updated_at AS UpdatedAt
-            FROM etapas
-            WHERE id = @Id";
+            UPDATE etapas
+            SET nome = @Nome,
+                ordem = @Ordem,
+                percentual_peso = @PercentualPeso,
+                data_inicio_prevista = @DataInicioPrevista,
+                data_fim_prevista = @DataFimPrevista,
+                data_inicio_real = @DataInicioReal,
+                data_fim_real = @DataFimReal,
+                status = @Status,
+                percentual_concluido = @PercentualConcluido,
+                updated_at = @UpdatedAt
+            WHERE id = @Id AND obra_id = @ObraId";
 
-        var row = await connection.QuerySingleOrDefaultAsync<EtapaRow>(sql, new { Id = id });
-        return row?.ToEntity();
+        var afetadas = await connection.ExecuteAsync(sql, new
+        {
+            etapa.Id,
+            etapa.ObraId,
+            etapa.Nome,
+            etapa.Ordem,
+            etapa.PercentualPeso,
+            DataInicioPrevista = etapa.DataInicioPrevista?.ToDateTime(TimeOnly.MinValue),
+            DataFimPrevista = etapa.DataFimPrevista?.ToDateTime(TimeOnly.MinValue),
+            DataInicioReal = etapa.DataInicioReal?.ToDateTime(TimeOnly.MinValue),
+            DataFimReal = etapa.DataFimReal?.ToDateTime(TimeOnly.MinValue),
+            etapa.Status,
+            etapa.PercentualConcluido,
+            etapa.UpdatedAt
+        });
+
+        return afetadas > 0;
     }
 
     public async Task<Guid?> GetObraIdByIdAsync(Guid id)
@@ -67,12 +97,7 @@ public sealed class EtapaRepository : IEtapaRepository
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = @"
-            SELECT id, obra_id AS ObraId, nome, ordem, percentual_peso AS PercentualPeso,
-                   data_inicio_prevista AS DataInicioPrevista, data_inicio_real AS DataInicioReal,
-                   data_fim_prevista AS DataFimPrevista, data_fim_real AS DataFimReal,
-                   status, created_at AS CreatedAt, updated_at AS UpdatedAt
-            FROM etapas
+        const string sql = SelectColumns + @"
             WHERE id = @Id AND obra_id = @ObraId";
 
         var row = await connection.QuerySingleOrDefaultAsync<EtapaRow>(sql, new { Id = id, ObraId = obraId });
@@ -83,12 +108,7 @@ public sealed class EtapaRepository : IEtapaRepository
     {
         using var connection = _connectionFactory.CreateConnection();
 
-        const string sql = @"
-            SELECT id, obra_id AS ObraId, nome, ordem, percentual_peso AS PercentualPeso,
-                   data_inicio_prevista AS DataInicioPrevista, data_inicio_real AS DataInicioReal,
-                   data_fim_prevista AS DataFimPrevista, data_fim_real AS DataFimReal,
-                   status, created_at AS CreatedAt, updated_at AS UpdatedAt
-            FROM etapas
+        const string sql = SelectColumns + @"
             WHERE obra_id = @ObraId
             ORDER BY ordem ASC, data_inicio_prevista ASC NULLS LAST";
 
@@ -108,6 +128,7 @@ public sealed class EtapaRepository : IEtapaRepository
         public DateTime? DataFimPrevista { get; set; }
         public DateTime? DataFimReal { get; set; }
         public string Status { get; set; } = string.Empty;
+        public decimal PercentualConcluido { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
@@ -123,6 +144,7 @@ public sealed class EtapaRepository : IEtapaRepository
             DataFimPrevista = DataFimPrevista.HasValue ? DateOnly.FromDateTime(DataFimPrevista.Value) : null,
             DataFimReal = DataFimReal.HasValue ? DateOnly.FromDateTime(DataFimReal.Value) : null,
             Status = Status,
+            PercentualConcluido = PercentualConcluido,
             CreatedAt = CreatedAt,
             UpdatedAt = UpdatedAt
         };

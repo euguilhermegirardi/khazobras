@@ -24,12 +24,12 @@ describe('guarda de rotas por papel', () => {
   it('cliente NAO acessa a area admin', () => {
     renderApp('/admin', 'Client');
     expect(screen.getByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Dashboard/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Meus projetos' })).not.toBeInTheDocument();
   });
 
   it.each(['Admin', 'Master'] as const)('%s acessa a area admin', (role) => {
     renderApp('/admin', role);
-    expect(screen.getByRole('heading', { name: /Dashboard/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Meus projetos' })).toBeInTheDocument();
   });
 
   it('admin NAO entra na visao cliente', () => {

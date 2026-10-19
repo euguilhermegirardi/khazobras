@@ -2,6 +2,7 @@ import {
   Building2,
   CalendarDays,
   Camera,
+  ChartNoAxesGantt,
   FileText,
   FolderOpen,
   LayoutDashboard,
@@ -50,8 +51,12 @@ export const CLIENT_NAV: NavConfig = {
 
 export const ADMIN_NAV: NavConfig = {
   hub: { label: 'Meus projetos', to: '/admin', icon: LayoutGrid, end: true },
-  obra: [],
-  empresa: [{ label: 'Dashboard', to: '/admin', icon: LayoutDashboard, end: true }],
+  obra: [
+    { label: 'Dashboard', to: '/admin/obras/:obraId', icon: LayoutDashboard, end: true },
+    { label: 'Gantt editável', to: '/admin/obras/:obraId/gantt', icon: ChartNoAxesGantt },
+  ],
+  // Itens da empresa (Pipeline, Rentabilidade, Histórico, Administração) entram com as suas telas.
+  empresa: [],
 };
 
 export const EMPRESA = { nome: 'Khaz Engenharia', sub: 'Gestão geral', icon: Building2 };

@@ -6,6 +6,8 @@ interface ProgressBarProps {
   /** 0 a 100. */
   value: number;
   tone?: 'info' | 'success' | 'warning' | 'danger' | 'neutral';
+  /** Esconde o rótulo visível (ex.: dentro de uma linha de tabela); continua sendo o nome acessível. */
+  hideLabel?: boolean;
 }
 
 const TONE_CLASS = {
@@ -17,14 +19,14 @@ const TONE_CLASS = {
 } as const;
 
 /** Barra de progresso com rótulo e % (protótipo: .progress-label + .bar-track/.bar-fill). */
-export const ProgressBar = ({ label, value, tone = 'info' }: ProgressBarProps) => {
+export const ProgressBar = ({ label, value, tone = 'info', hideLabel = false }: ProgressBarProps) => {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
 
   return (
     <div>
       <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-        <span>{label}</span>
-        <span>{pct}%</span>
+        <span className={hideLabel ? 'sr-only' : undefined}>{label}</span>
+        <span className="ml-auto">{pct}%</span>
       </div>
       <div
         role="progressbar"

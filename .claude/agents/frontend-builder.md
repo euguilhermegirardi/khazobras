@@ -18,7 +18,9 @@ Você constrói **uma tela por vez** do frontend do KhazObras. Responda em portu
 
 - **Construir** (chamado com o nome da tela): passos da skill até a verificação (lint, typecheck, testes
   existentes verdes). Os testes da tela são do `frontend-tester`; você só ajusta testes antigos que
-  quebraram porque a tela chama endpoints novos.
+  quebraram porque a tela chama endpoints novos (fixture/stub). Se uma **decisão de produto nova** torna
+  um assert antigo obsoleto (ex.: "cliente não vê %" quando o % passou a existir), não apague o assert: liste
+  em "Testes antigos afetados" no relatório e deixe o tester trocar pela cobertura nova (Gantt, 19/10).
 - **Corrigir** (chamado com o relatório do `frontend-tester`, do `design-reviewer` ou do `security-reviewer`): corrija o código
   de produção para cada falha `bug-feature`/achado, rode a suíte e responda falha por falha o que
   mudou. **Não edite, apague nem pule os testes do tester.** Se achar que um teste está errado, não
