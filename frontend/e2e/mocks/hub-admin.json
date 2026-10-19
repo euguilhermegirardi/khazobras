@@ -1,0 +1,36 @@
+{
+  "GET /obras": {
+    "totalItems": 3,
+    "pageIndex": 0,
+    "pageSize": 50,
+    "items": [
+      {
+        "id": "a1",
+        "nome": "Residencial Aurora",
+        "endereco": "Rua Exemplo, 100 — Vila Aurora-SP",
+        "status": "EmAndamento",
+        "valorContratado": 552055.0,
+        "dataInicio": "2025-02-03",
+        "dataPrevisaoTermino": "2026-09-30"
+      },
+      {
+        "id": "b2",
+        "nome": "Residencial Jardim Modelo",
+        "endereco": "Rua Modelo, 7",
+        "status": "Concluida",
+        "valorContratado": 620000.0,
+        "dataInicio": "2024-05-10",
+        "dataPrevisaoTermino": "2025-09-25"
+      },
+      {
+        "id": "c3",
+        "nome": "Edifício Horizonte",
+        "endereco": "Avenida Teste, 450",
+        "status": "EmAndamento",
+        "valorContratado": 1280000.0,
+        "dataInicio": "2026-01-12",
+        "dataPrevisaoTermino": "2027-06-30"
+      }
+    ]
+  }
+}

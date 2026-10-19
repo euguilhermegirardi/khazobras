@@ -237,6 +237,37 @@ describe('Cronograma (cliente)', () => {
       expect(within(main).queryByText(/curva s|\bSPI\b|\bCPI\b|custo real|margem/i)).not.toBeInTheDocument();
     });
 
+    it('cliente vê o "N%" concluído ao lado de cada barra prevista (e nenhum outro %, como o peso)', async () => {
+      server.use(getEtapas(cenario()));
+      renderApp(ROTA, 'Client');
+
+      await screen.findByText('Etapas totais');
+      const regiao = screen.getByRole('region', { name: 'Linha do tempo das etapas' });
+      const fundacao = within(regiao).getByRole('img', { name: /Fundação: previsto/ }).parentElement as HTMLElement;
+      const alvenaria = within(regiao).getByRole('img', { name: /Alvenaria: previsto/ }).parentElement as HTMLElement;
+      const telhado = within(regiao).getByRole('img', { name: /Telhado: previsto/ }).parentElement as HTMLElement;
+      expect(within(fundacao).getByText('100%')).toBeInTheDocument();
+      expect(within(alvenaria).getByText('40%')).toBeInTheDocument();
+      expect(within(telhado).getByText('0%')).toBeInTheDocument();
+      // o peso (10 nas fixtures) não é exibido ao cliente
+      expect(within(screen.getByRole('main')).queryByText('10%')).not.toBeInTheDocument();
+      expect(within(screen.getByRole('main')).queryByText(/peso/i)).not.toBeInTheDocument();
+    });
+
+    it('% fracionário é formatado em pt-BR (12,5%) no texto e no nome acessível', async () => {
+      server.use(
+        getEtapas([etapa({ status: 'em_andamento', percentualConcluido: 12.5, dataInicioReal: '2026-03-02' })]),
+      );
+      renderApp(ROTA, 'Client');
+
+      expect(
+        await screen.findByRole('img', {
+          name: 'Fundação: previsto de 01/03/2026 a 30/04/2026, Em andamento, 12,5% concluído',
+        }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('12,5%')).toBeInTheDocument();
+    });
+
     it.each(['Admin', 'Master'] as const)('%s não entra na rota do cliente', async (role) => {
       renderApp(ROTA, role);
       expect(await screen.findByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument();
