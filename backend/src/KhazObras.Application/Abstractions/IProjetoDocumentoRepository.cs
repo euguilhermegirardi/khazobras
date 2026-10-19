@@ -5,6 +5,7 @@ namespace KhazObras.Application.Abstractions;
 public interface IProjetoDocumentoRepository
 {
     Task<ProjetoDocumento> CreateAsync(ProjetoDocumento documento);
-    Task<ProjetoDocumento?> GetByIdAsync(Guid id);
+    Task<Guid?> GetObraIdByIdAsync(Guid id);
+    Task<ProjetoDocumento?> GetByIdAndObraAsync(Guid id, Guid obraId);
     Task<IReadOnlyList<ProjetoDocumento>> GetByObraIdAsync(Guid obraId);
 }
