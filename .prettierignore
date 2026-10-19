@@ -1,0 +1,10 @@
+# Prettier atua só em frontend/ e scripts/ (escolha do Guilherme, 19/10). Markdown e backend ficam de fora.
+*.md
+backend/
+database/
+docs/
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+frontend/package-lock.json
