@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Trava de commit: mudança que altera o estado do produto precisa levar o PLAN-09 junto.
+# Trava de commit: (1) arquivos staged de frontend/ e scripts/ formatados pelo Prettier;
+# (2) mudança que altera o estado do produto precisa levar o PLAN-09 junto.
 # Dispara quando entram no commit: telas (frontend/src/modules, exceto testes), rotas do front
 # (routes/AppRoutes.tsx), endpoints (Program.cs) ou scripts de banco (database/schema).
 # Liberado: merge commits, branches wip/*, e SKIP_PLAN_CHECK=1 (uso consciente).
@@ -14,6 +15,30 @@ branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
 case "$branch" in wip/*) exit 0 ;; esac
 
 staged="$(git diff --cached --name-only --diff-filter=ACMRD)"
+
+# --- Formatação (Prettier, frontend/ e scripts/) ---------------------------------------------
+# Confere os arquivos staged (o conteúdo da árvore de trabalho). Não formata sozinho: o agente roda
+# `npm --prefix frontend run format` e commita de novo.
+formataveis="$(git diff --cached --name-only --diff-filter=ACMR \
+  | grep -E '^(frontend|scripts)/.*\.(ts|tsx|js|jsx|mjs|cjs|json|css|html)$' || true)"
+if [ -n "$formataveis" ]; then
+  PRETTIER="frontend/node_modules/.bin/prettier"
+  if [ ! -x "$PRETTIER" ]; then
+    echo "✋ Commit bloqueado: Prettier não instalado. Rode: npm --prefix frontend install" >&2
+    exit 1
+  fi
+  # shellcheck disable=SC2086
+  if ! nao_formatados="$(printf '%s\n' "$formataveis" | xargs "$PRETTIER" --list-different --ignore-unknown \
+      --ignore-path .prettierignore --ignore-path frontend/.gitignore 2>&1)"; then
+    {
+      echo "✋ Commit bloqueado: arquivos fora do padrão do Prettier:"
+      printf '%s\n' "$nao_formatados" | sed 's/^/  - /'
+      echo
+      echo "Agente: rode  npm --prefix frontend run format , confira o diff, git add  e commite de novo."
+    } >&2
+    exit 1
+  fi
+fi
 
 gatilhos="$(printf '%s\n' "$staged" | grep -E \
   '^(frontend/src/modules/|frontend/src/routes/AppRoutes\.tsx$|backend/src/KhazObras\.Api/Program\.cs$|database/schema/)' \

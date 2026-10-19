@@ -44,3 +44,4 @@ resultado real de lint/typecheck/test, contestações, pendências e divergênci
 Um comando por chamada do Bash: sem `&&`, `;`, `|`, `&`, `$(...)`, heredoc ou redirecionamento para arquivo.
 Comando composto só passa se cada parte estiver liberada, e à noite ninguém aprova. Para escrever arquivo use
 Write/Edit; para trocar de pasta use caminhos (`npm --prefix frontend run test`, `git -C` não).
+Antes de commitar: `npm --prefix frontend run format` (Prettier; o pre-commit bloqueia arquivo fora do padrão).

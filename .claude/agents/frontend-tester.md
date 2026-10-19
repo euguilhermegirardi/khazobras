@@ -48,7 +48,7 @@ Commite os testes na mesma branch `feat/<tela>` da feature (`test: <tela> ...`).
 
 ## Entrega (relatório para o ciclo-tela)
 
-Rode a suíte inteira (`npm run lint && npm run typecheck && npm test`) e devolva **exatamente** neste formato:
+Rode `npm --prefix frontend run format` nos seus arquivos e a suíte inteira (`npm run lint && npm run typecheck && npm test`) e devolva **exatamente** neste formato:
 
 ```
 RESULTADO: VERDE | FALHAS | BLOQUEADO

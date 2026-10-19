@@ -96,7 +96,7 @@ Parou? O relatório explica onde, por quê e o que falta decidir; a branch fica 
 
 ## 5. Fechar
 
-1. Suíte verde: `cd frontend && npm run lint && npm run typecheck && npm test`.
+1. Suíte verde: `cd frontend && npm run format:check && npm run lint && npm run typecheck && npm test`.
 2. `checagem-pre-commit`.
 3. `docs/PLAN-09-frontend.md` atualizado (status da tela, lacunas, decisões) e, com tudo commitado,
    `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`. Branch empilhada sobre outra

@@ -15,6 +15,8 @@
     ],
     "allow": [
       "Bash(npm run lint:*)",
+      "Bash(npm run format:*)",
+      "Bash(npm --prefix frontend run format:*)",
       "Bash(npm run typecheck:*)",
       "Bash(npm test:*)",
       "Bash(npm run build:*)",
