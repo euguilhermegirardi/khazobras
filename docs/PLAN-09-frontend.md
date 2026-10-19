@@ -45,12 +45,10 @@ e flag `visivel_cliente`), Relatórios. Detalhar aqui quando iniciar.
 
 ## Lacunas de backend que bloqueiam telas
 
-Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (provavelmente com script `008_*.sql`+):
+Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (provavelmente com script `009_*.sql`+):
 
 - Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
 - Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
-- Cronograma: atualização de etapas (status, datas reais) e campo de % concluído — sem isso o cliente vê tudo "Não iniciada".
-  Antes de implementar, remover `EtapaRepository.GetByIdAsync` (sem uso e sem filtro de obra; security-reviewer 18/10)
 - Medições (achados do Fechamento): (B3) `MedicaoResponse` devolve `ApprovedByUserId` (id interno) ao cliente — criar DTO
   reduzido para a visão cliente, como no Financeiro (o front já ignora o campo); `GET /obras/{id}/medicoes` não é paginado
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
@@ -147,6 +145,16 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   informada precisa ser da mesma obra (400, antes do R2), chave nova `{guid}{ext}`. Lista ordena por `etapas.ordem` (sem etapa
   por último), depois `uploaded_at desc`, `nome`. O front busca com token (fetch → blob), como nas fotos. Testes:
   `Http/ProjetoDocumentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
+- **Etapas, atualização (backend pronto, branch `feat/etapas-admin`; falta a tela admin de etapas, em andamento).**
+  **Aplicar o script 008 no Mac antes de rodar a API:** `psql -d khazobras_db -f database/schema/008_etapas_percentual_concluido.sql`
+  (coluna `percentual_concluido` + CHECK de status; seguro: todas as etapas existentes são `nao_iniciada`).
+  `PUT /etapas/{id}` (`AdminOrMaster`): resolve `obra_id` (404) → `EnsureAccessAsync` (403) → validação (400) →
+  `UPDATE ... WHERE id AND obra_id` → 200 com `EtapaResponse`. `EtapaResponse` ganhou `percentualConcluido` (avanço físico;
+  o cliente vê). Regras: nome ≤150, ordem ≥1, peso e % 0..100, fim ≥ início (previsto e real); `nao_iniciada` = 0% sem datas
+  reais; `em_andamento` = 0..<100% com início real e sem fim real; `concluida` = 100% com início e fim reais (100% só com
+  `concluida`). `POST /etapas` segue criando 0% / `nao_iniciada`. **Sem DELETE de etapa no V1** (FKs de medições, relatórios
+  fotográficos e projetos). `EtapaRepository.GetByIdAsync` (sem filtro de obra) removido. Testes: `Http/EtapaAtualizacaoTests`.
+  Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
 - Etapas, varredura do módulo (18/10, antes do Cronograma): `GET /etapas/{id}` resolve `obra_id` → `EnsureAccessAsync` →
   `WHERE id = @Id AND obra_id = @ObraId`; `POST /etapas` checa acesso à obra antes de validar o corpo; a lista ordena por
   `ordem, data_inicio_prevista NULLS LAST`. `EtapaResponse` não expõe nada interno. "% concluído" segue como lacuna (sem

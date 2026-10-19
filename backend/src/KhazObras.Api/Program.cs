@@ -300,7 +300,37 @@ app.MapGet("/etapas/{id:guid}", async (Guid id, EtapaService etapaService, ObraA
 .WithName("GetEtapaById")
 .WithDescription("Retorna detalhes de uma etapa específica");
 
-app.MapGet("/obras/{obraId:guid}/etapas", async (Guid obraId, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+app.MapPut("/etapas/{id:guid}", async (Guid id, UpdateEtapaRequest request, IValidator<UpdateEtapaRequest> validator, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await etapaService.ResolveEtapaAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var result = await etapaService.UpdateAsync(id, obraId.Value, request);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateEtapa")
+.WithDescription("Atualiza etapa (nome, ordem, peso, datas previstas e reais, status e % concluido)");
+
+app.MapGet("/obras/{obraId:guid}/etapas",async (Guid obraId, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
     try
     {

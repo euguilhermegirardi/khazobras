@@ -25,6 +25,7 @@ public sealed class EtapaService
             DataInicioPrevista = request.DataInicioPrevista,
             DataFimPrevista = request.DataFimPrevista,
             Status = "nao_iniciada",
+            PercentualConcluido = 0m,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -33,10 +34,37 @@ public sealed class EtapaService
         return ToResponse(created);
     }
 
-    public async Task<EtapaResponse?> GetByIdAsync(Guid id)
+    /// <summary>
+    /// Atualiza a etapa presa a obra ja autorizada pelo endpoint. Devolve null se a etapa nao for dessa obra.
+    /// Nao altera Id, ObraId nem CreatedAt.
+    /// </summary>
+    public async Task<EtapaResponse?> UpdateAsync(Guid id, Guid obraId, UpdateEtapaRequest request)
     {
-        var etapa = await _etapaRepository.GetByIdAsync(id);
-        return etapa is null ? null : ToResponse(etapa);
+        var atual = await _etapaRepository.GetByIdAndObraAsync(id, obraId);
+        if (atual is null)
+        {
+            return null;
+        }
+
+        var atualizada = new Etapa
+        {
+            Id = atual.Id,
+            ObraId = atual.ObraId,
+            Nome = request.Nome.Trim(),
+            Ordem = request.Ordem,
+            PercentualPeso = request.PercentualPeso,
+            DataInicioPrevista = request.DataInicioPrevista,
+            DataFimPrevista = request.DataFimPrevista,
+            DataInicioReal = request.DataInicioReal,
+            DataFimReal = request.DataFimReal,
+            Status = request.Status,
+            PercentualConcluido = request.PercentualConcluido,
+            CreatedAt = atual.CreatedAt,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        var atualizou = await _etapaRepository.UpdateAsync(atualizada);
+        return atualizou ? ToResponse(atualizada) : null;
     }
 
     /// <summary>Resolve so a obra da etapa (query enxuta); o endpoint valida o acesso a ela antes de ler a etapa.</summary>
@@ -58,5 +86,5 @@ public sealed class EtapaService
     private static EtapaResponse ToResponse(Etapa e) => new(
         e.Id, e.ObraId, e.Nome, e.Ordem, e.PercentualPeso,
         e.DataInicioPrevista, e.DataInicioReal, e.DataFimPrevista, e.DataFimReal,
-        e.Status, e.CreatedAt);
+        e.Status, e.CreatedAt, e.PercentualConcluido);
 }
