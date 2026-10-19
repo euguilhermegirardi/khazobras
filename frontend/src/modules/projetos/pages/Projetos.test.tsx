@@ -234,6 +234,21 @@ describe('Projetos (cliente)', () => {
     expect(anchorClicks).toHaveLength(0)
   })
 
+  it('Visualizar de arquivo com tipo perigoso (svg) não abre aba: baixa com o nome do Content-Disposition', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null)
+    server.use(
+      getLista([projeto('p1', { nome: 'logo.png' })]),
+      getEtapas(),
+      getDownload({ contentType: 'image/svg+xml', disposition: 'attachment; filename="logo-real.svg"' }),
+    )
+    renderApp(ROTA, 'Client')
+
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Visualizar logo.png' }))
+    await waitFor(() => expect(anchorClicks).toHaveLength(1))
+    expect(anchorClicks[0]?.download).toBe('logo-real.svg')
+    expect(open).not.toHaveBeenCalled()
+  })
+
   it('Baixar com 403 mostra "Você não tem permissão para acessar este arquivo." sem derrubar a lista', async () => {
     server.use(
       getLista([projeto('p1', { nome: 'a.pdf' }), projeto('p2', { nome: 'b.pdf' })]),
