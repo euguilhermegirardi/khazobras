@@ -1,7 +1,7 @@
-import * as React from 'react'
-import { Slot } from '@radix-ui/react-slot'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/utils/cn'
+import * as React from 'react';
+import { Slot } from '@radix-ui/react-slot';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/utils/cn';
 
 const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -9,7 +9,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // Protótipo: .btn-primary (azul) e .btn (contorno fino, fundo branco). Sem sombra.
-        default: 'border border-primary bg-primary text-primary-foreground hover:border-primary-hover hover:bg-primary-hover',
+        default:
+          'border border-primary bg-primary text-primary-foreground hover:border-primary-hover hover:bg-primary-hover',
         destructive: 'bg-destructive text-white hover:bg-destructive/90',
         outline: 'border border-input bg-card hover:bg-accent hover:text-accent-foreground',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
@@ -26,7 +27,7 @@ const buttonVariants = cva(
     },
     defaultVariants: { variant: 'default', size: 'default' },
   },
-)
+);
 
 function Button({
   className,
@@ -35,9 +36,9 @@ function Button({
   asChild = false,
   ...props
 }: React.ComponentProps<'button'> & VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot : 'button'
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
+  const Comp = asChild ? Slot : 'button';
+  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export { Button, buttonVariants }
+export { Button, buttonVariants };

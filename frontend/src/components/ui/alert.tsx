@@ -1,6 +1,6 @@
-import * as React from 'react'
-import { cva, type VariantProps } from 'class-variance-authority'
-import { cn } from '@/utils/cn'
+import * as React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/utils/cn';
 
 // Base: shadcn/ui Alert, com o estilo do protótipo (.alert-amber/-red/-blue): faixa com fundo suave,
 // texto escuro da mesma cor, ícone à esquerda, raio 8px.
@@ -18,19 +18,21 @@ const alertVariants = cva(
     },
     defaultVariants: { variant: 'default' },
   },
-)
+);
 
 function Alert({ className, variant, ...props }: React.ComponentProps<'div'> & VariantProps<typeof alertVariants>) {
-  return <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props} />
+  return <div data-slot="alert" role="alert" className={cn(alertVariants({ variant }), className)} {...props} />;
 }
 
 function AlertTitle({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="alert-title" className={cn('col-start-2 font-medium', className)} {...props} />
+  return <div data-slot="alert-title" className={cn('col-start-2 font-medium', className)} {...props} />;
 }
 
 function AlertDescription({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="alert-description" className={cn('col-start-2 [&_p]:leading-relaxed', className)} {...props} />
+  return (
+    <div data-slot="alert-description" className={cn('col-start-2 [&_p]:leading-relaxed', className)} {...props} />
+  );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export { Alert, AlertTitle, AlertDescription, alertVariants }
+export { Alert, AlertTitle, AlertDescription, alertVariants };

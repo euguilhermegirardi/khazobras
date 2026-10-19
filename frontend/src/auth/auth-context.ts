@@ -1,10 +1,10 @@
-import { createContext } from 'react'
-import type { AuthSession } from '@/interfaces/auth'
+import { createContext } from 'react';
+import type { AuthSession } from '@/interfaces/auth';
 
 export interface AuthContextValue {
-  session: AuthSession | null
-  signIn: (email: string, password: string) => Promise<AuthSession>
-  signOut: () => void
+  session: AuthSession | null;
+  signIn: (email: string, password: string) => Promise<AuthSession>;
+  signOut: () => void;
 }
 
-export const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextValue | null>(null);

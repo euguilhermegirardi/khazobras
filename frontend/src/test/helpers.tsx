@@ -1,10 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import { AppRoutes } from '@/routes/AppRoutes'
-import { AuthProvider } from '@/auth/AuthContext'
-import type { AuthSession, Role } from '@/interfaces/auth'
-import { saveSession } from '@/services/session'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AppRoutes } from '@/routes/AppRoutes';
+import { AuthProvider } from '@/auth/AuthContext';
+import type { AuthSession, Role } from '@/interfaces/auth';
+import { saveSession } from '@/services/session';
 
 export function fakeSession(role: Role): AuthSession {
   return {
@@ -14,12 +14,12 @@ export function fakeSession(role: Role): AuthSession {
     name: `Usuário ${role}`,
     email: `${role.toLowerCase()}@example.com`,
     role,
-  }
+  };
 }
 
 export function renderApp(path: string, role?: Role) {
-  if (role) saveSession(fakeSession(role))
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  if (role) saveSession(fakeSession(role));
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
@@ -28,5 +28,5 @@ export function renderApp(path: string, role?: Role) {
         </AuthProvider>
       </MemoryRouter>
     </QueryClientProvider>,
-  )
+  );
 }

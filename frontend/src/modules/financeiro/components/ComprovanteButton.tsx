@@ -1,17 +1,17 @@
-import { Paperclip } from 'lucide-react'
-import type { LancamentoAnexo } from '@/interfaces/financeiro'
-import { Button } from '@/components/ui/button'
+import { Paperclip } from 'lucide-react';
+import type { LancamentoAnexo } from '@/interfaces/financeiro';
+import { Button } from '@/components/ui/button';
 
 interface ComprovanteButtonProps {
-  anexo: LancamentoAnexo
+  anexo: LancamentoAnexo;
   /** Este comprovante está sendo baixado agora. */
-  baixando: boolean
-  onDownload: (anexo: LancamentoAnexo) => void
+  baixando: boolean;
+  onDownload: (anexo: LancamentoAnexo) => void;
 }
 
 export const ComprovanteButton = ({ anexo, baixando, onDownload }: ComprovanteButtonProps) => {
   // Functions
-  const handleClick = () => onDownload(anexo)
+  const handleClick = () => onDownload(anexo);
 
   // Return
   return (
@@ -27,5 +27,5 @@ export const ComprovanteButton = ({ anexo, baixando, onDownload }: ComprovanteBu
     >
       <Paperclip aria-hidden />
     </Button>
-  )
-}
+  );
+};

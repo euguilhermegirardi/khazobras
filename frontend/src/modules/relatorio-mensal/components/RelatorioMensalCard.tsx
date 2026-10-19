@@ -1,9 +1,9 @@
-import type { RelatorioMensal } from '@/interfaces/relatorioMensal'
-import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import type { RelatorioMensal } from '@/interfaces/relatorioMensal';
+import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RelatorioMensalCardProps {
-  relatorio: RelatorioMensal
+  relatorio: RelatorioMensal;
 }
 
 export const RelatorioMensalCard = ({ relatorio }: RelatorioMensalCardProps) => (
@@ -19,4 +19,4 @@ export const RelatorioMensalCard = ({ relatorio }: RelatorioMensalCardProps) => 
       <p className="whitespace-pre-line text-[13px] leading-relaxed">{relatorio.conteudo}</p>
     </CardContent>
   </Card>
-)
+);

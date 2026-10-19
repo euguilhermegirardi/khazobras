@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from 'react';
 
 interface PageSectionProps {
-  title: string
+  title: string;
   /** Subtítulo cinza abaixo do título (protótipo: "Selecione um projeto para trabalhar..."). */
-  description?: string
+  description?: string;
   /** Ações à direita do título (ex.: botão primário). */
-  actions?: ReactNode
-  children: ReactNode
+  actions?: ReactNode;
+  children: ReactNode;
 }
 
 /** Moldura padrão de uma tela: título (h1) + conteúdo. Usada também nos retornos de carregando/erro/vazio. */
@@ -21,4 +21,4 @@ export const PageSection = ({ title, description, actions, children }: PageSecti
     </div>
     <div className="mt-4">{children}</div>
   </section>
-)
+);

@@ -1,25 +1,25 @@
-import { useParams } from 'react-router-dom'
-import { ErrorState } from '@/components/ErrorState'
-import { PageSection } from '@/components/PageSection'
-import { Skeleton } from '@/components/ui/skeleton'
-import { RelatorioMensalCard } from '../components/RelatorioMensalCard'
-import { useRelatoriosMensais } from '../hooks'
+import { useParams } from 'react-router-dom';
+import { ErrorState } from '@/components/ErrorState';
+import { PageSection } from '@/components/PageSection';
+import { Skeleton } from '@/components/ui/skeleton';
+import { RelatorioMensalCard } from '../components/RelatorioMensalCard';
+import { useRelatoriosMensais } from '../hooks';
 
-const TITULO = 'Relatório mensal'
-const DESCRICAO = 'O resumo de cada mês da sua obra, publicado pela Khaz Engenharia.'
-const MENSAGEM_ERRO = 'Não foi possível carregar os relatórios.'
-const MENSAGEM_VAZIO = 'Nenhum relatório foi publicado ainda. Quando a Khaz Engenharia publicar um, ele aparece aqui.'
+const TITULO = 'Relatório mensal';
+const DESCRICAO = 'O resumo de cada mês da sua obra, publicado pela Khaz Engenharia.';
+const MENSAGEM_ERRO = 'Não foi possível carregar os relatórios.';
+const MENSAGEM_VAZIO = 'Nenhum relatório foi publicado ainda. Quando a Khaz Engenharia publicar um, ele aparece aqui.';
 
 export const RelatorioMensalPage = () => {
   // Hooks
-  const { obraId = '' } = useParams()
-  const { data, isPending, isError, error, refetch } = useRelatoriosMensais(obraId)
+  const { obraId = '' } = useParams();
+  const { data, isPending, isError, error, refetch } = useRelatoriosMensais(obraId);
 
   // Constants derivadas (mês mais novo primeiro; "yyyy-MM-dd" ordena como texto)
-  const relatorios = [...(data ?? [])].sort((a, b) => b.competencia.localeCompare(a.competencia))
+  const relatorios = [...(data ?? [])].sort((a, b) => b.competencia.localeCompare(a.competencia));
 
   // Functions
-  const handleRetry = () => void refetch()
+  const handleRetry = () => void refetch();
 
   // Retornos breves
   if (isPending) {
@@ -31,7 +31,7 @@ export const RelatorioMensalPage = () => {
           <Skeleton className="h-40 rounded-xl" />
         </div>
       </PageSection>
-    )
+    );
   }
 
   if (isError) {
@@ -39,7 +39,7 @@ export const RelatorioMensalPage = () => {
       <PageSection title={TITULO} description={DESCRICAO}>
         <ErrorState error={error} fallbackMessage={MENSAGEM_ERRO} onRetry={handleRetry} />
       </PageSection>
-    )
+    );
   }
 
   if (relatorios.length === 0) {
@@ -49,7 +49,7 @@ export const RelatorioMensalPage = () => {
           {MENSAGEM_VAZIO}
         </p>
       </PageSection>
-    )
+    );
   }
 
   // Return
@@ -61,5 +61,5 @@ export const RelatorioMensalPage = () => {
         ))}
       </div>
     </PageSection>
-  )
-}
+  );
+};

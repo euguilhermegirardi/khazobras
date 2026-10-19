@@ -1,15 +1,15 @@
-import { Link } from 'react-router-dom'
-import type { Medicao } from '@/interfaces/medicao'
-import { formatMonthYear } from '@/utils/dates'
-import { formatCurrency } from '@/utils/format'
-import { Button } from '@/components/ui/button'
-import { TableCell, TableRow } from '@/components/ui/table'
-import { MedicaoStatusBadge } from './MedicaoStatusBadge'
+import { Link } from 'react-router-dom';
+import type { Medicao } from '@/interfaces/medicao';
+import { formatMonthYear } from '@/utils/dates';
+import { formatCurrency } from '@/utils/format';
+import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
+import { MedicaoStatusBadge } from './MedicaoStatusBadge';
 
 interface MedicaoLinhaResumoProps {
-  medicao: Medicao
+  medicao: Medicao;
   /** Destino da tela com os itens da medição. */
-  to: string
+  to: string;
 }
 
 export const MedicaoLinhaResumo = ({ medicao, to }: MedicaoLinhaResumoProps) => (
@@ -33,4 +33,4 @@ export const MedicaoLinhaResumo = ({ medicao, to }: MedicaoLinhaResumoProps) => 
       </Button>
     </TableCell>
   </TableRow>
-)
+);

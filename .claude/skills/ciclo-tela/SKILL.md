@@ -96,11 +96,17 @@ Parou? O relatório explica onde, por quê e o que falta decidir; a branch fica 
 
 ## 5. Fechar
 
-1. Suíte verde: `cd frontend && npm run lint && npm run typecheck && npm test`.
+1. Suíte verde: `cd frontend && npm run format:check && npm run lint && npm run typecheck && npm test`.
 2. `checagem-pre-commit`.
 3. `docs/PLAN-09-frontend.md` atualizado (status da tela, lacunas, decisões) e, com tudo commitado,
-   `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`.
+   `cd frontend && npm run plano:registro -- --escrever` + commit `docs: registro`. Branch empilhada sobre outra
+   ainda não mesclada: acrescente `--base feat/<anterior>` (senão a linha herda os commits da anterior).
 4. (Fora do modo noturno) Push da branch e `gh pr create` para a `main`. Na descrição: o que a tela faz, endpoints consumidos,
    resultado da suíte e do e2e, capturas da tela (claro, escuro, notebook 1280px), **histórico do loop** (rodadas, falhas encontradas e como foram
    corrigidas), achados do security-reviewer, pendências e o link para o relatório da manhã.
 5. Nunca merge, push ou commit na `main`; nunca `--force`, `--no-verify` ou `SKIP_PLAN_CHECK=1`. O merge é do usuário.
+6. **PR sempre com base `main`.** Empilhar PRs (base = branch de outra tela) perdeu código em 19/10: o usuário mesclou #11
+   na main e, em seguida, #12 e #13 entraram nas branches-base já mescladas, não na main. Se uma tela depende de outra
+   ainda não mesclada, a branch pode partir dela, mas o PR aponta para a `main` (o diff mostra as duas até a primeira
+   ser mesclada) e o corpo diz "mesclar depois do #N". Depois de cada merge, confira com
+   `git log origin/main..origin/feat/<tela>` que nada ficou para trás.

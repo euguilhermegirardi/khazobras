@@ -36,7 +36,7 @@ description: Passo a passo para construir uma tela/feature do frontend React do 
    (`.claude/rules/frontend-testes.md`). Fora do ciclo e sem subagente disponível, escreva os testes e diga
    isso na entrega. Se a tela chama endpoints novos, ajuste os testes antigos que renderizam essa rota
    (MSW falha em chamada sem handler).
-9. **Verificar**: `npm run lint && npm run typecheck && npm test`.
+9. **Verificar**: `npm run format`, depois `npm run lint && npm run typecheck && npm test`.
 10. **Plano**: atualizar `docs/PLAN-09-frontend.md`: status da tela, lacunas e decisões à mão; linha do
     Registro com `cd frontend && npm run plano:registro -- --escrever`. O hook de commit exige isso.
     Se o hook bloquear, resolva sozinho (não espere o usuário); `SKIP_PLAN_CHECK=1` só se ele pedir.

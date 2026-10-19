@@ -1,29 +1,29 @@
-import { NavLink } from 'react-router-dom'
-import type { NavItem } from '../navigation'
-import { cn } from '@/utils/cn'
+import { NavLink } from 'react-router-dom';
+import type { NavItem } from '../navigation';
+import { cn } from '@/utils/cn';
 
 interface SidebarLinkProps {
-  item: NavItem
+  item: NavItem;
   /** Caminho final (com `:obraId` já resolvido). */
-  to: string
+  to: string;
   /** Cor do item ativo: azul (obra/hub) ou verde (empresa), como no protótipo. */
-  tone?: 'obra' | 'empresa'
+  tone?: 'obra' | 'empresa';
 }
 
 // Hover: fundo escuro e texto claro (pedido do Guilherme), na cor do bloco.
 const HOVER_CLASS = {
   obra: 'hover:bg-sidebar-hover hover:text-sidebar-hover-foreground',
   empresa: 'hover:bg-sidebar-hover-empresa hover:text-sidebar-hover-foreground',
-} as const
+} as const;
 
 const ACTIVE_CLASS = {
   obra: 'bg-sidebar-accent font-medium text-sidebar-accent-foreground',
   empresa: 'bg-success/10 font-medium text-success',
-} as const
+} as const;
 
 /** Item de navegação da sidebar (protótipo: .nav-item). */
 export const SidebarLink = ({ item, to, tone = 'obra' }: SidebarLinkProps) => {
-  const Icon = item.icon
+  const Icon = item.icon;
 
   return (
     <NavLink
@@ -40,5 +40,5 @@ export const SidebarLink = ({ item, to, tone = 'obra' }: SidebarLinkProps) => {
       <Icon aria-hidden className="size-4 shrink-0" />
       {item.label}
     </NavLink>
-  )
-}
+  );
+};

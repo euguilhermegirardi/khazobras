@@ -1,29 +1,29 @@
-import { ImageOff } from 'lucide-react'
-import { useState } from 'react'
-import { ImageDialog } from '@/components/ImageDialog'
-import { Skeleton } from '@/components/ui/skeleton'
-import { useAuthenticatedObjectUrl } from '@/hooks/useAuthenticatedObjectUrl'
-import type { Foto } from '@/interfaces/relatorioFotografico'
-import { formatDateOnly } from '@/utils/dates'
+import { ImageOff } from 'lucide-react';
+import { useState } from 'react';
+import { ImageDialog } from '@/components/ImageDialog';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuthenticatedObjectUrl } from '@/hooks/useAuthenticatedObjectUrl';
+import type { Foto } from '@/interfaces/relatorioFotografico';
+import { formatDateOnly } from '@/utils/dates';
 
 interface FotoThumbProps {
-  foto: Foto
+  foto: Foto;
 }
 
 export const FotoThumb = ({ foto }: FotoThumbProps) => {
   // Estados
-  const [aberta, setAberta] = useState(false)
+  const [aberta, setAberta] = useState(false);
   // Hooks
-  const { url, isLoading, isError } = useAuthenticatedObjectUrl(`/fotos/${foto.id}/arquivo`)
+  const { url, isLoading, isError } = useAuthenticatedObjectUrl(`/fotos/${foto.id}/arquivo`);
   // Constants derivadas
-  const descricao = foto.descricao?.trim() || null
-  const data = foto.dataFoto ? formatDateOnly(foto.dataFoto) : null
-  const alt = descricao ?? 'Foto da obra'
-  const legenda = [descricao, data].filter(Boolean).join(' · ')
+  const descricao = foto.descricao?.trim() || null;
+  const data = foto.dataFoto ? formatDateOnly(foto.dataFoto) : null;
+  const alt = descricao ?? 'Foto da obra';
+  const legenda = [descricao, data].filter(Boolean).join(' · ');
 
   // Functions
-  const handleOpen = () => setAberta(true)
-  const handleClose = () => setAberta(false)
+  const handleOpen = () => setAberta(true);
+  const handleClose = () => setAberta(false);
 
   // Return
   return (
@@ -52,5 +52,5 @@ export const FotoThumb = ({ foto }: FotoThumbProps) => {
       {legenda && <figcaption className="text-xs text-muted-foreground">{legenda}</figcaption>}
       {aberta && url && <ImageDialog src={url} alt={alt} caption={legenda || undefined} onClose={handleClose} />}
     </figure>
-  )
-}
+  );
+};

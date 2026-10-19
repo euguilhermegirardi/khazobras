@@ -55,6 +55,30 @@ public sealed class EtapaRepository : IEtapaRepository
         return row?.ToEntity();
     }
 
+    public async Task<Guid?> GetObraIdByIdAsync(Guid id)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = "SELECT obra_id FROM etapas WHERE id = @Id";
+        return await connection.QuerySingleOrDefaultAsync<Guid?>(sql, new { Id = id });
+    }
+
+    public async Task<Etapa?> GetByIdAndObraAsync(Guid id, Guid obraId)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        const string sql = @"
+            SELECT id, obra_id AS ObraId, nome, ordem, percentual_peso AS PercentualPeso,
+                   data_inicio_prevista AS DataInicioPrevista, data_inicio_real AS DataInicioReal,
+                   data_fim_prevista AS DataFimPrevista, data_fim_real AS DataFimReal,
+                   status, created_at AS CreatedAt, updated_at AS UpdatedAt
+            FROM etapas
+            WHERE id = @Id AND obra_id = @ObraId";
+
+        var row = await connection.QuerySingleOrDefaultAsync<EtapaRow>(sql, new { Id = id, ObraId = obraId });
+        return row?.ToEntity();
+    }
+
     public async Task<IReadOnlyList<Etapa>> GetByObraIdAsync(Guid obraId)
     {
         using var connection = _connectionFactory.CreateConnection();
@@ -66,7 +90,7 @@ public sealed class EtapaRepository : IEtapaRepository
                    status, created_at AS CreatedAt, updated_at AS UpdatedAt
             FROM etapas
             WHERE obra_id = @ObraId
-            ORDER BY ordem ASC";
+            ORDER BY ordem ASC, data_inicio_prevista ASC NULLS LAST";
 
         var rows = await connection.QueryAsync<EtapaRow>(sql, new { ObraId = obraId });
         return rows.Select(r => r.ToEntity()).ToList();

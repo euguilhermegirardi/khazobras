@@ -1,23 +1,29 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 
 interface LancamentosPaginacaoProps {
-  pageIndex: number
-  pageSize: number
-  totalItems: number
+  pageIndex: number;
+  pageSize: number;
+  totalItems: number;
   /** Carregando outra página: trava os botões. */
-  ocupado: boolean
-  onChange: (pageIndex: number) => void
+  ocupado: boolean;
+  onChange: (pageIndex: number) => void;
 }
 
-export const LancamentosPaginacao = ({ pageIndex, pageSize, totalItems, ocupado, onChange }: LancamentosPaginacaoProps) => {
+export const LancamentosPaginacao = ({
+  pageIndex,
+  pageSize,
+  totalItems,
+  ocupado,
+  onChange,
+}: LancamentosPaginacaoProps) => {
   // Constants derivadas
-  const totalPaginas = Math.max(1, Math.ceil(totalItems / pageSize))
-  const temAnterior = pageIndex > 0
-  const temProxima = pageIndex + 1 < totalPaginas
+  const totalPaginas = Math.max(1, Math.ceil(totalItems / pageSize));
+  const temAnterior = pageIndex > 0;
+  const temProxima = pageIndex + 1 < totalPaginas;
 
   // Functions
-  const handleAnterior = () => onChange(pageIndex - 1)
-  const handleProxima = () => onChange(pageIndex + 1)
+  const handleAnterior = () => onChange(pageIndex - 1);
+  const handleProxima = () => onChange(pageIndex + 1);
 
   // Return
   return (
@@ -35,5 +41,5 @@ export const LancamentosPaginacao = ({ pageIndex, pageSize, totalItems, ocupado,
         </Button>
       </div>
     </nav>
-  )
-}
+  );
+};

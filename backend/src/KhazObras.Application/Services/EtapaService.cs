@@ -39,6 +39,16 @@ public sealed class EtapaService
         return etapa is null ? null : ToResponse(etapa);
     }
 
+    /// <summary>Resolve so a obra da etapa (query enxuta); o endpoint valida o acesso a ela antes de ler a etapa.</summary>
+    public Task<Guid?> ResolveEtapaAsync(Guid id) => _etapaRepository.GetObraIdByIdAsync(id);
+
+    /// <summary>Devolve null se a etapa nao existir ou nao pertencer a obra informada (a mesma que foi autorizada).</summary>
+    public async Task<EtapaResponse?> GetByIdAndObraAsync(Guid id, Guid obraId)
+    {
+        var etapa = await _etapaRepository.GetByIdAndObraAsync(id, obraId);
+        return etapa is null ? null : ToResponse(etapa);
+    }
+
     public async Task<IReadOnlyList<EtapaResponse>> GetByObraIdAsync(Guid obraId)
     {
         var etapas = await _etapaRepository.GetByObraIdAsync(obraId);

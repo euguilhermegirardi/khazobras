@@ -91,7 +91,8 @@ auth, hooks). Um módulo nunca importa de outro módulo; o que for comum sobe pa
 - Linguagem da visão cliente é simplificada (sem SPI, CPI, Curva S). Navbar e telas por papel: SPEC §5 (cliente) e §6 (admin).
 - Teste por comportamento do usuário (Testing Library), não por implementação. Fluxo crítico =
   teste e2e: login, aprovar medição (cliente), criar medição (admin), acesso negado entre obras.
-- Antes de concluir: `npm run lint && npm run typecheck && npm test` verdes.
+- Antes de concluir: `npm run format` e `npm run lint && npm run typecheck && npm test` verdes. Estilo do Prettier
+  (`.prettierrc.json`): ponto e vírgula, aspas simples, vírgula final, 120 colunas; o pre-commit bloqueia arquivo fora do padrão.
 
 ## Padrões já estabelecidos (siga-os)
 
@@ -120,6 +121,7 @@ se o usuário pedir. Antes do merge: `plano:registro -- --escrever` com tudo com
 cd frontend
 npm run dev        # http://localhost:5173
 npm run build
+npm run format       # Prettier (format:check só confere)
 npm run lint
 npm run typecheck
 npm test

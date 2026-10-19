@@ -254,12 +254,6 @@ app.MapGet("/obras", async (ObraService obraService, ObraAccessService accessSer
 
 app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapaRequest> validator, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var validation = await validator.ValidateAsync(request);
-    if (!validation.IsValid)
-    {
-        return Results.ValidationProblem(validation.ToDictionary());
-    }
-
     try
     {
         await accessService.EnsureAccessAsync(principal, request.ObraId);
@@ -267,6 +261,12 @@ app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapa
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
     }
 
     var result = await etapaService.CreateAsync(request);
@@ -278,22 +278,23 @@ app.MapPost("/etapas", async (CreateEtapaRequest request, IValidator<CreateEtapa
 
 app.MapGet("/etapas/{id:guid}", async (Guid id, EtapaService etapaService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var result = await etapaService.GetByIdAsync(id);
-    if (result is null)
+    var obraId = await etapaService.ResolveEtapaAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, result.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
-    return Results.Ok(result);
+    var result = await etapaService.GetByIdAndObraAsync(id, obraId.Value);
+    return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization()
 .WithName("GetEtapaById")
@@ -889,6 +890,12 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
         return Results.BadRequest(new { message = validationError });
     }
 
+    // Etapa informada precisa ser desta obra (senao 400); nada vai ao R2 antes dessa checagem.
+    if (etapaId is not null && !await service.EtapaPertenceAObraAsync(etapaId.Value, obraId))
+    {
+        return Results.BadRequest(new { message = "Etapa nao encontrada nesta obra." });
+    }
+
     using var stream = file.OpenReadStream();
     var result = await service.UploadAsync(obraId, etapaId, stream, file.FileName, file.ContentType, tipoDocumento);
     return Results.Created($"/projetos/{result.Id}", result);
@@ -898,26 +905,37 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
 .WithName("UploadProjetoDocumento")
 .WithDescription("Anexa documento/projeto a uma obra (máx 10MB, validado por magic bytes)");
 
-app.MapGet("/projetos/{id:guid}/download", async (Guid id, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+app.MapGet("/projetos/{id:guid}/download", async (Guid id, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal, HttpContext httpContext) =>
 {
-    var result = await service.DownloadAsync(id);
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    // So depois de todas as checagens o arquivo e lido do R2.
+    var result = await service.DownloadAsync(id, obraId.Value);
     if (result is null)
     {
         return Results.NotFound();
     }
 
-    // Mesma limitacao do anexo financeiro: DownloadAsync ainda nao expoe ObraId.
-    if (!accessService.IsAdminOrMaster(principal))
-    {
-        return Results.Forbid();
-    }
-
     var (content, fileName, contentType) = result.Value;
-    return Results.File(content, contentType ?? "application/octet-stream", fileName);
+    httpContext.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    return Results.File(content, contentType, fileName);
 })
 .RequireAuthorization()
 .WithName("DownloadProjetoDocumento")
-.WithDescription("Baixa documento/projeto (somente Admin/Master)");
+.WithDescription("Baixa documento/projeto (Admin/Master ou cliente vinculado a obra)");
 
 app.MapGet("/obras/{obraId:guid}/projetos", async (Guid obraId, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

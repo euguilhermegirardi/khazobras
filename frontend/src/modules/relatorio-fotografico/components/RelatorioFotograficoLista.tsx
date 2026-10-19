@@ -1,21 +1,19 @@
-import type { Etapa } from '@/interfaces/etapa'
-import type { RelatorioFotografico, RelatorioFotograficoTipo } from '@/interfaces/relatorioFotografico'
-import { MENSAGEM_VAZIO } from '../constants'
-import { RelatorioFotograficoCard } from './RelatorioFotograficoCard'
+import type { Etapa } from '@/interfaces/etapa';
+import type { RelatorioFotografico, RelatorioFotograficoTipo } from '@/interfaces/relatorioFotografico';
+import { MENSAGEM_VAZIO } from '../constants';
+import { RelatorioFotograficoCard } from './RelatorioFotograficoCard';
 
 interface RelatorioFotograficoListaProps {
-  tipo: RelatorioFotograficoTipo
-  relatorios: RelatorioFotografico[]
-  etapas: Etapa[]
+  tipo: RelatorioFotograficoTipo;
+  relatorios: RelatorioFotografico[];
+  etapas: Etapa[];
 }
 
 export const RelatorioFotograficoLista = ({ tipo, relatorios, etapas }: RelatorioFotograficoListaProps) => {
   // Constants derivadas (mensal: mês mais novo primeiro; "yyyy-MM-dd" ordena como texto; etapa: ordem da API)
-  const doTipo = relatorios.filter((r) => r.tipo === tipo)
+  const doTipo = relatorios.filter((r) => r.tipo === tipo);
   const lista =
-    tipo === 'mensal'
-      ? [...doTipo].sort((a, b) => (b.competencia ?? '').localeCompare(a.competencia ?? ''))
-      : doTipo
+    tipo === 'mensal' ? [...doTipo].sort((a, b) => (b.competencia ?? '').localeCompare(a.competencia ?? '')) : doTipo;
 
   // Retornos breves
   if (lista.length === 0) {
@@ -23,7 +21,7 @@ export const RelatorioFotograficoLista = ({ tipo, relatorios, etapas }: Relatori
       <p className="rounded-xl border border-dashed bg-card p-7 text-center text-[13px] text-muted-foreground">
         {MENSAGEM_VAZIO[tipo]}
       </p>
-    )
+    );
   }
 
   // Return
@@ -37,5 +35,5 @@ export const RelatorioFotograficoLista = ({ tipo, relatorios, etapas }: Relatori
         />
       ))}
     </div>
-  )
-}
+  );
+};
