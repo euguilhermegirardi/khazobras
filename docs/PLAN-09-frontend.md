@@ -200,7 +200,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   **Visualizar** só para PDF e imagens (decidido pela extensão de `nome`): o blob autenticado vira object URL aberto em **nova
   aba** (`window.open(url, '_blank', 'noopener')`, novo `utils/download.openBlobInNewTab`, URL revogado após 60 s). Escolhi
   nova aba (e não `ImageDialog`) para PDF e imagem usarem o mesmo caminho e o leitor nativo do navegador; nunca URL do bucket.
-  Limitação: se o navegador bloquear pop-up, nada abre (com `noopener` o `window.open` sempre devolve `null`). Altura da linha
+  `openBlobInNewTab(blob, fileName)` só abre `application/pdf` e `image/(jpeg|png|webp|gif)` pelo `blob.type`; outro tipo
+  (vazio, `text/html`, `image/svg+xml`) cai em `saveBlob` (security-reviewer, rodada 2). Pop-up: mantido `window.open` com
+  `noopener` após o fetch (abrir `about:blank` no clique e navegar depois exigiria dispensar `noopener`; não vale o risco
+  nem a mudança de contrato). Limitação: se o navegador bloquear pop-up, nada abre (com `noopener` o `window.open` sempre devolve `null`). Altura da linha
   fixa (`h-7`) com ou sem "Visualizar". Colunas com largura fixa e igual em todos os cards (`table-fixed`: Nome 40%, Tipo 20%,
   Enviado em 15%, Ações 25% à direita), para não "dançarem" entre cards empilhados. Durante a ação os botões daquele item ficam desabilitados; erro (403 = sem permissão)
   vira `Alert` sem derrubar a lista. Tipo `ProjetoDocumento` (`interfaces/projeto.ts`). Mudança na base: `useEtapas` saiu de

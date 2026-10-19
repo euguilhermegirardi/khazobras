@@ -21,7 +21,7 @@ export const useAcaoProjeto = () =>
   useMutation({
     mutationFn: async ({ projeto, acao }: ProjetoAcaoVariables) => {
       const { blob, fileName } = await downloadProjeto(projeto)
-      if (acao === 'visualizar') openBlobInNewTab(blob)
+      if (acao === 'visualizar') openBlobInNewTab(blob, fileName)
       else saveBlob(blob, fileName)
     },
   })
