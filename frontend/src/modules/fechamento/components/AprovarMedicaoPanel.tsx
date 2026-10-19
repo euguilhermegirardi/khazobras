@@ -1,43 +1,44 @@
-import { CircleAlert } from 'lucide-react'
-import { useState } from 'react'
-import { ApiError } from '@/services/apiClient'
-import { formatCurrency } from '@/utils/format'
-import type { Medicao } from '@/interfaces/medicao'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
-import { useApproveMedicao } from '../hooks'
+import { CircleAlert } from 'lucide-react';
+import { useState } from 'react';
+import { ApiError } from '@/services/apiClient';
+import { formatCurrency } from '@/utils/format';
+import type { Medicao } from '@/interfaces/medicao';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { useApproveMedicao } from '../hooks';
 
 interface AprovarMedicaoPanelProps {
-  medicao: Medicao
+  medicao: Medicao;
 }
 
-const MENSAGEM_ERRO = 'Não foi possível aprovar a medição. Tente novamente.'
+const MENSAGEM_ERRO = 'Não foi possível aprovar a medição. Tente novamente.';
 
-const MENSAGEM_CONFLITO =
-  'Esta medição já não está aguardando aprovação. Atualizamos a página com a situação atual.'
+const MENSAGEM_CONFLITO = 'Esta medição já não está aguardando aprovação. Atualizamos a página com a situação atual.';
 
 /** Única ação de escrita do cliente: aprovar a medição, com confirmação (ação formal e sem volta). */
 export const AprovarMedicaoPanel = ({ medicao }: AprovarMedicaoPanelProps) => {
   // Estados
-  const [confirmando, setConfirmando] = useState(false)
+  const [confirmando, setConfirmando] = useState(false);
   // Hooks
-  const { mutate, isPending, isError, error, reset } = useApproveMedicao(medicao.obraId, medicao.id)
+  const { mutate, isPending, isError, error, reset } = useApproveMedicao(medicao.obraId, medicao.id);
   // Constants derivadas
   const mensagemErro =
-    error instanceof ApiError ? (error.status === 409 ? MENSAGEM_CONFLITO : error.message) : MENSAGEM_ERRO
+    error instanceof ApiError ? (error.status === 409 ? MENSAGEM_CONFLITO : error.message) : MENSAGEM_ERRO;
   // Functions
-  const handleAbrir = () => setConfirmando(true)
+  const handleAbrir = () => setConfirmando(true);
   const handleCancelar = () => {
-    reset()
-    setConfirmando(false)
-  }
-  const handleConfirmar = () => mutate()
+    reset();
+    setConfirmando(false);
+  };
+  const handleConfirmar = () => mutate();
 
   // Return
   if (!confirmando) {
     return (
-      <Button className="self-start" onClick={handleAbrir}>Aprovar medição</Button>
-    )
+      <Button className="self-start" onClick={handleAbrir}>
+        Aprovar medição
+      </Button>
+    );
   }
 
   return (
@@ -70,5 +71,5 @@ export const AprovarMedicaoPanel = ({ medicao }: AprovarMedicaoPanelProps) => {
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -1,10 +1,10 @@
-import { KpiCard } from '@/components/KpiCard'
+import { KpiCard } from '@/components/KpiCard';
 
 interface CronogramaKpisProps {
-  total: number
-  concluidas: number
-  emAndamento: number
-  naoIniciadas: number
+  total: number;
+  concluidas: number;
+  emAndamento: number;
+  naoIniciadas: number;
 }
 
 export const CronogramaKpis = ({ total, concluidas, emAndamento, naoIniciadas }: CronogramaKpisProps) => (
@@ -14,4 +14,4 @@ export const CronogramaKpis = ({ total, concluidas, emAndamento, naoIniciadas }:
     <KpiCard label="Em andamento" value={emAndamento} tone="info" />
     <KpiCard label="Não iniciadas" value={naoIniciadas} tone="neutral" />
   </div>
-)
+);

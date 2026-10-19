@@ -1,25 +1,25 @@
-import { ErrorState } from '@/components/ErrorState'
-import { PageSection } from '@/components/PageSection'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ObraCard } from '../components/ObraCard'
-import { useObras } from '../hooks'
+import { ErrorState } from '@/components/ErrorState';
+import { PageSection } from '@/components/PageSection';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ObraCard } from '../components/ObraCard';
+import { useObras } from '../hooks';
 
 interface ObraHubPageProps {
   /** Monta o destino da obra escolhida (cada visão tem o seu prefixo). */
-  obraPath: (obraId: string) => string
+  obraPath: (obraId: string) => string;
 }
 
 // Constants (não dependem de props/estado: ficam fora do componente)
-const TITULO = 'Suas obras'
-const MENSAGEM_ERRO = 'Não foi possível carregar as obras.'
-const MENSAGEM_VAZIO = 'Nenhuma obra vinculada à sua conta ainda. Fale com a Khaz Engenharia.'
+const TITULO = 'Suas obras';
+const MENSAGEM_ERRO = 'Não foi possível carregar as obras.';
+const MENSAGEM_VAZIO = 'Nenhuma obra vinculada à sua conta ainda. Fale com a Khaz Engenharia.';
 
 export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
   // Hooks
-  const { data, isPending, isError, error, refetch } = useObras()
+  const { data, isPending, isError, error, refetch } = useObras();
 
   // Functions
-  const handleRetry = () => void refetch()
+  const handleRetry = () => void refetch();
 
   // Retornos breves (carregando / erro / vazio) — sempre depois de todos os hooks
   if (isPending) {
@@ -31,7 +31,7 @@ export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
           <Skeleton className="h-36 rounded-xl" />
         </div>
       </PageSection>
-    )
+    );
   }
 
   if (isError) {
@@ -39,7 +39,7 @@ export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
       <PageSection title={TITULO}>
         <ErrorState error={error} fallbackMessage={MENSAGEM_ERRO} onRetry={handleRetry} />
       </PageSection>
-    )
+    );
   }
 
   if (data.items.length === 0) {
@@ -49,7 +49,7 @@ export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
           {MENSAGEM_VAZIO}
         </p>
       </PageSection>
-    )
+    );
   }
 
   // Return
@@ -61,5 +61,5 @@ export const ObraHubPage = ({ obraPath }: ObraHubPageProps) => {
         ))}
       </ul>
     </PageSection>
-  )
-}
+  );
+};

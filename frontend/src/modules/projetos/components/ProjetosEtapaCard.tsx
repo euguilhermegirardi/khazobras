@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import type { ProjetoAcao } from '../hooks'
-import type { ProjetoDocumento } from '@/interfaces/projeto'
-import { ProjetoLinha } from './ProjetoLinha'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { ProjetoAcao } from '../hooks';
+import type { ProjetoDocumento } from '@/interfaces/projeto';
+import { ProjetoLinha } from './ProjetoLinha';
 
 interface ProjetosEtapaCardProps {
-  titulo: string
-  projetos: ProjetoDocumento[]
-  ocupadoId: string | null
-  onAcao: (projeto: ProjetoDocumento, acao: ProjetoAcao) => void
+  titulo: string;
+  projetos: ProjetoDocumento[];
+  ocupadoId: string | null;
+  onAcao: (projeto: ProjetoDocumento, acao: ProjetoAcao) => void;
 }
 
 export const ProjetosEtapaCard = ({ titulo, projetos, ocupadoId, onAcao }: ProjetosEtapaCardProps) => (
@@ -36,4 +36,4 @@ export const ProjetosEtapaCard = ({ titulo, projetos, ocupadoId, onAcao }: Proje
       </Table>
     </CardContent>
   </Card>
-)
+);

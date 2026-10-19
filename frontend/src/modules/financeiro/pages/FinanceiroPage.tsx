@@ -1,43 +1,43 @@
-import { CircleAlert } from 'lucide-react'
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { ErrorState } from '@/components/ErrorState'
-import { PageSection } from '@/components/PageSection'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import type { LancamentoAnexo } from '@/interfaces/financeiro'
-import { ApiError } from '@/services/apiClient'
-import { LancamentoLinha } from '../components/LancamentoLinha'
-import { LancamentosPaginacao } from '../components/LancamentosPaginacao'
-import { useDownloadComprovante, useLancamentos } from '../hooks'
+import { CircleAlert } from 'lucide-react';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { ErrorState } from '@/components/ErrorState';
+import { PageSection } from '@/components/PageSection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { LancamentoAnexo } from '@/interfaces/financeiro';
+import { ApiError } from '@/services/apiClient';
+import { LancamentoLinha } from '../components/LancamentoLinha';
+import { LancamentosPaginacao } from '../components/LancamentosPaginacao';
+import { useDownloadComprovante, useLancamentos } from '../hooks';
 
-const TITULO = 'Financeiro'
-const DESCRICAO = 'Os lançamentos da sua obra liberados pela Khaz Engenharia, com os comprovantes.'
-const MENSAGEM_ERRO = 'Não foi possível carregar os lançamentos.'
-const MENSAGEM_ERRO_DOWNLOAD = 'Não foi possível baixar o comprovante. Tente novamente.'
-const MENSAGEM_VAZIO = 'Quando a Khaz Engenharia liberar um lançamento da sua obra, ele aparece aqui.'
+const TITULO = 'Financeiro';
+const DESCRICAO = 'Os lançamentos da sua obra liberados pela Khaz Engenharia, com os comprovantes.';
+const MENSAGEM_ERRO = 'Não foi possível carregar os lançamentos.';
+const MENSAGEM_ERRO_DOWNLOAD = 'Não foi possível baixar o comprovante. Tente novamente.';
+const MENSAGEM_VAZIO = 'Quando a Khaz Engenharia liberar um lançamento da sua obra, ele aparece aqui.';
 
 export const FinanceiroPage = () => {
   // Estados
-  const [pageIndex, setPageIndex] = useState(0)
+  const [pageIndex, setPageIndex] = useState(0);
   // Hooks
-  const { obraId = '' } = useParams()
-  const { data, isPending, isError, error, refetch, isPlaceholderData } = useLancamentos(obraId, pageIndex)
-  const download = useDownloadComprovante()
+  const { obraId = '' } = useParams();
+  const { data, isPending, isError, error, refetch, isPlaceholderData } = useLancamentos(obraId, pageIndex);
+  const download = useDownloadComprovante();
 
   // Constants derivadas
-  const baixandoId = download.isPending ? (download.variables?.id ?? null) : null
+  const baixandoId = download.isPending ? (download.variables?.id ?? null) : null;
   const erroDownload = download.isError
     ? download.error instanceof ApiError && download.error.kind === 'forbidden'
       ? 'Você não tem permissão para baixar este comprovante.'
       : MENSAGEM_ERRO_DOWNLOAD
-    : null
+    : null;
 
   // Functions
-  const handleRetry = () => void refetch()
-  const handleDownload = (anexo: LancamentoAnexo) => download.mutate(anexo)
+  const handleRetry = () => void refetch();
+  const handleDownload = (anexo: LancamentoAnexo) => download.mutate(anexo);
 
   // Retornos breves
   if (isPending) {
@@ -49,7 +49,7 @@ export const FinanceiroPage = () => {
           <Skeleton className="h-64 rounded-xl" />
         </div>
       </PageSection>
-    )
+    );
   }
 
   if (isError) {
@@ -57,7 +57,7 @@ export const FinanceiroPage = () => {
       <PageSection title={TITULO} description={DESCRICAO}>
         <ErrorState error={error} fallbackMessage={MENSAGEM_ERRO} onRetry={handleRetry} />
       </PageSection>
-    )
+    );
   }
 
   if (data.totalItems === 0) {
@@ -68,7 +68,7 @@ export const FinanceiroPage = () => {
           <p className="mt-1 text-[13px]">{MENSAGEM_VAZIO}</p>
         </div>
       </PageSection>
-    )
+    );
   }
 
   // Return
@@ -118,5 +118,5 @@ export const FinanceiroPage = () => {
         </Card>
       </div>
     </PageSection>
-  )
-}
+  );
+};

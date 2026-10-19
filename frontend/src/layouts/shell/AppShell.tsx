@@ -1,15 +1,15 @@
-import { ArrowLeft, Building, Building2, LogOut } from 'lucide-react'
-import { Link, Outlet, useMatch } from 'react-router-dom'
-import { EMPRESA, type NavConfig } from '../navigation'
-import { SidebarBlock } from './SidebarBlock'
-import { SidebarLink } from './SidebarLink'
-import { useAuth } from '@/auth/useAuth'
-import { Button } from '@/components/ui/button'
+import { ArrowLeft, Building, Building2, LogOut } from 'lucide-react';
+import { Link, Outlet, useMatch } from 'react-router-dom';
+import { EMPRESA, type NavConfig } from '../navigation';
+import { SidebarBlock } from './SidebarBlock';
+import { SidebarLink } from './SidebarLink';
+import { useAuth } from '@/auth/useAuth';
+import { Button } from '@/components/ui/button';
 
 interface AppShellProps {
-  nav: NavConfig
+  nav: NavConfig;
   /** Padrão de rota da obra aberta (ex.: `/cliente/obras/:obraId/*`). */
-  obraRoute: string
+  obraRoute: string;
 }
 
 /**
@@ -19,13 +19,13 @@ interface AppShellProps {
  */
 export const AppShell = ({ nav, obraRoute }: AppShellProps) => {
   // Hooks
-  const { session, signOut } = useAuth()
-  const obraMatch = useMatch(obraRoute)
+  const { session, signOut } = useAuth();
+  const obraMatch = useMatch(obraRoute);
 
   // Constants derivadas
-  const obraId = obraMatch?.params.obraId
-  const resolve = (to: string) => (obraId ? to.replace(':obraId', obraId) : to)
-  const EmpresaIcon = EMPRESA.icon
+  const obraId = obraMatch?.params.obraId;
+  const resolve = (to: string) => (obraId ? to.replace(':obraId', obraId) : to);
+  const EmpresaIcon = EMPRESA.icon;
 
   // Return
   return (
@@ -90,5 +90,5 @@ export const AppShell = ({ nav, obraRoute }: AppShellProps) => {
         </main>
       </div>
     </div>
-  )
-}
+  );
+};

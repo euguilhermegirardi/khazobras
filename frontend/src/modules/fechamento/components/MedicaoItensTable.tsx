@@ -1,12 +1,12 @@
-import type { MedicaoItem } from '@/interfaces/medicao'
-import { formatCurrency, formatQuantity } from '@/utils/format'
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ITEM_TIPO_LABEL } from '../constants'
+import type { MedicaoItem } from '@/interfaces/medicao';
+import { formatCurrency, formatQuantity } from '@/utils/format';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ITEM_TIPO_LABEL } from '../constants';
 
 interface MedicaoItensTableProps {
-  itens: MedicaoItem[]
+  itens: MedicaoItem[];
   /** Total calculado pelo backend (não somamos no front). */
-  valorTotal: number
+  valorTotal: number;
 }
 
 /** Itens da medição (protótipo: docs/design/capturas/medicoes.png), somente leitura. */
@@ -46,4 +46,4 @@ export const MedicaoItensTable = ({ itens, valorTotal }: MedicaoItensTableProps)
       </TableRow>
     </TableFooter>
   </Table>
-)
+);

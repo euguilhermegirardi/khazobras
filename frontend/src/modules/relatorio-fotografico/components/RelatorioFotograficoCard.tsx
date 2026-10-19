@@ -1,12 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { RelatorioFotografico } from '@/interfaces/relatorioFotografico'
-import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates'
-import { FotoThumb } from './FotoThumb'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { RelatorioFotografico } from '@/interfaces/relatorioFotografico';
+import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates';
+import { FotoThumb } from './FotoThumb';
 
 interface RelatorioFotograficoCardProps {
-  relatorio: RelatorioFotografico
+  relatorio: RelatorioFotografico;
   /** Nome da etapa (relatórios `etapa`); sem ele, vale o título do relatório. */
-  etapaNome?: string
+  etapaNome?: string;
 }
 
 export const RelatorioFotograficoCard = ({ relatorio, etapaNome }: RelatorioFotograficoCardProps) => {
@@ -14,8 +14,8 @@ export const RelatorioFotograficoCard = ({ relatorio, etapaNome }: RelatorioFoto
   const titulo =
     relatorio.tipo === 'mensal' && relatorio.competencia
       ? formatMonthYearTitle(relatorio.competencia)
-      : (etapaNome ?? relatorio.titulo)
-  const fotos = [...relatorio.fotos].sort((a, b) => a.ordem - b.ordem)
+      : (etapaNome ?? relatorio.titulo);
+  const fotos = [...relatorio.fotos].sort((a, b) => a.ordem - b.ordem);
 
   // Return
   return (
@@ -41,5 +41,5 @@ export const RelatorioFotograficoCard = ({ relatorio, etapaNome }: RelatorioFoto
         )}
       </CardContent>
     </Card>
-  )
-}
+  );
+};

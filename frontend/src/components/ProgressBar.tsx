@@ -1,11 +1,11 @@
-import { cn } from '@/utils/cn'
+import { cn } from '@/utils/cn';
 
 interface ProgressBarProps {
   /** Rótulo à esquerda (ex.: nome da etapa). Também é o nome acessível da barra. */
-  label: string
+  label: string;
   /** 0 a 100. */
-  value: number
-  tone?: 'info' | 'success' | 'warning' | 'danger' | 'neutral'
+  value: number;
+  tone?: 'info' | 'success' | 'warning' | 'danger' | 'neutral';
 }
 
 const TONE_CLASS = {
@@ -14,11 +14,11 @@ const TONE_CLASS = {
   warning: 'bg-warning',
   danger: 'bg-danger',
   neutral: 'bg-neutral',
-} as const
+} as const;
 
 /** Barra de progresso com rótulo e % (protótipo: .progress-label + .bar-track/.bar-fill). */
 export const ProgressBar = ({ label, value, tone = 'info' }: ProgressBarProps) => {
-  const pct = Math.max(0, Math.min(100, Math.round(value)))
+  const pct = Math.max(0, Math.min(100, Math.round(value)));
 
   return (
     <div>
@@ -37,5 +37,5 @@ export const ProgressBar = ({ label, value, tone = 'info' }: ProgressBarProps) =
         <div className={cn('h-2 rounded', TONE_CLASS[tone])} style={{ width: `${pct}%` }} />
       </div>
     </div>
-  )
-}
+  );
+};

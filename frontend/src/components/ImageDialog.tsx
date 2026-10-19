@@ -1,38 +1,38 @@
-import { X } from 'lucide-react'
-import { useEffect, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
 interface ImageDialogProps {
-  src: string
-  alt: string
-  caption?: string
-  onClose: () => void
+  src: string;
+  alt: string;
+  caption?: string;
+  onClose: () => void;
 }
 
 /** Imagem ampliada em diálogo modal simples: Esc e clique fora fecham; o foco vai ao botão e volta ao gatilho. */
 export const ImageDialog = ({ src, alt, caption, onClose }: ImageDialogProps) => {
   // Estados
-  const closeRef = useRef<HTMLButtonElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   // Effects
   useEffect(() => {
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    closeRef.current?.focus()
-    return () => previous?.focus()
-  }, [])
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeRef.current?.focus();
+    return () => previous?.focus();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onClose();
       // Único elemento focável: mantém o foco dentro do diálogo.
       if (event.key === 'Tab') {
-        event.preventDefault()
-        closeRef.current?.focus()
+        event.preventDefault();
+        closeRef.current?.focus();
       }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Return
   return (
@@ -59,5 +59,5 @@ export const ImageDialog = ({ src, alt, caption, onClose }: ImageDialogProps) =>
         {caption && <p className="text-[13px] text-muted-foreground">{caption}</p>}
       </div>
     </div>
-  )
-}
+  );
+};

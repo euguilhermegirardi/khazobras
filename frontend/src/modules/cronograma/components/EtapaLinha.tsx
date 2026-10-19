@@ -1,41 +1,41 @@
-import { Badge } from '@/components/ui/badge'
-import type { EtapaCronograma } from '@/interfaces/etapa'
-import { cn } from '@/utils/cn'
-import { formatDateOnly } from '@/utils/dates'
-import { BAR_CLASS, HOJE_CLASS, REAL_BAR_CLASS } from '../constants'
-import { barBox, statusInfo, type TimelineRange } from '../timeline'
+import { Badge } from '@/components/ui/badge';
+import type { EtapaCronograma } from '@/interfaces/etapa';
+import { cn } from '@/utils/cn';
+import { formatDateOnly } from '@/utils/dates';
+import { BAR_CLASS, HOJE_CLASS, REAL_BAR_CLASS } from '../constants';
+import { barBox, statusInfo, type TimelineRange } from '../timeline';
 
 interface EtapaLinhaProps {
-  etapa: EtapaCronograma
-  range: TimelineRange
+  etapa: EtapaCronograma;
+  range: TimelineRange;
   /** Posição (% da grade) do marcador de hoje; null = fora da grade. */
-  hojeLeft: number | null
+  hojeLeft: number | null;
 }
 
 const realTexto = (inicio: string | null, fim: string | null): string | null => {
-  if (inicio && fim) return `Real: ${formatDateOnly(inicio)} a ${formatDateOnly(fim)}`
-  if (inicio) return `Real: iniciada em ${formatDateOnly(inicio)}`
-  if (fim) return `Real: concluída em ${formatDateOnly(fim)}`
-  return null
-}
+  if (inicio && fim) return `Real: ${formatDateOnly(inicio)} a ${formatDateOnly(fim)}`;
+  if (inicio) return `Real: iniciada em ${formatDateOnly(inicio)}`;
+  if (fim) return `Real: concluída em ${formatDateOnly(fim)}`;
+  return null;
+};
 
 /** Uma linha da linha do tempo: nome, períodos por extenso, situação em texto e a barra. */
 export const EtapaLinha = ({ etapa, range, hojeLeft }: EtapaLinhaProps) => {
   // Constants derivadas
-  const { label, tone } = statusInfo(etapa.status)
-  const { dataInicioPrevista, dataFimPrevista, dataInicioReal, dataFimReal } = etapa
+  const { label, tone } = statusInfo(etapa.status);
+  const { dataInicioPrevista, dataFimPrevista, dataInicioReal, dataFimReal } = etapa;
   const previsto =
     dataInicioPrevista && dataFimPrevista
       ? { inicio: formatDateOnly(dataInicioPrevista), fim: formatDateOnly(dataFimPrevista) }
-      : null
-  const previstoBox = dataInicioPrevista && dataFimPrevista ? barBox(dataInicioPrevista, dataFimPrevista, range) : null
-  const realBox = dataInicioReal && dataFimReal ? barBox(dataInicioReal, dataFimReal, range) : null
-  const real = realTexto(dataInicioReal, dataFimReal)
+      : null;
+  const previstoBox = dataInicioPrevista && dataFimPrevista ? barBox(dataInicioPrevista, dataFimPrevista, range) : null;
+  const realBox = dataInicioReal && dataFimReal ? barBox(dataInicioReal, dataFimReal, range) : null;
+  const real = realTexto(dataInicioReal, dataFimReal);
   // Grade de meses: uma linha vertical por mês, em % (acompanha a largura flexível).
   const gridStyle = {
     backgroundImage: 'linear-gradient(to right, var(--border) 1px, transparent 1px)',
     backgroundSize: `${100 / range.months}% 100%`,
-  }
+  };
 
   // Return
   return (
@@ -84,5 +84,5 @@ export const EtapaLinha = ({ etapa, range, hojeLeft }: EtapaLinhaProps) => {
         )}
       </div>
     </li>
-  )
-}
+  );
+};

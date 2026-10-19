@@ -1,42 +1,44 @@
-import { screen } from '@testing-library/react'
-import { http, HttpResponse } from 'msw'
-import { beforeEach, describe, expect, it } from 'vitest'
-import { renderApp } from '@/test/helpers'
-import { API, server } from '@/test/server'
+import { screen } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { renderApp } from '@/test/helpers';
+import { API, server } from '@/test/server';
 
 describe('guarda de rotas por papel', () => {
   beforeEach(() => {
-    server.use(http.get(`${API}/obras`, () => HttpResponse.json({ totalItems: 0, pageIndex: 0, pageSize: 50, items: [] })))
-  })
+    server.use(
+      http.get(`${API}/obras`, () => HttpResponse.json({ totalItems: 0, pageIndex: 0, pageSize: 50, items: [] })),
+    );
+  });
 
   it('sem sessao, redireciona para o login', () => {
-    renderApp('/cliente')
-    expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
-  })
+    renderApp('/cliente');
+    expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument();
+  });
 
   it('cliente acessa a visao cliente', () => {
-    renderApp('/cliente', 'Client')
-    expect(screen.getByRole('heading', { name: 'Suas obras' })).toBeInTheDocument()
-  })
+    renderApp('/cliente', 'Client');
+    expect(screen.getByRole('heading', { name: 'Suas obras' })).toBeInTheDocument();
+  });
 
   it('cliente NAO acessa a area admin', () => {
-    renderApp('/admin', 'Client')
-    expect(screen.getByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: /Dashboard/ })).not.toBeInTheDocument()
-  })
+    renderApp('/admin', 'Client');
+    expect(screen.getByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Dashboard/ })).not.toBeInTheDocument();
+  });
 
   it.each(['Admin', 'Master'] as const)('%s acessa a area admin', (role) => {
-    renderApp('/admin', role)
-    expect(screen.getByRole('heading', { name: /Dashboard/ })).toBeInTheDocument()
-  })
+    renderApp('/admin', role);
+    expect(screen.getByRole('heading', { name: /Dashboard/ })).toBeInTheDocument();
+  });
 
   it('admin NAO entra na visao cliente', () => {
-    renderApp('/cliente', 'Admin')
-    expect(screen.getByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument()
-  })
+    renderApp('/cliente', 'Admin');
+    expect(screen.getByRole('heading', { name: 'Sem permissão' })).toBeInTheDocument();
+  });
 
   it('a raiz leva cada papel para a sua home', () => {
-    renderApp('/', 'Client')
-    expect(screen.getByRole('heading', { name: 'Suas obras' })).toBeInTheDocument()
-  })
-})
+    renderApp('/', 'Client');
+    expect(screen.getByRole('heading', { name: 'Suas obras' })).toBeInTheDocument();
+  });
+});

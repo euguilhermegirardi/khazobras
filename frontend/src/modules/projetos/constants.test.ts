@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { arquivoTipo, podeVisualizar } from './constants'
+import { describe, expect, it } from 'vitest';
+import { arquivoTipo, podeVisualizar } from './constants';
 
 describe('arquivoTipo', () => {
   it.each([
@@ -18,16 +18,16 @@ describe('arquivoTipo', () => {
     ['arquivo.tar.pdf', 'pdf'],
     ['termina.com.ponto.', 'outro'],
   ])('%s -> %s', (nome, esperado) => {
-    expect(arquivoTipo(nome)).toBe(esperado)
-  })
-})
+    expect(arquivoTipo(nome)).toBe(esperado);
+  });
+});
 
 describe('podeVisualizar', () => {
   it.each(['a.pdf', 'a.PDF', 'a.jpg', 'a.jpeg', 'a.png', 'a.webp', 'a.gif', 'A.PNG'])('permite %s', (nome) => {
-    expect(podeVisualizar(nome)).toBe(true)
-  })
+    expect(podeVisualizar(nome)).toBe(true);
+  });
 
   it.each(['a.xlsx', 'a.xls', 'a.dwg', 'a.docx', 'a.txt', 'a.svg', 'a.html', 'a'])('não permite %s', (nome) => {
-    expect(podeVisualizar(nome)).toBe(false)
-  })
-})
+    expect(podeVisualizar(nome)).toBe(false);
+  });
+});

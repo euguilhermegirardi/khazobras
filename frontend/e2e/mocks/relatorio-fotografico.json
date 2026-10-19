@@ -9,10 +9,34 @@
       "competencia": "2026-03-01",
       "createdAt": "2026-04-01T12:00:00Z",
       "fotos": [
-        { "id": "f31", "dataFoto": "2026-03-05", "descricao": "Alvenaria do pavimento térreo", "ordem": 1, "createdAt": "2026-04-01T12:00:00Z" },
-        { "id": "f32", "dataFoto": "2026-03-12", "descricao": "Instalação elétrica embutida", "ordem": 2, "createdAt": "2026-04-01T12:00:00Z" },
-        { "id": "f33", "dataFoto": "2026-03-20", "descricao": "Vista da fachada frontal", "ordem": 3, "createdAt": "2026-04-01T12:00:00Z" },
-        { "id": "f34", "dataFoto": "2026-03-28", "descricao": "Preparação para a cobertura", "ordem": 4, "createdAt": "2026-04-01T12:00:00Z" }
+        {
+          "id": "f31",
+          "dataFoto": "2026-03-05",
+          "descricao": "Alvenaria do pavimento térreo",
+          "ordem": 1,
+          "createdAt": "2026-04-01T12:00:00Z"
+        },
+        {
+          "id": "f32",
+          "dataFoto": "2026-03-12",
+          "descricao": "Instalação elétrica embutida",
+          "ordem": 2,
+          "createdAt": "2026-04-01T12:00:00Z"
+        },
+        {
+          "id": "f33",
+          "dataFoto": "2026-03-20",
+          "descricao": "Vista da fachada frontal",
+          "ordem": 3,
+          "createdAt": "2026-04-01T12:00:00Z"
+        },
+        {
+          "id": "f34",
+          "dataFoto": "2026-03-28",
+          "descricao": "Preparação para a cobertura",
+          "ordem": 4,
+          "createdAt": "2026-04-01T12:00:00Z"
+        }
       ]
     },
     {
@@ -24,9 +48,27 @@
       "competencia": "2026-02-01",
       "createdAt": "2026-03-01T12:00:00Z",
       "fotos": [
-        { "id": "f21", "dataFoto": "2026-02-03", "descricao": "Armação da fundação", "ordem": 1, "createdAt": "2026-03-01T12:00:00Z" },
-        { "id": "f22", "dataFoto": "2026-02-10", "descricao": "Concretagem das sapatas", "ordem": 2, "createdAt": "2026-03-01T12:00:00Z" },
-        { "id": "f23", "dataFoto": "2026-02-24", "descricao": "Fundação curada", "ordem": 3, "createdAt": "2026-03-01T12:00:00Z" }
+        {
+          "id": "f21",
+          "dataFoto": "2026-02-03",
+          "descricao": "Armação da fundação",
+          "ordem": 1,
+          "createdAt": "2026-03-01T12:00:00Z"
+        },
+        {
+          "id": "f22",
+          "dataFoto": "2026-02-10",
+          "descricao": "Concretagem das sapatas",
+          "ordem": 2,
+          "createdAt": "2026-03-01T12:00:00Z"
+        },
+        {
+          "id": "f23",
+          "dataFoto": "2026-02-24",
+          "descricao": "Fundação curada",
+          "ordem": 3,
+          "createdAt": "2026-03-01T12:00:00Z"
+        }
       ]
     },
     {
@@ -38,15 +80,57 @@
       "competencia": null,
       "createdAt": "2026-03-02T12:00:00Z",
       "fotos": [
-        { "id": "f11", "dataFoto": "2026-02-02", "descricao": "Locação e gabarito", "ordem": 1, "createdAt": "2026-03-02T12:00:00Z" },
-        { "id": "f12", "dataFoto": "2026-02-08", "descricao": "Escavação concluída", "ordem": 2, "createdAt": "2026-03-02T12:00:00Z" },
-        { "id": "f13", "dataFoto": "2026-02-24", "descricao": "Fundação pronta", "ordem": 3, "createdAt": "2026-03-02T12:00:00Z" }
+        {
+          "id": "f11",
+          "dataFoto": "2026-02-02",
+          "descricao": "Locação e gabarito",
+          "ordem": 1,
+          "createdAt": "2026-03-02T12:00:00Z"
+        },
+        {
+          "id": "f12",
+          "dataFoto": "2026-02-08",
+          "descricao": "Escavação concluída",
+          "ordem": 2,
+          "createdAt": "2026-03-02T12:00:00Z"
+        },
+        {
+          "id": "f13",
+          "dataFoto": "2026-02-24",
+          "descricao": "Fundação pronta",
+          "ordem": 3,
+          "createdAt": "2026-03-02T12:00:00Z"
+        }
       ]
     }
   ],
   "GET /obras/a1/etapas": [
-    { "id": "e1", "obraId": "a1", "nome": "Fundação", "ordem": 1, "percentualPeso": 20, "dataInicioPrevista": "2026-01-15", "dataInicioReal": "2026-01-16", "dataFimPrevista": "2026-02-28", "dataFimReal": "2026-02-26", "status": "Concluida", "createdAt": "2026-01-10T12:00:00Z" },
-    { "id": "e2", "obraId": "a1", "nome": "Alvenaria", "ordem": 2, "percentualPeso": 25, "dataInicioPrevista": "2026-03-01", "dataInicioReal": "2026-03-02", "dataFimPrevista": "2026-04-15", "dataFimReal": null, "status": "EmAndamento", "createdAt": "2026-01-10T12:00:00Z" }
+    {
+      "id": "e1",
+      "obraId": "a1",
+      "nome": "Fundação",
+      "ordem": 1,
+      "percentualPeso": 20,
+      "dataInicioPrevista": "2026-01-15",
+      "dataInicioReal": "2026-01-16",
+      "dataFimPrevista": "2026-02-28",
+      "dataFimReal": "2026-02-26",
+      "status": "Concluida",
+      "createdAt": "2026-01-10T12:00:00Z"
+    },
+    {
+      "id": "e2",
+      "obraId": "a1",
+      "nome": "Alvenaria",
+      "ordem": 2,
+      "percentualPeso": 25,
+      "dataInicioPrevista": "2026-03-01",
+      "dataInicioReal": "2026-03-02",
+      "dataFimPrevista": "2026-04-15",
+      "dataFimReal": null,
+      "status": "EmAndamento",
+      "createdAt": "2026-01-10T12:00:00Z"
+    }
   ],
   "GET /fotos/*/arquivo": { "imagem": true }
 }

@@ -224,6 +224,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - **Estrutura de pastas = modelo "por módulos"** (escolha do Guilherme, 18/10): `src/modules/<tela>/` + base plana na
   raiz de `src/` (`components/` com `ui/` do shadcn, `interfaces/`, `utils/`, `services/`, `auth/`, `hooks/`) +
   `layouts/` (shell e navegação) + `routes/`. Substitui `app/` + `features/` + `shared/`. Fronteiras no `.oxlintrc.json`.
+- **Formatação = Prettier** (escolha do Guilherme, 19/10): ponto e vírgula, aspas simples, vírgula final, 120 colunas
+  (`.prettierrc.json` na raiz), só em `frontend/` e `scripts/` (Markdown e backend fora). `npm run format` /
+  `npm run format:check`; o pre-commit bloqueia arquivo staged não formatado. Motivo: um `Edit` engolia o espaço em
+  `AppRoutes.tsx` e lint/typecheck não pegavam. Commit só de formatação listado em `.git-blame-ignore-revs`.
 
 ## Registro
 

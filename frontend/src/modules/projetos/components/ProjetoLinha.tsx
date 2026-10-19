@@ -1,28 +1,28 @@
-import { Download, Eye } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { TableCell, TableRow } from '@/components/ui/table'
-import type { ProjetoDocumento } from '@/interfaces/projeto'
-import { formatTimestamp } from '@/utils/dates'
-import { ARQUIVO_ICONE, ARQUIVO_ROTULO, arquivoTipo, podeVisualizar } from '../constants'
-import type { ProjetoAcao } from '../hooks'
+import { Download, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
+import type { ProjetoDocumento } from '@/interfaces/projeto';
+import { formatTimestamp } from '@/utils/dates';
+import { ARQUIVO_ICONE, ARQUIVO_ROTULO, arquivoTipo, podeVisualizar } from '../constants';
+import type { ProjetoAcao } from '../hooks';
 
 interface ProjetoLinhaProps {
-  projeto: ProjetoDocumento
+  projeto: ProjetoDocumento;
   /** Id do projeto em visualização/download (null = nenhum). */
-  ocupadoId: string | null
-  onAcao: (projeto: ProjetoDocumento, acao: ProjetoAcao) => void
+  ocupadoId: string | null;
+  onAcao: (projeto: ProjetoDocumento, acao: ProjetoAcao) => void;
 }
 
 export const ProjetoLinha = ({ projeto, ocupadoId, onAcao }: ProjetoLinhaProps) => {
   // Constants derivadas
-  const tipo = arquivoTipo(projeto.nome)
-  const Icone = ARQUIVO_ICONE[tipo]
-  const ocupado = ocupadoId === projeto.id
+  const tipo = arquivoTipo(projeto.nome);
+  const Icone = ARQUIVO_ICONE[tipo];
+  const ocupado = ocupadoId === projeto.id;
 
   // Functions
-  const handleVisualizar = () => onAcao(projeto, 'visualizar')
-  const handleBaixar = () => onAcao(projeto, 'baixar')
+  const handleVisualizar = () => onAcao(projeto, 'visualizar');
+  const handleBaixar = () => onAcao(projeto, 'baixar');
 
   // Return
   return (
@@ -73,5 +73,5 @@ export const ProjetoLinha = ({ projeto, ocupadoId, onAcao }: ProjetoLinhaProps) 
         </div>
       </TableCell>
     </TableRow>
-  )
-}
+  );
+};

@@ -1,11 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState, type ReactNode } from 'react'
-import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from '@/auth/AuthContext'
-import { ApiError } from '@/services/apiClient'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@/auth/AuthContext';
+import { ApiError } from '@/services/apiClient';
 
 interface AppProvidersProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export const AppProviders = ({ children }: AppProvidersProps) => {
@@ -21,7 +21,7 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
           },
         },
       }),
-  )
+  );
 
   return (
     <BrowserRouter>
@@ -29,5 +29,5 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
         <AuthProvider>{children}</AuthProvider>
       </QueryClientProvider>
     </BrowserRouter>
-  )
-}
+  );
+};

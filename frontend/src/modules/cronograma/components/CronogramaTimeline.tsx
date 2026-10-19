@@ -1,24 +1,24 @@
-import { CalendarRange } from 'lucide-react'
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import type { EtapaCronograma } from '@/interfaces/etapa'
-import { formatDateOnly, formatMonthYearShort, monthIndexToDateOnly } from '@/utils/dates'
-import { LEFT_COLUMNS_WIDTH, MONTH_MIN_WIDTH } from '../constants'
-import { buildRange, todayLeft } from '../timeline'
-import { CronogramaLegenda } from './CronogramaLegenda'
-import { EtapaLinha } from './EtapaLinha'
+import { CalendarRange } from 'lucide-react';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { EtapaCronograma } from '@/interfaces/etapa';
+import { formatDateOnly, formatMonthYearShort, monthIndexToDateOnly } from '@/utils/dates';
+import { LEFT_COLUMNS_WIDTH, MONTH_MIN_WIDTH } from '../constants';
+import { buildRange, todayLeft } from '../timeline';
+import { CronogramaLegenda } from './CronogramaLegenda';
+import { EtapaLinha } from './EtapaLinha';
 
 interface CronogramaTimelineProps {
-  etapas: EtapaCronograma[]
+  etapas: EtapaCronograma[];
   /** Hoje, "yyyy-MM-dd" (data local). */
-  hoje: string
+  hoje: string;
 }
 
 export const CronogramaTimeline = ({ etapas, hoje }: CronogramaTimelineProps) => {
   // Constants derivadas
-  const range = buildRange(etapas, hoje)
-  const hojeLeft = todayLeft(hoje, range)
-  const meses = Array.from({ length: range.months }, (_, i) => monthIndexToDateOnly(range.firstMonth + i))
-  const intervalo = `${formatMonthYearShort(meses[0] ?? hoje)} – ${formatMonthYearShort(meses[meses.length - 1] ?? hoje)}`
+  const range = buildRange(etapas, hoje);
+  const hojeLeft = todayLeft(hoje, range);
+  const meses = Array.from({ length: range.months }, (_, i) => monthIndexToDateOnly(range.firstMonth + i));
+  const intervalo = `${formatMonthYearShort(meses[0] ?? hoje)} – ${formatMonthYearShort(meses[meses.length - 1] ?? hoje)}`;
 
   // Return
   return (
@@ -60,5 +60,5 @@ export const CronogramaTimeline = ({ etapas, hoje }: CronogramaTimelineProps) =>
         <CronogramaLegenda comHoje={hojeLeft !== null} />
       </CardContent>
     </Card>
-  )
-}
+  );
+};

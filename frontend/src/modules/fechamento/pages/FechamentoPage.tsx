@@ -1,35 +1,35 @@
-import { Clock } from 'lucide-react'
-import { useParams } from 'react-router-dom'
-import { ErrorState } from '@/components/ErrorState'
-import { PageSection } from '@/components/PageSection'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { MedicaoLinhaResumo } from '../components/MedicaoLinhaResumo'
-import { useMedicoes } from '../hooks'
+import { Clock } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { ErrorState } from '@/components/ErrorState';
+import { PageSection } from '@/components/PageSection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { MedicaoLinhaResumo } from '../components/MedicaoLinhaResumo';
+import { useMedicoes } from '../hooks';
 
 interface FechamentoPageProps {
   /** Monta o destino dos itens de uma medição (cada visão tem o seu prefixo). */
-  medicaoPath: (obraId: string, medicaoId: string) => string
+  medicaoPath: (obraId: string, medicaoId: string) => string;
 }
 
-const TITULO = 'Fechamento'
-const DESCRICAO = 'Confira as medições da obra e aprove o que foi executado.'
-const MENSAGEM_ERRO = 'Não foi possível carregar as medições.'
-const MENSAGEM_VAZIO = 'Nenhuma medição foi enviada ainda. Quando a Khaz Engenharia enviar uma, ela aparece aqui.'
+const TITULO = 'Fechamento';
+const DESCRICAO = 'Confira as medições da obra e aprove o que foi executado.';
+const MENSAGEM_ERRO = 'Não foi possível carregar as medições.';
+const MENSAGEM_VAZIO = 'Nenhuma medição foi enviada ainda. Quando a Khaz Engenharia enviar uma, ela aparece aqui.';
 
 export const FechamentoPage = ({ medicaoPath }: FechamentoPageProps) => {
   // Hooks
-  const { obraId = '' } = useParams()
-  const { data, isPending, isError, error, refetch } = useMedicoes(obraId)
+  const { obraId = '' } = useParams();
+  const { data, isPending, isError, error, refetch } = useMedicoes(obraId);
 
   // Constants derivadas
-  const medicoes = [...(data ?? [])].sort((a, b) => b.numero - a.numero)
-  const aguardando = medicoes.filter((m) => m.status === 'PendingApproval').length
+  const medicoes = [...(data ?? [])].sort((a, b) => b.numero - a.numero);
+  const aguardando = medicoes.filter((m) => m.status === 'PendingApproval').length;
 
   // Functions
-  const handleRetry = () => void refetch()
+  const handleRetry = () => void refetch();
 
   // Retornos breves
   if (isPending) {
@@ -41,7 +41,7 @@ export const FechamentoPage = ({ medicaoPath }: FechamentoPageProps) => {
           <Skeleton className="h-48 rounded-xl" />
         </div>
       </PageSection>
-    )
+    );
   }
 
   if (isError) {
@@ -49,7 +49,7 @@ export const FechamentoPage = ({ medicaoPath }: FechamentoPageProps) => {
       <PageSection title={TITULO} description={DESCRICAO}>
         <ErrorState error={error} fallbackMessage={MENSAGEM_ERRO} onRetry={handleRetry} />
       </PageSection>
-    )
+    );
   }
 
   if (medicoes.length === 0) {
@@ -59,7 +59,7 @@ export const FechamentoPage = ({ medicaoPath }: FechamentoPageProps) => {
           {MENSAGEM_VAZIO}
         </p>
       </PageSection>
-    )
+    );
   }
 
   // Return
@@ -102,5 +102,5 @@ export const FechamentoPage = ({ medicaoPath }: FechamentoPageProps) => {
         </Card>
       </div>
     </PageSection>
-  )
-}
+  );
+};
