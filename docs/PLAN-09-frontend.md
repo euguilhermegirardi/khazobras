@@ -30,7 +30,7 @@
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
-| 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante | ⬜ | parcelas dependem de Contratos |
+| 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
 | 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas`; falta % concluído | ⬜ | lacuna: atualização de etapas |
 | 7 | Projetos | 🟨 listagem ok; download pelo cliente bloqueado | ⬜ | lacuna: liberar download ao cliente da obra |
 | 8 | Contratos | ❌ sem endpoints | ⬜ | lacuna: módulo Contratos/Pagamentos |
@@ -55,10 +55,9 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Download de anexos de **projetos** pelo cliente da obra (hoje só AdminOrMaster) — bloqueia Projetos
-- Downloads fora da régua (security-reviewer, 18/10): `GET /projetos/{id}/download` sem `EnsureAccessAsync` (e baixa do R2
-  antes de checar o perfil) e `/financeiro/anexos/{id}/download` com a segunda query só por id. Corrigir com o padrão do
-  download de foto (resolve `obra_id` → `EnsureAccessAsync` → `WHERE id = @Id AND obra_id = @ObraId`) antes das telas
-  Projetos e Financeiro.
+- Download fora da régua (security-reviewer, 18/10): `GET /projetos/{id}/download` sem `EnsureAccessAsync` (e baixa do R2
+  antes de checar o perfil). Corrigir com o padrão do download de foto (resolve `obra_id` → `EnsureAccessAsync` →
+  `WHERE id = @Id AND obra_id = @ObraId`) antes da tela Projetos.
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
@@ -133,8 +132,19 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Correção do security-reviewer (rodada 2): o download resolve só o `obra_id` da foto (`GetObraIdByFotoIdAsync`), valida acesso e
   busca o arquivo com `WHERE f.id = @FotoId AND r.obra_id = @ObraId` (`GetFotoByIdAndObraAsync`; obra errada = 404). Upload de
   foto aceita só jpg/jpeg/png/webp/gif (400 caso contrário); chave nova `{guid}{ext}` sem nome original (chaves antigas
-  `{guid}-{nome}` seguem legíveis); `Content-Disposition` fixo `foto-{fotoId}{ext}`. Backlog: mesmo padrão sem `EnsureAccessAsync`
-  em `/financeiro/anexos/{id}/download` e `GET /projetos/{id}/download`.
+  `{guid}-{nome}` seguem legíveis); `Content-Disposition` fixo `foto-{fotoId}{ext}`. Backlog: mesmo padrão em
+  `GET /projetos/{id}/download`.
+- Financeiro, download de comprovante (18/10, correção do security-reviewer): `GET /financeiro/anexos/{id}/download` agora
+  resolve só o `obra_id` (`GetObraIdByAnexoIdAsync`), valida `EnsureAccessAsync` e busca o anexo numa consulta única
+  `WHERE a.id = @AnexoId AND l.obra_id = @ObraId AND (@SomenteVisiveisCliente = FALSE OR l.visivel_cliente)` (cliente com
+  lançamento oculto = 404; só então lê do R2). Upload novo grava `{guid}{ext}` sem o nome original (`NomeArquivo` segue no
+  DTO e no `Content-Disposition`). Testes: `Http/FinanceiroAnexoDownloadTests`. Escrito na nuvem sem .NET: validar com
+  `dotnet build` e `dotnet test`.
+- Financeiro, rodada 1 do security-reviewer (18/10): `GET /financeiro/lancamentos/{id}` e `PATCH .../visibilidade` agora
+  resolvem o `obra_id` → `EnsureAccessAsync` → consulta/UPDATE presos a `id + obra_id` (+ visibilidade no SQL para o cliente;
+  oculto = 404). Listagem valida `pageIndex >= 0` e `pageSize` 1..100 (400 `{ message }`), offset em `long` e anexos da página
+  numa consulta só (`ANY(@Ids)`). Download de comprovante envia `X-Content-Type-Options: nosniff`. Testes:
+  `Http/FinanceiroLancamentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
 - Relatório fotográfico (cliente, front): rota `/cliente/obras/:obraId/relatorio-fotografico`, item na sidebar antes de
   "Relatório mensal" (SPEC §5: item 7 vem antes do 8). Tabs Mensal/Etapa filtram `tipo` no front (o backend devolve tudo
   num array). Mensal: título = `formatMonthYearTitle(competencia)`, ordenado por competência desc; Etapa: título = nome da
@@ -145,6 +155,17 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   vai ao botão e volta ao gatilho), porque `@radix-ui/react-dialog` não está instalado; trocar por shadcn `dialog` quando
   o registro estiver acessível. Todas as miniaturas do relatório carregam de uma vez (sem lazy/paginação; V1).
   Tipos `Foto`/`RelatorioFotografico` (`interfaces/relatorioFotografico.ts`) e `Etapa` (`interfaces/etapa.ts`, só id/nome/ordem).
+- Financeiro (cliente, front): rota `/cliente/obras/:obraId/financeiro`, item "Financeiro" (ícone `Wallet`) na sidebar logo
+  depois de "Fechamento" (SPEC §5). V1 = só a visão **Lançamentos**, somente leitura (sem edição, checkbox, pagador, "Novo
+  lançamento"/"Importar"). **Sem "Resumo" e sem "Por categoria"**: "Valor contratado" depende de Contratos (lacuna) e
+  "Custo realizado" é custo real (regra 7); nenhum total chamado "custo" é exibido. Tabela: Data, Competência
+  (`formatMonthYearTitle`), Categoria (badge neutro: Mão de obra/Material/Equipamento), Descrição, Valor (BRL, direita,
+  `tabular-nums`), Comprovante (botão de clipe por anexo com `aria-label="Baixar comprovante <nome>"`; sem anexo = "—").
+  Download: `apiDownload` (Bearer -> blob) + `utils/download.saveBlob` (link temporário `download`, object URL revogado);
+  botão desabilitado enquanto baixa; erro aparece em `Alert` sem derrubar a tabela. Paginação do servidor (20 por página,
+  `keepPreviousData`): Anterior/Próxima, "Página X de Y", "N lançamentos". Sem filtro de mês (o backend não filtra por mês;
+  filtrar só a página atual enganaria). `categoria` chega em PascalCase (`ItemTipo.ToString()` => `MaoDeObra`); o mapa de
+  rótulos aceita também snake_case por segurança. Tipo `LancamentoCliente` omite `createdByUserId`/`visivelCliente`.
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
@@ -163,6 +184,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-18 — `feat/financeiro`: fix(financeiro): download de anexo na mesma regua do download de foto; feat(financeiro): tela do cliente com lançamentos paginados e download de comprovante; docs: registro do financeiro; test: financeiro (cliente) - vitest, e2e e mocks de captura; docs: capturas do financeiro (claro, escuro, 1280); fix(financeiro): detalhe e visibilidade presos a obra, paginacao validada, anexos em lote; fix(financeiro): altura uniforme da célula de comprovante; espaço faltando na rota; docs: relatório da manhã do Financeiro; harness: varrer o módulo no gap-filler, altura de linha no checklist visual. Arquivos: infra (2), backend (4), testes backend (4), docs (4), front (4), front/rotas-layouts (2), modules/financeiro (8).
 - 2026-10-18 — `feat/relatorio-fotografico`: feat(backend): download autenticado de fotos do relatório fotográfico; feat(relatorio-fotografico): tela do cliente com tabs Mensal e Etapa; chore(captura): mocks de imagem e chave com curinga no capturar-tela; test: relatorio-fotografico (unitários, e2e e mocks de captura); fix(relatorio-fotografico): overlay do diálogo escuro nos dois temas; docs: capturas do relatório fotográfico (claro, escuro, 1280); fix(backend): download de foto preso à obra no SQL, upload só de imagem, nome fixo; fix(api-client): nome de arquivo malformado não derruba o download; docs: relatório da manhã do Relatório fotográfico, PLAN-09 e npm run e2e. Arquivos: infra (2), backend (4), testes backend (2), docs (4), front (10), front/rotas-layouts (2), modules/relatorio-fotografico (8).
 - 2026-10-18 — `refactor/estrutura-modules`: refactor(front): estrutura por módulos (modules/ + base plana em src/). Arquivos: infra (5), outros (1), front (36), front/rotas-layouts (10), modules/auth (2), modules/fechamento (10), modules/obras (6), modules/relatorio-mensal (5).
 - 2026-10-18 — `feat/ajustes-relatorio-shell`: feat: voltar ao hub em toda tela da obra, hover escuro na sidebar, ajustes do relatório mensal. Arquivos: backend (4), testes backend (1), front/app (4), features/relatorio-mensal (1), front (4).

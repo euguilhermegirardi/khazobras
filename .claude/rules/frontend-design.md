@@ -117,5 +117,9 @@ Mapas de rótulo e de cor ficam no `constants.ts` do módulo (ex.: `OBRA_STATUS_
 7. Estados de interação: passe o mouse nos itens da sidebar e nos botões (hover) e navegue com Tab (foco
    visível). Captura estática não mostra isso: confira no código as classes `hover:`/`focus-visible:`.
 8. Datas em título no formato "Setembro de 2026" (sem "De" maiúsculo).
+8a. Tabelas: altura de linha uniforme. Célula de ação (botão-ícone) e o "—" de quando não há ação ocupam a
+   mesma altura; compare linhas com e sem ação na captura.
+8b. A sidebar é `sticky h-screen`: na captura de página inteira a faixa dela termina na altura do viewport. Igual
+   ao protótipo; não é falha.
 9. Desktop web: confira em 1440px e 1280px (notebook) e no tema escuro. **Sem mobile** (SPEC §10: sistema
    desktop-only) — não reporte nem corrija quebra em larguras de celular.
