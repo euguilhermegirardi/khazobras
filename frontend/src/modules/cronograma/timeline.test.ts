@@ -14,6 +14,7 @@ const etapa = (parcial: Partial<EtapaCronograma>): EtapaCronograma => ({
   dataFimPrevista: null,
   dataFimReal: null,
   status: 'nao_iniciada',
+  percentualConcluido: 0,
   createdAt: '2026-01-01T00:00:00Z',
   ...parcial,
 });

@@ -11,7 +11,8 @@
       "dataInicioReal": "2026-03-02",
       "dataFimReal": "2026-03-25",
       "status": "concluida",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 100
     },
     {
       "id": "e02",
@@ -24,7 +25,8 @@
       "dataInicioReal": "2026-03-26",
       "dataFimReal": "2026-04-22",
       "status": "concluida",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 100
     },
     {
       "id": "e03",
@@ -37,7 +39,8 @@
       "dataInicioReal": "2026-04-23",
       "dataFimReal": "2026-06-19",
       "status": "concluida",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 100
     },
     {
       "id": "e04",
@@ -50,7 +53,8 @@
       "dataInicioReal": "2026-06-22",
       "dataFimReal": "2026-08-21",
       "status": "concluida",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 100
     },
     {
       "id": "e05",
@@ -63,7 +67,8 @@
       "dataInicioReal": "2026-08-24",
       "dataFimReal": null,
       "status": "em_andamento",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 45
     },
     {
       "id": "e06",
@@ -76,7 +81,8 @@
       "dataInicioReal": "2026-09-21",
       "dataFimReal": null,
       "status": "em_andamento",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 45
     },
     {
       "id": "e07",
@@ -89,7 +95,8 @@
       "dataInicioReal": null,
       "dataFimReal": null,
       "status": "nao_iniciada",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 0
     },
     {
       "id": "e08",
@@ -102,7 +109,8 @@
       "dataInicioReal": null,
       "dataFimReal": null,
       "status": "nao_iniciada",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 0
     },
     {
       "id": "e09",
@@ -115,7 +123,8 @@
       "dataInicioReal": null,
       "dataFimReal": null,
       "status": "nao_iniciada",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 0
     },
     {
       "id": "e10",
@@ -128,7 +137,8 @@
       "dataInicioReal": null,
       "dataFimReal": null,
       "status": "nao_iniciada",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 0
     },
     {
       "id": "e11",
@@ -141,7 +151,8 @@
       "dataInicioReal": null,
       "dataFimReal": null,
       "status": "nao_iniciada",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 0
     },
     {
       "id": "e12",
@@ -154,7 +165,8 @@
       "dataInicioReal": null,
       "dataFimReal": null,
       "status": "nao_iniciada",
-      "createdAt": "2026-02-10T12:00:00Z"
+      "createdAt": "2026-02-10T12:00:00Z",
+      "percentualConcluido": 0
     }
   ]
 }

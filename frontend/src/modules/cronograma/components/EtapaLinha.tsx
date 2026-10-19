@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import type { EtapaCronograma } from '@/interfaces/etapa';
 import { cn } from '@/utils/cn';
 import { formatDateOnly } from '@/utils/dates';
+import { formatPercent } from '@/utils/format';
 import { BAR_CLASS, HOJE_CLASS, REAL_BAR_CLASS } from '../constants';
 import { barBox, statusInfo, type TimelineRange } from '../timeline';
 
@@ -31,6 +32,7 @@ export const EtapaLinha = ({ etapa, range, hojeLeft }: EtapaLinhaProps) => {
   const previstoBox = dataInicioPrevista && dataFimPrevista ? barBox(dataInicioPrevista, dataFimPrevista, range) : null;
   const realBox = dataInicioReal && dataFimReal ? barBox(dataInicioReal, dataFimReal, range) : null;
   const real = realTexto(dataInicioReal, dataFimReal);
+  const percentual = formatPercent(etapa.percentualConcluido);
   // Grade de meses: uma linha vertical por mês, em % (acompanha a largura flexível).
   const gridStyle = {
     backgroundImage: 'linear-gradient(to right, var(--border) 1px, transparent 1px)',
@@ -65,12 +67,23 @@ export const EtapaLinha = ({ etapa, range, hojeLeft }: EtapaLinhaProps) => {
           />
         )}
         {previstoBox && previsto ? (
-          <div
-            role="img"
-            aria-label={`${etapa.nome}: previsto de ${previsto.inicio} a ${previsto.fim}, ${label}`}
-            className={cn('h-3 rounded-sm', BAR_CLASS[tone])}
-            style={{ marginLeft: `${previstoBox.left}%`, width: `${previstoBox.width}%` }}
-          />
+          <div className="relative h-3" style={{ marginLeft: `${previstoBox.left}%`, width: `${previstoBox.width}%` }}>
+            <div
+              role="img"
+              aria-label={`${etapa.nome}: previsto de ${previsto.inicio} a ${previsto.fim}, ${label}, ${percentual} concluído`}
+              className={cn('h-full rounded-sm', BAR_CLASS[tone])}
+            />
+            {/* O % vai ao lado da barra (depois dela; antes, se ela termina perto da borda direita da grade). */}
+            <span
+              aria-hidden
+              className={cn(
+                'absolute top-1/2 -translate-y-1/2 rounded-sm bg-card px-0.5 text-[11px] leading-none text-foreground tabular-nums',
+                previstoBox.left + previstoBox.width < 90 ? 'left-full ml-1.5' : 'right-full mr-1.5',
+              )}
+            >
+              {percentual}
+            </span>
+          </div>
         ) : (
           <span className="px-2 text-[11px] text-muted-foreground">Sem datas previstas</span>
         )}

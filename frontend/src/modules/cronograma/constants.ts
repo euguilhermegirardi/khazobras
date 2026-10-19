@@ -1,15 +1,13 @@
-export type EtapaTone = 'success' | 'info' | 'neutral';
+import type { EtapaTone } from '@/utils/etapaStatus';
 
-export const STATUS_NAO_INICIADA = 'nao_iniciada';
-export const STATUS_EM_ANDAMENTO = 'em_andamento';
-export const STATUS_CONCLUIDA = 'concluida';
-
-/** Rótulo e cor por status (mapa de status do guia de design). Status fora da lista: neutro com o texto cru. */
-export const ETAPA_STATUS: Record<string, { label: string; tone: EtapaTone }> = {
-  [STATUS_NAO_INICIADA]: { label: 'Não iniciada', tone: 'neutral' },
-  [STATUS_EM_ANDAMENTO]: { label: 'Em andamento', tone: 'info' },
-  [STATUS_CONCLUIDA]: { label: 'Concluída', tone: 'success' },
-};
+// Rótulos e cores por status moram na base (utils/etapaStatus.ts): o Gantt do admin usa o mesmo mapa.
+export {
+  ETAPA_STATUS,
+  STATUS_CONCLUIDA,
+  STATUS_EM_ANDAMENTO,
+  STATUS_NAO_INICIADA,
+  type EtapaTone,
+} from '@/utils/etapaStatus';
 
 /** Barra cheia da linha do tempo, por token do tema. */
 export const BAR_CLASS: Record<EtapaTone, string> = {

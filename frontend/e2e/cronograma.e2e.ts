@@ -15,6 +15,7 @@ const etapa = (id: string, nome: string, ordem: number, over: Record<string, unk
   dataInicioReal: null,
   dataFimReal: null,
   status: 'nao_iniciada',
+  percentualConcluido: 0,
   createdAt: '2026-01-10T12:00:00Z',
   ...over,
 });
@@ -44,7 +45,12 @@ test('cliente vê a linha do tempo com KPIs, barras acessíveis e sem ações de
       auth.push(req.headers().authorization ?? '');
       return route.fulfill({
         json: [
-          etapa('e1', 'Fundação', 1, { status: 'concluida', dataInicioReal: '2026-03-02', dataFimReal: '2026-04-28' }),
+          etapa('e1', 'Fundação', 1, {
+            status: 'concluida',
+            percentualConcluido: 100,
+            dataInicioReal: '2026-03-02',
+            dataFimReal: '2026-04-28',
+          }),
           etapa('e2', 'Alvenaria', 2, { dataInicioPrevista: '2026-05-01', dataFimPrevista: '2026-12-31' }),
           etapa('e3', 'Pintura', 3, { dataInicioPrevista: null, dataFimPrevista: null }),
         ],
@@ -57,11 +63,11 @@ test('cliente vê a linha do tempo com KPIs, barras acessíveis e sem ações de
   await page.goto(`/cliente/obras/${OBRA}/cronograma`);
   await expect(page.getByRole('heading', { name: 'Cronograma' })).toBeVisible();
   await expect(
-    page.getByRole('img', { name: 'Fundação: previsto de 01/03/2026 a 30/04/2026, Concluída' }),
+    page.getByRole('img', { name: 'Fundação: previsto de 01/03/2026 a 30/04/2026, Concluída, 100% concluído' }),
   ).toBeVisible();
   await expect(page.getByRole('img', { name: 'Fundação: realizado de 02/03/2026 a 28/04/2026' })).toBeVisible();
   await expect(
-    page.getByRole('img', { name: 'Alvenaria: previsto de 01/05/2026 a 31/12/2026, Não iniciada' }),
+    page.getByRole('img', { name: 'Alvenaria: previsto de 01/05/2026 a 31/12/2026, Não iniciada, 0% concluído' }),
   ).toBeVisible();
   await expect(page.getByText('Sem datas previstas')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Linha do tempo das etapas' }).getByText('Dez/26')).toBeVisible();

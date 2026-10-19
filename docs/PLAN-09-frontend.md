@@ -31,7 +31,7 @@
 | 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
-| 6 | Cronograma (sem Curva S) | 🟨 `GET /obras/{id}/etapas` (detalhe preso à obra no SQL); falta atualizar status/datas reais e % concluído | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, sem %; 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
+| 6 | Cronograma (sem Curva S) | ✅ `GET /obras/{id}/etapas` (detalhe preso à obra no SQL) + `percentualConcluido` (script 008; edição pelo Gantt admin) | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, com % concluído ao lado da barra (desde `feat/etapas-admin`); 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
 | 7 | Projetos | ✅ `GET /obras/{id}/projetos` + `GET /projetos/{id}/download` (liberado ao cliente da obra, preso à obra no SQL) | ✅ | `feat/projetos` (empilhada sobre `feat/cronograma`). Cards por etapa, Visualizar (PDF/imagem, nova aba) e Baixar; 219 testes na suíte + 4 e2e. 2 rodadas (design: colunas alinhadas; segurança: só PDF/imagem abrem). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-projetos.md` |
 | 8 | Contratos | ❌ sem endpoints | ⬜ | lacuna: módulo Contratos/Pagamentos |
 | 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
@@ -41,7 +41,13 @@ Navbar do cliente cresce uma entrada por tela entregue (ordem do SPEC §5).
 ## Telas admin/master (SPEC §6)
 
 Começam depois da visão cliente. Prioridade provável: Medições (criar e emitir NF), Financeiro (edição
-e flag `visivel_cliente`), Relatórios. Detalhar aqui quando iniciar.
+e flag `visivel_cliente`), Relatórios. Primeira entregue: o Gantt editável (pedido do Guilherme: etapas deixarem de ser
+sempre "Não iniciada").
+
+| # | Tela | Backend pronto? | Status | Branch / observação |
+|---|---|---|---|---|
+| A1 | Hub admin ("Meus projetos", SPEC §6 item 1) | ✅ `GET /obras` (admin/master: todas, paginado) | 🟨 | `feat/etapas-admin`. Mesma `ObraHubPage` do cliente (props `title`/`description`/`emptyMessage`/`obraPath`), em `/admin`; clicar abre `/admin/obras/:obraId`. Paginação (50 por página) só se `totalItems > pageSize`. Falta: criar/editar obra, avanço % no card (SPEC), Dashboard da obra (placeholder "em construção"). |
+| A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | 🟨 | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". Aguarda testes do `frontend-tester`, revisão de design e segurança. |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -145,7 +151,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   informada precisa ser da mesma obra (400, antes do R2), chave nova `{guid}{ext}`. Lista ordena por `etapas.ordem` (sem etapa
   por último), depois `uploaded_at desc`, `nome`. O front busca com token (fetch → blob), como nas fotos. Testes:
   `Http/ProjetoDocumentoAcessoTests`. Sem .NET na nuvem: validar com `dotnet build` e `dotnet test`.
-- **Etapas, atualização (backend pronto, branch `feat/etapas-admin`; falta a tela admin de etapas, em andamento).**
+- **Etapas, atualização (backend pronto e tela admin feita na branch `feat/etapas-admin`: ver "Gantt editável" abaixo).**
   **Aplicar o script 008 no Mac antes de rodar a API:** `psql -d khazobras_db -f database/schema/008_etapas_percentual_concluido.sql`
   (coluna `percentual_concluido` + CHECK de status; seguro: todas as etapas existentes são `nao_iniciada`).
   `PUT /etapas/{id}` (`AdminOrMaster`): resolve `obra_id` (404) → `EnsureAccessAsync` (403) → validação (400) →
@@ -181,8 +187,11 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   filtrar só a página atual enganaria). `categoria` chega em PascalCase (`ItemTipo.ToString()` => `MaoDeObra`); o mapa de
   rótulos aceita também snake_case por segurança. Tipo `LancamentoCliente` omite `createdByUserId`/`visivelCliente`.
 - Cronograma (cliente, front): rota `/cliente/obras/:obraId/cronograma`, item "Cronograma" (ícone `CalendarDays`) entre
-  "Dashboard" e "Fechamento" (SPEC §5). Sem Curva S, sem Gantt editável, sem exportar/importar, sem botão de escrita, **sem %**
-  (não existe % concluído no backend; `percentualPeso` está no tipo mas não é exibido). KPIs: Etapas totais, Concluídas, Em
+  "Dashboard" e "Fechamento" (SPEC §5). Sem Curva S, sem Gantt editável, sem exportar/importar, sem botão de escrita.
+  **% concluído (atualizado em `feat/etapas-admin`, antes era "sem %"):** o backend passou a mandar `percentualConcluido`;
+  a barra prevista mostra o "80%" ao lado (depois da barra; antes dela se ela termina a mais de 90% da grade; fundo `bg-card`
+  para a linha de Hoje não cortar o texto) e o texto acessível da barra termina em ", 80% concluído". `percentualPeso` segue
+  fora da tela do cliente. KPIs: Etapas totais, Concluídas, Em
   andamento, Não iniciadas (contagem por status exato; status desconhecido entra só no total). Linha do tempo **mensal** do
   mês da menor data ao mês da maior (previstas e reais; sem nenhuma data = só o mês de hoje), cabeçalho "Mar/26" (`formatMonthYearShort`),
   meses de largura flexível (esticam para ocupar o card; mínimo 48px, então ~12 meses cabem em 1440 e 1280 sem rolar; posições
@@ -236,6 +245,32 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (`.prettierrc.json` na raiz), só em `frontend/` e `scripts/` (Markdown e backend fora). `npm run format` /
   `npm run format:check`; o pre-commit bloqueia arquivo staged não formatado. Motivo: um `Edit` engolia o espaço em
   `AppRoutes.tsx` e lint/typecheck não pegavam. Commit só de formatação listado em `.git-blame-ignore-revs`.
+
+- Hub admin + Gantt editável (`feat/etapas-admin`, primeira tela admin). **Hub:** `ObraHubPage` virou reutilizável por papel
+  (props `obraPath`, `title`, `description`, `emptyMessage`), `useObras(pageIndex, pageSize)` com chave
+  `['obras', pageIndex, pageSize]` e `keepPreviousData`; paginação genérica em `components/Pagination.tsx` (a do Financeiro,
+  `LancamentosPaginacao`, continua no módulo dele). `/admin` agora é o Hub; o item "Dashboard" do bloco da empresa (que
+  apontava para `/admin`) saiu (o bloco some até as telas da empresa existirem); `AdminDashboardPage` virou
+  `AdminObraDashboardPage` (placeholder em `/admin/obras/:obraId`). **Nav da obra no admin:** "Dashboard" (`end`) e "Gantt
+  editável" (ícone `ChartNoAxesGantt`); o "← Meus projetos" do AppShell já volta ao `/admin` (`nav.hub`). **Gantt:** tabela
+  (#, Etapa, Previsto, Real, % exec. com `ProgressBar hideLabel`, Status em `Badge` pelo mapa de status, Peso, "Editar") +
+  `Dialog` único para criar e editar. Edição = `PUT /etapas/{id}` com todos os campos; criação ("+ Etapa") = `POST /etapas`
+  só com nome, ordem (padrão = maior + 1), peso e datas previstas (nasce 0% / `nao_iniciada`). Formulário com RHF + zod:
+  campos como texto (`etapaForm.ts` converte para número/null), regras do `UpdateEtapaRequestValidator` espelhadas num
+  `superRefine` (backend é a fonte); o % sugere o status (0 → não iniciada, 100 → concluída, senão em andamento) sem travar
+  o select; erro 400 `{ errors: { Campo: [msg] } }` vira mensagem no campo (chave PascalCase → camelCase), o que não casa e
+  403/404/500 viram `Alert` no diálogo (500 com `requestId`). Sucesso: fecha, `Alert` de sucesso discreto na página e
+  invalida `['obra', id, 'gantt' | 'cronograma' | 'etapas']` (Cronograma e Projetos/Relatório fotográfico do cliente).
+  Sem excluir etapa (decisão do backend). Dinheiro não entra na tela. **Base nova:** `components/ui/dialog` (Radix Dialog,
+  escrito a partir do código padrão do shadcn porque o registro estava bloqueado na nuvem; dependência
+  `@radix-ui/react-dialog`), `ui/input`, `ui/native-select` (`<select>` nativo), `components/FormField` (label + controle +
+  erro/dica, com `aria-invalid`/`aria-describedby`), `components/Pagination`, `utils/etapaStatus.ts` (rótulos/cores de status
+  e `etapaStatusInfo`, movidos do `modules/cronograma/constants.ts`, que re-exporta) e `formatPercent` em `utils/format.ts`.
+  `ProgressBar` ganhou `hideLabel` (rótulo só para leitor de tela). `EtapaCronograma` ganhou `percentualConcluido` (obrigatório)
+  e `interfaces/etapa.ts` os tipos `EtapaCreateRequest`/`EtapaUpdateRequest`.
+  Testes antigos ajustados por causa do campo novo/da decisão mudada: fixtures de `Cronograma.test`, `timeline.test` e
+  `e2e/cronograma` (+ mock), nomes acessíveis das barras (", N% concluído"), remoção do assert "cliente não vê %" e o
+  `ProtectedRoute.test` (admin em `/admin` agora vê "Meus projetos").
 
 ## Registro
 
