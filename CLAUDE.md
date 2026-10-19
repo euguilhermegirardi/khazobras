@@ -28,7 +28,7 @@ escala ao usuário) → `security-reviewer` (telas com escrita/restrição) → 
 backend/src/KhazObras.{Api,Application,Domain,Infrastructure}   # Program.cs tem todos os endpoints
 backend/tests/KhazObras.Security.Tests                           # inclui Http/ (WebApplicationFactory)
 backend/tools/ResetMasterPassword
-database/schema/001..007_*.sql                                   # nunca editar script já aplicado
+database/schema/001..008_*.sql                                   # nunca editar script já aplicado
 frontend/                                                        # React + Vite + TS
 docs/  scripts/  .githooks/
 ```
