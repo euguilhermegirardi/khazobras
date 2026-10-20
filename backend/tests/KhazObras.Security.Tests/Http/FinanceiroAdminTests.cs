@@ -159,12 +159,12 @@ public sealed class FinanceiroAdminTests : IClassFixture<ApiFactory>
         return await c.Client.SendAsync(request);
     }
 
-    private static async Task<HttpResponseMessage> UploadAsync(Cenario c, Guid lancamentoId, UserRole? role, Guid? userId = null)
+    private static async Task<HttpResponseMessage> UploadAsync(Cenario c, Guid lancamentoId, UserRole? role, Guid? userId = null, string fileName = "comprovante.pdf")
     {
         using var body = new MultipartFormDataContent();
         var pdf = new ByteArrayContent("%PDF-1.4 conteudo"u8.ToArray());
         pdf.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
-        body.Add(pdf, "file", "comprovante.pdf");
+        body.Add(pdf, "file", fileName);
         using var request = new HttpRequestMessage(HttpMethod.Post, $"/financeiro/lancamentos/{lancamentoId}/anexos") { Content = body };
         if (role is not null)
         {
@@ -984,6 +984,48 @@ public sealed class FinanceiroAdminTests : IClassFixture<ApiFactory>
         Assert.Contains("10", json.GetProperty("message").GetString());
         Assert.Equal(9, c.Storage.Uploads.Count);
         Assert.Equal(10, (await c.Financeiro.GetByIdAsync(c.LiberadoId))!.Anexos.Count);
+    }
+
+    [Fact]
+    public async Task Upload_com_nome_de_arquivo_maior_que_255_retorna_400_sem_tocar_no_storage()
+    {
+        var c = await CriarCenarioAsync();
+        var nomeLongo = new string('a', 252) + ".pdf"; // 256 caracteres
+
+        using var response = await UploadAsync(c, c.LiberadoId, UserRole.Admin, fileName: nomeLongo);
+        var json = await JsonAsync(response);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("255", json.GetProperty("message").GetString());
+        Assert.Empty(c.Storage.Uploads);
+        Assert.Single((await c.Financeiro.GetByIdAsync(c.LiberadoId))!.Anexos);
+    }
+
+    [Fact]
+    public async Task Upload_com_nome_de_exatamente_255_caracteres_e_aceito()
+    {
+        var c = await CriarCenarioAsync();
+        var nome = new string('a', 251) + ".pdf"; // 255 caracteres
+
+        using var response = await UploadAsync(c, c.LiberadoId, UserRole.Admin, fileName: nome);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Single(c.Storage.Uploads);
+    }
+
+    [Fact]
+    public async Task Service_remove_o_objeto_do_storage_se_o_banco_falhar_depois_do_upload()
+    {
+        var c = await CriarCenarioAsync();
+        var service = NovoService(c);
+        c.Financeiro.FalharAoAnexar = true;
+        using var conteudo = new MemoryStream("%PDF-1.4"u8.ToArray());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.UploadAnexoAsync(c.LiberadoId, c.ObraId, conteudo, "x.pdf", "application/pdf", 8));
+
+        var chave = Assert.Single(c.Storage.Uploads);
+        Assert.Equal(new[] { chave }, c.Storage.Deletes.ToArray());
     }
 
     [Fact]

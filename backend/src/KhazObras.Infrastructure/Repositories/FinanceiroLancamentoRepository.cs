@@ -40,28 +40,6 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
         return lancamento;
     }
 
-    public async Task<FinanceiroLancamento?> GetByIdAsync(Guid id)
-    {
-        using var connection = _connectionFactory.CreateConnection();
-
-        const string sql = @"
-            SELECT id, obra_id AS ObraId, categoria, descricao, valor,
-                   data_lancamento AS DataLancamento, mes_competencia AS MesCompetencia,
-                   created_by_user_id AS CreatedByUserId, visivel_cliente AS VisivelCliente, created_at AS CreatedAt
-            FROM financeiro_lancamentos
-            WHERE id = @Id";
-
-        var row = await connection.QuerySingleOrDefaultAsync<LancamentoRow>(sql, new { Id = id });
-        if (row is null)
-        {
-            return null;
-        }
-
-        var lancamento = row.ToEntity();
-        lancamento.Anexos = (await GetAnexosAsync(connection, id)).ToList();
-        return lancamento;
-    }
-
     // Obra + visibilidade do cliente + filtros opcionais da tela admin; tudo parametrizado (nada interpolado).
     // Competencia = mes inteiro: [dia 1 do mes, dia 1 do mes seguinte).
     private const string ListaWhere = @"

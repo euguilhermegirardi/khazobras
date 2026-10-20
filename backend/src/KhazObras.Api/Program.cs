@@ -990,6 +990,7 @@ app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFil
     {
         AnexoUploadStatus.Created => Results.Created($"/financeiro/anexos/{result.Anexo!.Id}", result.Anexo),
         AnexoUploadStatus.LimiteExcedido => Results.BadRequest(new { message = $"Cada lancamento aceita no maximo {FinanceiroService.MaxAnexosPorLancamento} anexos." }),
+        AnexoUploadStatus.NomeArquivoInvalido => Results.BadRequest(new { message = $"O nome do arquivo deve ter de 1 a {FinanceiroService.MaxNomeArquivo} caracteres." }),
         _ => Results.NotFound()
     };
 })

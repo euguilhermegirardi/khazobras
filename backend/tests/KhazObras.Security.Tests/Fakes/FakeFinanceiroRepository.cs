@@ -17,6 +17,10 @@ public sealed class FakeFinanceiroRepository : IFinanceiroLancamentoRepository
         return Task.FromResult(lancamento);
     }
 
+    /// <summary>Simula falha do banco no INSERT do anexo (depois do upload ao storage).</summary>
+    public bool FalharAoAnexar { get; set; }
+
+    /// <summary>Apenas para os testes inspecionarem o estado (qualquer obra); NAO faz parte do contrato do repositorio de producao.</summary>
     public Task<FinanceiroLancamento?> GetByIdAsync(Guid id)
     {
         var lancamento = _lancamentos.FirstOrDefault(l => l.Id == id);
@@ -139,6 +143,11 @@ public sealed class FakeFinanceiroRepository : IFinanceiroLancamentoRepository
 
     public Task<bool> TryAddAnexoAsync(FinanceiroLancamentoAnexo anexo, Guid obraId, int maxAnexos)
     {
+        if (FalharAoAnexar)
+        {
+            throw new InvalidOperationException("Banco indisponivel");
+        }
+
         var lancamento = _lancamentos.FirstOrDefault(l => l.Id == anexo.LancamentoId && l.ObraId == obraId);
         if (lancamento is null || _anexos.Count(a => a.LancamentoId == lancamento.Id) >= maxAnexos)
         {

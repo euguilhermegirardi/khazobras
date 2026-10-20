@@ -5,7 +5,6 @@ namespace KhazObras.Application.Abstractions;
 public interface IFinanceiroLancamentoRepository
 {
     Task<FinanceiroLancamento> CreateAsync(FinanceiroLancamento lancamento);
-    Task<FinanceiroLancamento?> GetByIdAsync(Guid id);
 
     /// <summary>
     /// Lista de uma obra, mais recente primeiro. <paramref name="somenteVisiveisCliente"/> (visao do cliente) e

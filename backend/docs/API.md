@@ -789,6 +789,8 @@ cujo valor mudou (`"lote": true`). 400 também para lista vazia, > 200 ou id vaz
 
 Máx 10 MB; extensão + MIME + magic bytes (`FileUploadValidator`: jpg, jpeg, png, webp, gif, pdf, doc, docx, xls, xlsx, txt).
 Máximo **10 anexos por lançamento** (o 11º = **400** `{ "message": "Cada lancamento aceita no maximo 10 anexos." }`, nada vai ao R2).
+Nome do arquivo vazio ou com mais de **255 caracteres** = **400** `{ "message": "O nome do arquivo deve ter de 1 a 255 caracteres." }` (nada vai ao R2).
+Se o banco falhar depois do upload, o objeto é removido do R2 e a API responde 500.
 **201** `{ "id", "nomeArquivo", "contentType", "tamanhoBytes", "uploadedAt" }` (`Location: /financeiro/anexos/{id}`), 400, 403, 404.
 A chave no R2 é `obras/{obraId}/financeiro/{lancamentoId}/{guid}{ext}` (sem o nome original, nunca exposta).
 

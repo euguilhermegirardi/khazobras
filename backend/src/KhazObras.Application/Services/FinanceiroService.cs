@@ -20,7 +20,8 @@ public enum AnexoUploadStatus
 {
     Created,
     LancamentoNaoEncontrado,
-    LimiteExcedido
+    LimiteExcedido,
+    NomeArquivoInvalido
 }
 
 public sealed record AnexoUploadResult(AnexoUploadStatus Status, FinanceiroAnexoResponse? Anexo);
@@ -31,6 +32,9 @@ public sealed record StorageCleanupResult(int ArquivosRemovidos, int FalhasNoSto
 public sealed class FinanceiroService
 {
     public const int MaxAnexosPorLancamento = 10;
+
+    /// <summary>Tamanho da coluna nome_arquivo (VARCHAR(255)).</summary>
+    public const int MaxNomeArquivo = 255;
 
     private const string EntidadeAuditoria = "financeiro_lancamento";
 
@@ -75,12 +79,6 @@ public sealed class FinanceiroService
 
         var created = await _lancamentoRepository.CreateAsync(lancamento);
         return new FinanceiroCreateResult(FinanceiroCreateStatus.Created, ToResponse(created, []));
-    }
-
-    public async Task<FinanceiroLancamentoResponse?> GetByIdAsync(Guid id)
-    {
-        var lancamento = await _lancamentoRepository.GetByIdAsync(id);
-        return lancamento is null ? null : ToResponse(lancamento, lancamento.Anexos);
     }
 
     /// <summary>Lista ADMIN (todos os lancamentos, liberados ou nao), com filtros opcionais aplicados no SQL.</summary>
@@ -331,6 +329,13 @@ public sealed class FinanceiroService
             return new AnexoUploadResult(AnexoUploadStatus.LimiteExcedido, null);
         }
 
+        // Nome vazio ou maior que a coluna: recusa ANTES do R2 (senao o INSERT falharia e o arquivo ficaria orfao).
+        // Recusa em vez de truncar para nao gravar um nome diferente do que o usuario enviou (sem ambiguidade de extensao).
+        if (string.IsNullOrWhiteSpace(fileName) || fileName.Length > MaxNomeArquivo)
+        {
+            return new AnexoUploadResult(AnexoUploadStatus.NomeArquivoInvalido, null);
+        }
+
         // Chave nova: .../{guid}{ext}, sem o nome original (que segue em NomeArquivo). Chaves antigas {guid}-{nome} continuam legiveis.
         var storageKey = $"obras/{obraId}/financeiro/{lancamentoId}/{Guid.NewGuid()}{SafeExtension(fileName)}";
         await _storageService.UploadAsync(storageKey, content, contentType);
@@ -346,7 +351,19 @@ public sealed class FinanceiroService
             UploadedAt = DateTime.UtcNow
         };
 
-        if (!await _lancamentoRepository.TryAddAnexoAsync(anexo, obraId, MaxAnexosPorLancamento))
+        bool adicionado;
+        try
+        {
+            adicionado = await _lancamentoRepository.TryAddAnexoAsync(anexo, obraId, MaxAnexosPorLancamento);
+        }
+        catch (Exception)
+        {
+            // Falha do banco depois do upload: nao deixa comprovante orfao no R2 e propaga o erro original.
+            await RemoverDoStorageAsync([storageKey]);
+            throw;
+        }
+
+        if (!adicionado)
         {
             // Outro upload ocupou a ultima vaga entre a checagem e o INSERT: nao deixa arquivo orfao no R2.
             await RemoverDoStorageAsync([storageKey]);
