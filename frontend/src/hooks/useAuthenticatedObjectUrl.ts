@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { apiDownload } from '@/services/apiClient';
 
 /**
@@ -8,9 +8,6 @@ import { apiDownload } from '@/services/apiClient';
  * `path` null/undefined não busca nada (útil para carregar só quando visível ou aberto).
  */
 export const useAuthenticatedObjectUrl = (path: string | null | undefined) => {
-  // Estados
-  const [url, setUrl] = useState<string | null>(null);
-
   // Hooks
   const {
     data: blob,
@@ -24,17 +21,17 @@ export const useAuthenticatedObjectUrl = (path: string | null | undefined) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Effects (object URL é recurso do navegador, não dado do servidor)
-  useEffect(() => {
-    if (!blob) return;
-    const objectUrl = URL.createObjectURL(blob);
-    // oxlint-disable-next-line react/set-state-in-effect -- o object URL é um recurso externo do navegador, criado e revogado aqui
-    setUrl(objectUrl);
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-      setUrl(null);
-    };
-  }, [blob]);
+  // O object URL é derivado do blob (sem setState em efeito: com dezenas de imagens resolvendo juntas, o ciclo
+  // efeito -> setState -> render somava-se às notificações do TanStack Query e estourava "Maximum update depth").
+  const url = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob]);
 
-  return { url, isLoading: Boolean(path) && (isPending || (Boolean(blob) && !url)), isError };
+  // Effects (revoga o URL ao trocar o blob ou desmontar)
+  useEffect(
+    () => () => {
+      if (url) URL.revokeObjectURL(url);
+    },
+    [url],
+  );
+
+  return { url, isLoading: Boolean(path) && isPending, isError };
 };

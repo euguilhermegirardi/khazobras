@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ErroAlert } from '@/components/ErroAlert';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Foto } from '@/interfaces/relatorioFotografico';
+import { ApiError } from '@/services/apiClient';
 import { toMensagemErro, type MensagemErro } from '@/utils/erros';
 import { idBotaoMover } from '../fotoNome';
 import { useReordenarFotos, useRemoverFoto } from '../hooks';
@@ -58,7 +59,13 @@ export const FotosGrid = ({ obraId, relatorioId, fotos }: FotosGridProps) => {
     } catch (e) {
       // A tela já voltou à ordem anterior (rollback); o foco volta ao botão que acionou.
       setAviso('');
-      setErro(toMensagemErro(e, 'Não foi possível reordenar as fotos. A ordem anterior foi mantida.', NAO_ENCONTRADA));
+      // 400 `errors.Fotos` não traz `message`: mostra o texto do servidor em vez de "Dados inválidos.".
+      const doServidor = e instanceof ApiError ? Object.values(e.fieldErrors ?? {}).flat() : [];
+      setErro(
+        doServidor.length > 0
+          ? { message: `${doServidor.join(' ')} A ordem anterior foi mantida.` }
+          : toMensagemErro(e, 'Não foi possível reordenar as fotos. A ordem anterior foi mantida.', NAO_ENCONTRADA),
+      );
     }
   };
 

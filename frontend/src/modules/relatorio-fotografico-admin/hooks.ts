@@ -57,6 +57,12 @@ export const useExcluirRelatorio = (obraId: string, esperarLeitura = true) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteRelatorio(id),
+    // Sem esperar a releitura, o detalhe apagado sairia do cache antes (evita o 404 piscar antes de navegar).
+    onSuccess: async (_dados, id) => {
+      if (esperarLeitura) return;
+      await queryClient.cancelQueries({ queryKey: detalheKey(obraId, id) });
+      queryClient.removeQueries({ queryKey: detalheKey(obraId, id) });
+    },
     // Mesmo se falhar (ex.: já excluído em outra aba) a lista precisa refletir o servidor.
     onSettled: () => {
       const leitura = invalidateRelatorios(queryClient, obraId);
