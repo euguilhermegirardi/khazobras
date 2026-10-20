@@ -1,0 +1,749 @@
+{
+  "GET /relatorios-fotograficos/rfx": {
+    "obraId": "a1",
+    "etapaId": null,
+    "competencia": null,
+    "quantidadeFotos": 100,
+    "id": "rfx",
+    "tipo": "etapa",
+    "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+    "createdAt": "2026-10-20T12:00:00Z",
+    "fotos": [
+      {
+        "id": "d1",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 0,
+        "createdAt": "2026-09-11T12:00:00Z"
+      },
+      {
+        "id": "d2",
+        "dataFoto": "2026-09-20",
+        "descricao": "Concretagem da laje do 1º pavimento",
+        "ordem": 1,
+        "createdAt": "2026-09-11T12:00:01Z"
+      },
+      {
+        "id": "d3",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 2,
+        "createdAt": "2026-09-11T12:00:02Z"
+      },
+      {
+        "id": "d4",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 3,
+        "createdAt": "2026-09-11T12:00:03Z"
+      },
+      {
+        "id": "d5",
+        "dataFoto": null,
+        "descricao": "Vista geral da obra, lado leste",
+        "ordem": 4,
+        "createdAt": "2026-09-11T12:00:04Z"
+      },
+      {
+        "id": "d6",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 5,
+        "createdAt": "2026-09-11T12:00:05Z"
+      },
+      {
+        "id": "d7",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 6,
+        "createdAt": "2026-09-11T12:00:06Z"
+      },
+      {
+        "id": "d8",
+        "dataFoto": "2026-09-20",
+        "descricao": "Conferência do prumo dos pilares",
+        "ordem": 7,
+        "createdAt": "2026-09-11T12:00:07Z"
+      },
+      {
+        "id": "d9",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 8,
+        "createdAt": "2026-09-11T12:00:08Z"
+      },
+      {
+        "id": "d10",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 9,
+        "createdAt": "2026-09-11T12:00:09Z"
+      },
+      {
+        "id": "d11",
+        "dataFoto": "2026-09-20",
+        "descricao": "Alvenaria de vedação, fachada norte",
+        "ordem": 10,
+        "createdAt": "2026-09-11T12:00:10Z"
+      },
+      {
+        "id": "d12",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 11,
+        "createdAt": "2026-09-11T12:00:11Z"
+      },
+      {
+        "id": "d13",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 12,
+        "createdAt": "2026-09-11T12:00:12Z"
+      },
+      {
+        "id": "d14",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 13,
+        "createdAt": "2026-09-11T12:00:13Z"
+      },
+      {
+        "id": "d15",
+        "dataFoto": null,
+        "descricao": null,
+        "ordem": 14,
+        "createdAt": "2026-09-11T12:00:14Z"
+      },
+      {
+        "id": "d16",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 15,
+        "createdAt": "2026-09-11T12:00:15Z"
+      },
+      {
+        "id": "d17",
+        "dataFoto": "2026-09-20",
+        "descricao": "Armação dos pilares do pavimento térreo",
+        "ordem": 16,
+        "createdAt": "2026-09-11T12:00:16Z"
+      },
+      {
+        "id": "d18",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 17,
+        "createdAt": "2026-09-11T12:00:17Z"
+      },
+      {
+        "id": "d19",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 18,
+        "createdAt": "2026-09-11T12:00:18Z"
+      },
+      {
+        "id": "d20",
+        "dataFoto": null,
+        "descricao": "Instalação dos eletrodutos embutidos",
+        "ordem": 19,
+        "createdAt": "2026-09-11T12:00:19Z"
+      },
+      {
+        "id": "d21",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 20,
+        "createdAt": "2026-09-11T12:00:20Z"
+      },
+      {
+        "id": "d22",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 21,
+        "createdAt": "2026-09-11T12:00:21Z"
+      },
+      {
+        "id": "d23",
+        "dataFoto": "2026-09-20",
+        "descricao": "Impermeabilização da caixa d’água",
+        "ordem": 22,
+        "createdAt": "2026-09-11T12:00:22Z"
+      },
+      {
+        "id": "d24",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 23,
+        "createdAt": "2026-09-11T12:00:23Z"
+      },
+      {
+        "id": "d25",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 24,
+        "createdAt": "2026-09-11T12:00:24Z"
+      },
+      {
+        "id": "d26",
+        "dataFoto": "2026-09-20",
+        "descricao": "Concretagem da laje do 1º pavimento",
+        "ordem": 25,
+        "createdAt": "2026-09-11T12:00:25Z"
+      },
+      {
+        "id": "d27",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 26,
+        "createdAt": "2026-09-11T12:00:26Z"
+      },
+      {
+        "id": "d28",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 27,
+        "createdAt": "2026-09-11T12:00:27Z"
+      },
+      {
+        "id": "d29",
+        "dataFoto": "2026-09-20",
+        "descricao": "Vista geral da obra, lado leste",
+        "ordem": 28,
+        "createdAt": "2026-09-11T12:00:28Z"
+      },
+      {
+        "id": "d30",
+        "dataFoto": null,
+        "descricao": null,
+        "ordem": 29,
+        "createdAt": "2026-09-11T12:00:29Z"
+      },
+      {
+        "id": "d31",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 30,
+        "createdAt": "2026-09-11T12:00:30Z"
+      },
+      {
+        "id": "d32",
+        "dataFoto": "2026-09-20",
+        "descricao": "Conferência do prumo dos pilares",
+        "ordem": 31,
+        "createdAt": "2026-09-11T12:00:31Z"
+      },
+      {
+        "id": "d33",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 32,
+        "createdAt": "2026-09-11T12:00:32Z"
+      },
+      {
+        "id": "d34",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 33,
+        "createdAt": "2026-09-11T12:00:33Z"
+      },
+      {
+        "id": "d35",
+        "dataFoto": null,
+        "descricao": "Alvenaria de vedação, fachada norte",
+        "ordem": 34,
+        "createdAt": "2026-09-11T12:00:34Z"
+      },
+      {
+        "id": "d36",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 35,
+        "createdAt": "2026-09-11T12:00:35Z"
+      },
+      {
+        "id": "d37",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 36,
+        "createdAt": "2026-09-11T12:00:36Z"
+      },
+      {
+        "id": "d38",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 37,
+        "createdAt": "2026-09-11T12:00:37Z"
+      },
+      {
+        "id": "d39",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 38,
+        "createdAt": "2026-09-11T12:00:38Z"
+      },
+      {
+        "id": "d40",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 39,
+        "createdAt": "2026-09-11T12:00:39Z"
+      },
+      {
+        "id": "d41",
+        "dataFoto": "2026-09-20",
+        "descricao": "Armação dos pilares do pavimento térreo",
+        "ordem": 40,
+        "createdAt": "2026-09-11T12:00:40Z"
+      },
+      {
+        "id": "d42",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 41,
+        "createdAt": "2026-09-11T12:00:41Z"
+      },
+      {
+        "id": "d43",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 42,
+        "createdAt": "2026-09-11T12:00:42Z"
+      },
+      {
+        "id": "d44",
+        "dataFoto": "2026-09-20",
+        "descricao": "Instalação dos eletrodutos embutidos",
+        "ordem": 43,
+        "createdAt": "2026-09-11T12:00:43Z"
+      },
+      {
+        "id": "d45",
+        "dataFoto": null,
+        "descricao": null,
+        "ordem": 44,
+        "createdAt": "2026-09-11T12:00:44Z"
+      },
+      {
+        "id": "d46",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 45,
+        "createdAt": "2026-09-11T12:00:45Z"
+      },
+      {
+        "id": "d47",
+        "dataFoto": "2026-09-20",
+        "descricao": "Impermeabilização da caixa d’água",
+        "ordem": 46,
+        "createdAt": "2026-09-11T12:00:46Z"
+      },
+      {
+        "id": "d48",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 47,
+        "createdAt": "2026-09-11T12:00:47Z"
+      },
+      {
+        "id": "d49",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 48,
+        "createdAt": "2026-09-11T12:00:48Z"
+      },
+      {
+        "id": "d50",
+        "dataFoto": null,
+        "descricao": "Concretagem da laje do 1º pavimento",
+        "ordem": 49,
+        "createdAt": "2026-09-11T12:00:49Z"
+      },
+      {
+        "id": "d51",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 50,
+        "createdAt": "2026-09-11T12:00:50Z"
+      },
+      {
+        "id": "d52",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 51,
+        "createdAt": "2026-09-11T12:00:51Z"
+      },
+      {
+        "id": "d53",
+        "dataFoto": "2026-09-20",
+        "descricao": "Vista geral da obra, lado leste",
+        "ordem": 52,
+        "createdAt": "2026-09-11T12:00:52Z"
+      },
+      {
+        "id": "d54",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 53,
+        "createdAt": "2026-09-11T12:00:53Z"
+      },
+      {
+        "id": "d55",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 54,
+        "createdAt": "2026-09-11T12:00:54Z"
+      },
+      {
+        "id": "d56",
+        "dataFoto": "2026-09-20",
+        "descricao": "Conferência do prumo dos pilares",
+        "ordem": 55,
+        "createdAt": "2026-09-11T12:00:55Z"
+      },
+      {
+        "id": "d57",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 56,
+        "createdAt": "2026-09-11T12:00:56Z"
+      },
+      {
+        "id": "d58",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 57,
+        "createdAt": "2026-09-11T12:00:57Z"
+      },
+      {
+        "id": "d59",
+        "dataFoto": "2026-09-20",
+        "descricao": "Alvenaria de vedação, fachada norte",
+        "ordem": 58,
+        "createdAt": "2026-09-11T12:00:58Z"
+      },
+      {
+        "id": "d60",
+        "dataFoto": null,
+        "descricao": null,
+        "ordem": 59,
+        "createdAt": "2026-09-11T12:00:59Z"
+      },
+      {
+        "id": "d61",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 60,
+        "createdAt": "2026-09-11T12:01:00Z"
+      },
+      {
+        "id": "d62",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 61,
+        "createdAt": "2026-09-11T12:01:01Z"
+      },
+      {
+        "id": "d63",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 62,
+        "createdAt": "2026-09-11T12:01:02Z"
+      },
+      {
+        "id": "d64",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 63,
+        "createdAt": "2026-09-11T12:01:03Z"
+      },
+      {
+        "id": "d65",
+        "dataFoto": null,
+        "descricao": "Armação dos pilares do pavimento térreo",
+        "ordem": 64,
+        "createdAt": "2026-09-11T12:01:04Z"
+      },
+      {
+        "id": "d66",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 65,
+        "createdAt": "2026-09-11T12:01:05Z"
+      },
+      {
+        "id": "d67",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 66,
+        "createdAt": "2026-09-11T12:01:06Z"
+      },
+      {
+        "id": "d68",
+        "dataFoto": "2026-09-20",
+        "descricao": "Instalação dos eletrodutos embutidos",
+        "ordem": 67,
+        "createdAt": "2026-09-11T12:01:07Z"
+      },
+      {
+        "id": "d69",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 68,
+        "createdAt": "2026-09-11T12:01:08Z"
+      },
+      {
+        "id": "d70",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 69,
+        "createdAt": "2026-09-11T12:01:09Z"
+      },
+      {
+        "id": "d71",
+        "dataFoto": "2026-09-20",
+        "descricao": "Impermeabilização da caixa d’água",
+        "ordem": 70,
+        "createdAt": "2026-09-11T12:01:10Z"
+      },
+      {
+        "id": "d72",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 71,
+        "createdAt": "2026-09-11T12:01:11Z"
+      },
+      {
+        "id": "d73",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 72,
+        "createdAt": "2026-09-11T12:01:12Z"
+      },
+      {
+        "id": "d74",
+        "dataFoto": "2026-09-20",
+        "descricao": "Concretagem da laje do 1º pavimento",
+        "ordem": 73,
+        "createdAt": "2026-09-11T12:01:13Z"
+      },
+      {
+        "id": "d75",
+        "dataFoto": null,
+        "descricao": null,
+        "ordem": 74,
+        "createdAt": "2026-09-11T12:01:14Z"
+      },
+      {
+        "id": "d76",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 75,
+        "createdAt": "2026-09-11T12:01:15Z"
+      },
+      {
+        "id": "d77",
+        "dataFoto": "2026-09-20",
+        "descricao": "Vista geral da obra, lado leste",
+        "ordem": 76,
+        "createdAt": "2026-09-11T12:01:16Z"
+      },
+      {
+        "id": "d78",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 77,
+        "createdAt": "2026-09-11T12:01:17Z"
+      },
+      {
+        "id": "d79",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 78,
+        "createdAt": "2026-09-11T12:01:18Z"
+      },
+      {
+        "id": "d80",
+        "dataFoto": null,
+        "descricao": "Conferência do prumo dos pilares",
+        "ordem": 79,
+        "createdAt": "2026-09-11T12:01:19Z"
+      },
+      {
+        "id": "d81",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 80,
+        "createdAt": "2026-09-11T12:01:20Z"
+      },
+      {
+        "id": "d82",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 81,
+        "createdAt": "2026-09-11T12:01:21Z"
+      },
+      {
+        "id": "d83",
+        "dataFoto": "2026-09-20",
+        "descricao": "Alvenaria de vedação, fachada norte",
+        "ordem": 82,
+        "createdAt": "2026-09-11T12:01:22Z"
+      },
+      {
+        "id": "d84",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 83,
+        "createdAt": "2026-09-11T12:01:23Z"
+      },
+      {
+        "id": "d85",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 84,
+        "createdAt": "2026-09-11T12:01:24Z"
+      },
+      {
+        "id": "d86",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 85,
+        "createdAt": "2026-09-11T12:01:25Z"
+      },
+      {
+        "id": "d87",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 86,
+        "createdAt": "2026-09-11T12:01:26Z"
+      },
+      {
+        "id": "d88",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 87,
+        "createdAt": "2026-09-11T12:01:27Z"
+      },
+      {
+        "id": "d89",
+        "dataFoto": "2026-09-20",
+        "descricao": "Armação dos pilares do pavimento térreo",
+        "ordem": 88,
+        "createdAt": "2026-09-11T12:01:28Z"
+      },
+      {
+        "id": "d90",
+        "dataFoto": null,
+        "descricao": null,
+        "ordem": 89,
+        "createdAt": "2026-09-11T12:01:29Z"
+      },
+      {
+        "id": "d91",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 90,
+        "createdAt": "2026-09-11T12:01:30Z"
+      },
+      {
+        "id": "d92",
+        "dataFoto": "2026-09-20",
+        "descricao": "Instalação dos eletrodutos embutidos",
+        "ordem": 91,
+        "createdAt": "2026-09-11T12:01:31Z"
+      },
+      {
+        "id": "d93",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 92,
+        "createdAt": "2026-09-11T12:01:32Z"
+      },
+      {
+        "id": "d94",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 93,
+        "createdAt": "2026-09-11T12:01:33Z"
+      },
+      {
+        "id": "d95",
+        "dataFoto": null,
+        "descricao": "Impermeabilização da caixa d’água",
+        "ordem": 94,
+        "createdAt": "2026-09-11T12:01:34Z"
+      },
+      {
+        "id": "d96",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 95,
+        "createdAt": "2026-09-11T12:01:35Z"
+      },
+      {
+        "id": "d97",
+        "dataFoto": "2026-09-20",
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 96,
+        "createdAt": "2026-09-11T12:01:36Z"
+      },
+      {
+        "id": "d98",
+        "dataFoto": "2026-09-20",
+        "descricao": "Concretagem da laje do 1º pavimento",
+        "ordem": 97,
+        "createdAt": "2026-09-11T12:01:37Z"
+      },
+      {
+        "id": "d99",
+        "dataFoto": "2026-09-20",
+        "descricao": null,
+        "ordem": 98,
+        "createdAt": "2026-09-11T12:01:38Z"
+      },
+      {
+        "id": "d100",
+        "dataFoto": null,
+        "descricao": "Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da laje com detalhe das armaduras negativas e das juntas de dilatação. Registro fotográfico da concretagem da la",
+        "ordem": 99,
+        "createdAt": "2026-09-11T12:01:39Z"
+      }
+    ]
+  },
+  "GET /obras/a1/etapas": [
+    {
+      "id": "e1",
+      "obraId": "a1",
+      "nome": "Fundação",
+      "ordem": 1
+    },
+    {
+      "id": "e2",
+      "obraId": "a1",
+      "nome": "Alvenaria",
+      "ordem": 2
+    },
+    {
+      "id": "e3",
+      "obraId": "a1",
+      "nome": "Instalações elétricas e hidráulicas",
+      "ordem": 3
+    },
+    {
+      "id": "e4",
+      "obraId": "a1",
+      "nome": "Cobertura",
+      "ordem": 4
+    },
+    {
+      "id": "e9",
+      "obraId": "a1",
+      "nome": "Instalações prediais completas de combate a incêndio, gás e climatização central",
+      "ordem": 5
+    }
+  ],
+  "GET /fotos/*/arquivo": {
+    "imagem": true
+  }
+}
