@@ -43,7 +43,10 @@ export const MedicaoAdminDetalhePage = () => {
 
   // Retornos breves
   const voltar = (
-    <Link to={`/admin/obras/${obraId}/medicoes`} className="text-[13px] text-info underline-offset-4 hover:underline">
+    <Link
+      to={`/admin/obras/${obraId}/medicoes`}
+      className="inline-flex h-8 items-center text-[13px] text-info underline-offset-4 hover:underline"
+    >
       ← Voltar para as medições
     </Link>
   );
