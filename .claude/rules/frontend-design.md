@@ -125,6 +125,12 @@ Mapas de rótulo e de cor ficam no `constants.ts` do módulo (ex.: `OBRA_STATUS_
 8e. Gráficos e timelines cabem na largura do card em 1440 e 1280 quando o intervalo é normal (~12–18 meses);
    rolagem horizontal dentro do card só como último recurso. Compare onde os dados terminam com onde a
    captura corta.
+8f. Tabelas largas (7+ colunas): usar `table-fixed` + `colgroup` com larguras somadas ao conteúdo REAL mais longo
+   (inclusive códigos como nº de NF e rótulos de status), nunca largura "no olho". Toda célula de texto livre ou
+   código tem `truncate` + `title` (nunca transborda para a vizinha); `whitespace-nowrap` sozinho, sem largura
+   fixa, empurra as colunas para fora. A soma das colunas fixas deve deixar >= ~110px para a coluna flexível em
+   1280. Na captura, procure texto sobreposto entre células e cabeçalho cortado; a medição do builder é estimativa,
+   quem confirma é o design-reviewer olhando a imagem em 1280 e 1440. (Medições admin precisou de 4 rodadas por isso.)
 8b. A sidebar é `sticky h-screen`: na captura de página inteira a faixa dela termina na altura do viewport. Igual
    ao protótipo; não é falha.
 9. Desktop web: confira em 1440px e 1280px (notebook) e no tema escuro. **Sem mobile** (SPEC §10: sistema
