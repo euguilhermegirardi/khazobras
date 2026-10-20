@@ -166,7 +166,9 @@ public sealed class FotoDownloadTests : IClassFixture<ApiFactory>
             StorageKey = $"obras/{obraId}/relatorios-fotograficos/{relatorioId}/{Guid.NewGuid()}.png",
             CreatedAt = DateTime.UtcNow
         });
-        var service = new RelatorioFotograficoService(relatorios, new FakeStorageService());
+        var service = new RelatorioFotograficoService(
+            relatorios, new FakeStorageService(), new FakeEtapaRepository(), new FakeObraRepository(),
+            new LogAuditoriaService(new FakeLogAuditoriaRepository()));
 
         var daObraCerta = await service.DownloadFotoAsync(fotoId, obraId);
         var daObraErrada = await service.DownloadFotoAsync(fotoId, Guid.NewGuid());

@@ -807,80 +807,122 @@ Auditoria `lancamento_anexo_removido` (entidade `financeiro_lancamento`, id do l
 
 ## Módulo Relatórios Fotográficos
 
-Gerencia relatórios fotográficos de progresso de obra.
+Registro visual da obra, por **mês** (`tipo = "mensal"`, usa `competencia`) ou por **etapa** (`tipo = "etapa"`, usa `etapaId`)
+(SPEC §6 item 11 e §7). O schema (script 005) não tem rascunho/publicação nem unicidade: **o cliente da obra vê o mesmo que o
+admin**, e pode haver mais de um relatório por mês/etapa. Todo endpoint com id de relatório ou foto resolve o `obra_id`, chama
+`EnsureAccessAsync` (403) e só então lê/grava com `WHERE id AND obra_id`. Ordem de erros: 401 sem token → 403 (cliente /
+sem acesso à obra, **antes** de validar o corpo) → 404 → 400. O cliente é somente leitura: toda escrita é `AdminOrMaster`.
 
-### 1. Criar Relatório Fotográfico
-**POST** `/relatorios-fotograficos`
+**Formatos:** datas `yyyy-MM-dd`; `createdAt` ISO 8601 UTC; IDs GUID; JSON em camelCase. Erro de validação de corpo JSON (400):
+`{ "title", "status", "errors": { "Campo": ["msg"] } }`; outros 400 (upload): `{ "message": "..." }`. A chave do bucket
+(`storage_key`) **nunca** aparece em resposta nenhuma; a imagem sai só por `GET /fotos/{id}/arquivo`.
 
-Cria novo relatório fotográfico para uma obra.
-
-**Autorização:** Admin, Master
-
-**Request:**
-```bash
-curl -X POST http://localhost:5285/relatorios-fotograficos \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "obraId": "770e8400-e29b-41d4-a716-446655440000",
-    "data": "2026-10-12",
-    "descricao": "Progresso da fundação - 50% concluído"
-  }'
-```
-
-**Response (201 Created):**
+**DTO do relatório (`RelatorioFotograficoResponse`, admin e cliente):**
 ```json
 {
   "id": "cc0e8400-e29b-41d4-a716-446655440000",
   "obraId": "770e8400-e29b-41d4-a716-446655440000",
-  "data": "2026-10-12",
-  "descricao": "Progresso da fundação - 50% concluído",
-  "fotoCount": 0,
-  "createdAt": "2026-10-12T10:00:00Z"
+  "tipo": "mensal",
+  "etapaId": null,
+  "titulo": "Setembro",
+  "competencia": "2026-09-01",
+  "createdAt": "2026-10-12T10:00:00Z",
+  "quantidadeFotos": 2,
+  "fotos": [
+    { "id": "dd0e8400-...", "dataFoto": "2026-09-05", "descricao": "Fundacao", "ordem": 0, "createdAt": "2026-10-12T10:10:00Z" },
+    { "id": "ee0e8400-...", "dataFoto": null, "descricao": null, "ordem": 1, "createdAt": "2026-10-12T10:11:00Z" }
+  ]
 }
 ```
+Fotos em ordem estável (`ordem`, `createdAt`, `id`); relatórios do mais novo para o mais antigo (`createdAt DESC`, `id`).
 
-### 2. Listar Relatórios Fotográficos
-**GET** `/relatorios-fotograficos?obraId={id}`
+### 1. Listar relatórios da obra
+**GET** `/obras/{obraId}/relatorios-fotograficos` — qualquer usuário com acesso à obra. **200** array de `RelatorioFotograficoResponse`
+(cada um com suas fotos e `quantidadeFotos`, numa consulta só), 403. Sem paginação (backlog).
 
-Lista relatórios fotográficos de uma obra.
+### 2. Detalhe
+**GET** `/relatorios-fotograficos/{id}` — qualquer usuário com acesso à obra. **200**, 403, 404.
 
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
+### 3. Criar relatório
+**POST** `/relatorios-fotograficos` — Admin, Master
 
-### 3. Obter Relatório Fotográfico por ID
-**GET** `/relatorios-fotograficos/{id}`
-
-Retorna detalhes de um relatório fotográfico.
-
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
-
-### 4. Adicionar Foto
-**POST** `/relatorios-fotograficos/{id}/fotos`
-
-Adiciona foto a um relatório fotográfico (máx 10MB, validado por magic bytes).
-
-**Autorização:** Admin, Master
-
-**Request:**
-```bash
-curl -X POST http://localhost:5285/relatorios-fotograficos/cc0e8400-e29b-41d4-a716-446655440000/fotos \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@foto_fundacao.png"
-```
-
-**Tipos Aceitos:** PNG, JPEG (máx 10MB)
-
-**Response (200 OK):**
 ```json
-{
-  "id": "dd0e8400-e29b-41d4-a716-446655440000",
-  "relatorioId": "cc0e8400-e29b-41d4-a716-446655440000",
-  "fileName": "foto_fundacao.png",
-  "fileSize": 2048000,
-  "s3Key": "relatorios-fotograficos/cc0e8400/foto_fundacao.png",
-  "uploadedAt": "2026-10-12T10:10:00Z"
-}
+{ "obraId": "770e8400-...", "tipo": "mensal", "etapaId": null, "titulo": "Outubro", "competencia": "2026-10-01" }
 ```
+`tipo`: `mensal` ou `etapa` (qualquer caixa; sai minúsculo). `titulo`: 1 a 150 caracteres (aparado). `competencia`: opcional,
+anos 2000–2100. `etapaId`: opcional; se vier, **precisa ser da mesma obra**. Ordem: acesso à obra (403) → validação (400) →
+obra existe (404) → etapa da obra (400). **201** (DTO, `Location: /relatorios-fotograficos/{id}`, `fotos: []`), 400, 403, **404** (obra inexistente).
+Etapa inexistente e etapa de outra obra dão o **mesmo** 400:
+`{ "errors": { "EtapaId": ["A etapa informada deve ser desta obra."] } }`.
+
+### 4. Editar relatório
+**PUT** `/relatorios-fotograficos/{id}` — Admin, Master
+
+```json
+{ "tipo": "etapa", "etapaId": "ff0e8400-...", "titulo": "Fundacao concluida", "competencia": null }
+```
+Substitui `tipo`, `etapaId`, `titulo` e `competencia` (mande todos; `null` limpa etapa/competência). A obra **nunca** troca (um `obraId`
+no JSON é ignorado). **200** (DTO com as fotos), 400 (inclui o 400 de `EtapaId` acima), 403, 404. Auditoria
+`relatorio_fotografico_editado` (entidade `relatorio_fotografico`): `{ "obraId": "...", "campos": ["titulo","competencia"] }`
+(só nomes dos campos que mudaram; nada alterado = sem registro).
+
+### 5. Excluir relatório
+**DELETE** `/relatorios-fotograficos/{id}` — Admin, Master. **204**, 403, 404. Exclusão **definitiva** (sem lixeira): as chaves das
+fotos são lidas e o relatório apagado na mesma transação (fotos saem por `ON DELETE CASCADE`); depois os arquivos saem do R2 (falha
+no R2 não desfaz: 204 + aviso no log). Auditoria `relatorio_fotografico_excluido`: `{ "obraId", "quantidadeFotos": 2 }`.
+
+### 6. Enviar foto
+**POST** `/relatorios-fotograficos/{id}/fotos?dataFoto=2026-10-01&descricao=Viga&ordem=3` — Admin, Master. `multipart/form-data`,
+campo `file`; **`dataFoto`, `descricao` e `ordem` vão na query string** (todos opcionais).
+
+- Arquivo: máx 10 MB, extensão + MIME + magic bytes (`FileUploadValidator`) e **só imagem**: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`
+  (outro tipo = 400 `{ message }`).
+- Máximo **100 fotos por relatório**: a 101ª = **400** `{ "message": "Cada relatorio aceita no maximo 100 fotos." }`, nada vai ao R2.
+  A contagem é refeita dentro de uma transação que trava o relatório (`FOR UPDATE`), então uploads simultâneos não passam do limite.
+- Nome do arquivo vazio ou com mais de **255 caracteres** = **400** `{ "message": "O nome do arquivo deve ter de 1 a 255 caracteres." }`
+  (antes do R2; o nome não é gravado, só a extensão entra na chave).
+- `descricao` até 255 caracteres (aparada; vazia vira `null`); `dataFoto` entre 2000-01-01 e **amanhã** (UTC); `ordem` de 0 a 100000.
+  Fora disso = 400 `{ "message": "..." }` (antes do R2). **Sem `ordem`, a foto vai para o fim** (maior ordem + 1).
+- Se o banco falhar depois do upload, ou se a corrida estourar o limite, o objeto é removido do R2 (500 / 400 respectivamente).
+- Chave no R2: `obras/{obraId}/relatorios-fotograficos/{relatorioId}/{guid}{ext}` (sem o nome original, nunca exposta).
+
+**201** (`Location: /fotos/{id}`), 400, 403, 404:
+```json
+{ "id": "dd0e8400-...", "dataFoto": "2026-10-01", "descricao": "Viga", "ordem": 3, "createdAt": "2026-10-12T10:10:00Z" }
+```
+
+### 7. Editar foto
+**PATCH** `/fotos/{fotoId}` — Admin, Master. **Parcial**: só muda o campo que estiver no JSON; `descricao` e `dataFoto` aceitam
+`null` (limpam); `ordem` não aceita `null`. Fotos de outro relatório não são alcançáveis: o `UPDATE` é preso à obra (`JOIN` com o relatório).
+
+```json
+{ "descricao": "Fachada norte", "dataFoto": null, "ordem": 4 }
+```
+**200** (`FotoResponse` atualizada), 403, 404, 400 (`{ "errors": { "Descricao" | "DataFoto" | "Ordem" | "Body": ["msg"] } }`: corpo vazio / sem
+nenhum dos três campos, tipo errado, descrição > 255, data fora de 2000–amanhã ou fora de `yyyy-MM-dd`, ordem fora de 0–100000).
+Auditoria `foto_editada` (entidade `relatorio_fotografico`, id do relatório): `{ "obraId", "fotoId", "campos": ["descricao","ordem"] }`
+(nomes dos campos **enviados**, sem a descrição).
+
+### 8. Remover foto
+**DELETE** `/fotos/{fotoId}` — Admin, Master. **204**, 403, 404. Foto → obra → acesso → `DELETE ... WHERE f.id AND r.obra_id` → apaga do R2
+(falha no R2 = 204 + aviso no log). Auditoria `foto_removida`: `{ "obraId", "fotoId" }`.
+
+### 9. Reordenar em lote
+**PATCH** `/relatorios-fotograficos/{id}/fotos/ordem` — Admin, Master
+
+```json
+{ "fotos": [ { "id": "ee0e8400-...", "ordem": 0 }, { "id": "dd0e8400-...", "ordem": 1 } ] }
+```
+Máximo **200** fotos; `ordem` de 0 a 100000; ids sem repetição; as fotos não citadas ficam como estão. Tudo-ou-nada numa transação com o
+relatório travado: se **alguma** foto não for **deste relatório** (inexistente, de outro relatório ou de outra obra, indistinguíveis) → **400**
+`{ "errors": { "Fotos": ["Uma ou mais fotos informadas nao pertencem a este relatorio."] } }` sem alterar nenhuma. Sucesso: **200** com
+**todas** as fotos do relatório (`FotoResponse[]`) na nova ordem. 400 também para lista vazia, > 200, id vazio, id repetido ou ordem inválida;
+403 (cliente, antes de validar o corpo); 404 (relatório inexistente). Auditoria `fotos_reordenadas` (um registro): `{ "obraId", "quantidade": 2 }`.
+
+### 10. Baixar foto
+**GET** `/fotos/{fotoId}/arquivo` — qualquer usuário com acesso à obra (cliente só da própria). Resposta: a imagem
+(`image/jpeg|png|webp|gif` pela extensão da chave), `Content-Disposition` fixo `foto-{id}{ext}`, `X-Content-Type-Options: nosniff`.
+O front busca com o token (fetch → blob → object URL), pois `<img src>` não envia `Authorization`.
 
 ---
 

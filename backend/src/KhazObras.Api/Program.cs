@@ -1070,35 +1070,32 @@ app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, Fi
 
 app.MapGet("/relatorios-fotograficos/{id:guid}", async (Guid id, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var result = await service.GetByIdAsync(id);
-    if (result is null)
+    // Padrao: resolve so o obra_id -> acesso -> leitura presa a obra (WHERE id AND obra_id).
+    var obraId = await service.ResolveRelatorioAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, result.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
-    return Results.Ok(result);
+    var result = await service.GetByIdAndObraAsync(id, obraId.Value);
+    return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization()
 .WithName("GetRelatorioFotograficoById")
-.WithDescription("Retorna detalhes de um relatório fotográfico");
+.WithDescription("Retorna detalhes de um relatório fotográfico (fotos em ordem estável, sem chave do bucket)");
 
 app.MapPost("/relatorios-fotograficos", async (CreateRelatorioFotograficoRequest request, IValidator<CreateRelatorioFotograficoRequest> validator, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var validation = await validator.ValidateAsync(request);
-    if (!validation.IsValid)
-    {
-        return Results.ValidationProblem(validation.ToDictionary());
-    }
-
+    // Acesso a obra ANTES de validar o corpo (padrao: 403 nao depende do conteudo enviado).
     try
     {
         await accessService.EnsureAccessAsync(principal, request.ObraId);
@@ -1108,12 +1105,101 @@ app.MapPost("/relatorios-fotograficos", async (CreateRelatorioFotograficoRequest
         return Results.Forbid();
     }
 
-    var result = await service.CreateAsync(request);
-    return Results.Created($"/relatorios-fotograficos/{result.Id}", result);
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var created = await service.CreateAsync(request);
+    return created.Status switch
+    {
+        RelatorioCreateStatus.Created => Results.Created($"/relatorios-fotograficos/{created.Relatorio!.Id}", created.Relatorio),
+        RelatorioCreateStatus.ObraNaoEncontrada => Results.NotFound(),
+        // Mesma resposta para etapa inexistente e etapa de outra obra (nao confirma que ela existe em outro lugar).
+        _ => Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["EtapaId"] = ["A etapa informada deve ser desta obra."]
+        })
+    };
 })
 .RequireAuthorization("AdminOrMaster")
 .WithName("CreateRelatorioFotografico")
-.WithDescription("Cria novo relatório fotográfico para uma obra");
+.WithDescription("Cria relatório fotográfico (mensal ou etapa) em uma obra (Admin/Master). Etapa informada precisa ser da mesma obra (400); obra inexistente = 404");
+
+app.MapPut("/relatorios-fotograficos/{id:guid}", async (Guid id, UpdateRelatorioFotograficoRequest request, IValidator<UpdateRelatorioFotograficoRequest> validator, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveRelatorioAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.UpdateAsync(id, obraId.Value, request, userId);
+    return result.Status switch
+    {
+        RelatorioUpdateStatus.Updated => Results.Ok(result.Relatorio),
+        RelatorioUpdateStatus.NaoEncontrado => Results.NotFound(),
+        _ => Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["EtapaId"] = ["A etapa informada deve ser desta obra."]
+        })
+    };
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateRelatorioFotografico")
+.WithDescription("Edita tipo, etapa, título e competência de um relatório fotográfico; a obra não muda. Somente Admin/Master; audita relatorio_fotografico_editado");
+
+app.MapDelete("/relatorios-fotograficos/{id:guid}", async (Guid id, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal, ILogger<Program> logger) =>
+{
+    var obraId = await service.ResolveRelatorioAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.DeleteAsync(id, obraId.Value, userId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    if (result.FalhasNoStorage > 0)
+    {
+        logger.LogWarning("Relatorio fotografico {RelatorioId} excluido, mas {Falhas} arquivo(s) nao foram removidos do storage", id, result.FalhasNoStorage);
+    }
+
+    return Results.NoContent();
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("DeleteRelatorioFotografico")
+.WithDescription("Exclui um relatório fotográfico e suas fotos (banco e R2). Exclusão definitiva, sem lixeira. Somente Admin/Master; audita relatorio_fotografico_excluido");
 
 app.MapGet("/obras/{obraId:guid}/relatorios-fotograficos", async (Guid obraId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -1133,24 +1219,20 @@ app.MapGet("/obras/{obraId:guid}/relatorios-fotograficos", async (Guid obraId, R
 .WithName("GetRelatoriosFotograficosByObra")
 .WithDescription("Lista relatórios fotográficos de uma obra");
 
-app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFile file, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal, DateOnly? dataFoto, string? descricao, int ordem = 0) =>
+app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFile file, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal, DateOnly? dataFoto, string? descricao, int? ordem = null) =>
 {
-    var relatorio = await service.GetByIdAsync(id);
-    if (relatorio is null)
+    // Padrao: resolve so o obra_id (sem carregar fotos) -> acesso -> validacoes -> R2.
+    var obraId = await service.ResolveRelatorioAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, relatorio.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
-    {
-        return Results.Forbid();
-    }
-
-    if (!accessService.IsAdminOrMaster(principal))
     {
         return Results.Forbid();
     }
@@ -1162,24 +1244,140 @@ app.MapPost("/relatorios-fotograficos/{id:guid}/fotos", async (Guid id, IFormFil
 
     // O validador generico aceita PDF/Office; foto aceita apenas imagem (extensao + content-type).
     var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-    var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
-    var imageContentTypes = new[] { "image/jpeg", "image/png", "image/webp", "image/gif" };
-    if (!imageExtensions.Contains(extension)
-        || !imageContentTypes.Contains(file.ContentType, StringComparer.OrdinalIgnoreCase))
+    if (!FotoRegras.IsImagem(extension, file.ContentType))
     {
         return Results.BadRequest(new { message = "Foto deve ser uma imagem (jpg, jpeg, png, webp ou gif)." });
     }
 
+    // descricao <= 255, dataFoto entre 2000-01-01 e amanha, ordem >= 0 (antes de qualquer envio ao R2).
+    var erros = FotoRegras.Erros(descricao, dataFoto, ordem);
+    if (erros.Count > 0)
+    {
+        return Results.BadRequest(new { message = string.Join(" ", erros.Values.SelectMany(mensagens => mensagens)) });
+    }
+
     using var stream = file.OpenReadStream();
-    var result = await service.UploadFotoAsync(id, stream, extension, file.ContentType, dataFoto, descricao, ordem);
-    return Results.Created($"/fotos/{result.Id}", result);
+    var result = await service.UploadFotoAsync(id, obraId.Value, stream, file.FileName, file.ContentType, dataFoto, descricao, ordem);
+
+    return result.Status switch
+    {
+        FotoUploadStatus.Created => Results.Created($"/fotos/{result.Foto!.Id}", result.Foto),
+        FotoUploadStatus.LimiteExcedido => Results.BadRequest(new { message = $"Cada relatorio aceita no maximo {FotoRegras.MaxFotosPorRelatorio} fotos." }),
+        FotoUploadStatus.NomeArquivoInvalido => Results.BadRequest(new { message = $"O nome do arquivo deve ter de 1 a {FotoRegras.MaxNomeArquivo} caracteres." }),
+        _ => Results.NotFound()
+    };
 })
 .DisableAntiforgery()
 .RequireAuthorization("AdminOrMaster")
 .WithName("UploadFoto")
-.WithDescription("Adiciona foto a um relatório fotográfico (máx 10MB, validado por magic bytes)");
+.WithDescription("Adiciona foto (jpg/jpeg/png/webp/gif, máx 10MB, magic bytes) a um relatório fotográfico; no máximo 100 fotos por relatório (400 ao exceder). dataFoto, descricao e ordem na query string; sem ordem, a foto vai para o fim. Somente Admin/Master");
 
-app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+app.MapPatch("/relatorios-fotograficos/{id:guid}/fotos/ordem", async (Guid id, ReordenarFotosRequest request, IValidator<ReordenarFotosRequest> validator, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveRelatorioAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.ReordenarFotosAsync(id, obraId.Value, request, userId);
+    if (result is null)
+    {
+        // Mesma resposta para id inexistente e id de outra obra/relatorio (nao confirma que o registro existe em outro lugar).
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["Fotos"] = ["Uma ou mais fotos informadas nao pertencem a este relatorio."]
+        });
+    }
+
+    return Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("ReordenarFotos")
+.WithDescription("Reordena fotos de um relatório em lote (máx. 200; tudo-ou-nada: foto de outro relatório/obra = 400 sem alterar nada). Somente Admin/Master; audita fotos_reordenadas");
+
+app.MapPatch("/fotos/{fotoId:guid}", async (Guid fotoId, System.Text.Json.JsonElement body, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveFotoAsync(fotoId);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    if (!UpdateFotoRequestParser.TryParse(body, out var request, out var erros))
+    {
+        return Results.ValidationProblem(erros);
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.UpdateFotoAsync(fotoId, obraId.Value, request, userId);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateFoto")
+.WithDescription("Altera descrição, data e/ou ordem de uma foto (PATCH parcial: só os campos enviados; null limpa descrição/data). Somente Admin/Master; audita foto_editada");
+
+app.MapDelete("/fotos/{fotoId:guid}", async (Guid fotoId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal, ILogger<Program> logger) =>
+{
+    var obraId = await service.ResolveFotoAsync(fotoId);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.DeleteFotoAsync(fotoId, obraId.Value, userId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    if (result.FalhasNoStorage > 0)
+    {
+        logger.LogWarning("Foto {FotoId} removida do banco, mas o arquivo nao foi removido do storage", fotoId);
+    }
+
+    return Results.NoContent();
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("DeleteFoto")
+.WithDescription("Remove uma foto (banco e R2). Somente Admin/Master; audita foto_removida");
+
+app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograficoService service, ObraAccessService accessService, ClaimsPrincipal principal, HttpContext httpContext) =>
 {
     var obraId = await service.ResolveFotoAsync(fotoId);
     if (obraId is null)
@@ -1203,6 +1401,7 @@ app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograf
     }
 
     var (content, fileName, contentType) = result.Value;
+    httpContext.Response.Headers["X-Content-Type-Options"] = "nosniff";
     return Results.File(content, contentType, fileName);
 })
 .RequireAuthorization()
