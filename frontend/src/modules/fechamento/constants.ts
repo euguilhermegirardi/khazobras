@@ -1,4 +1,7 @@
-import type { MedicaoItemTipo, MedicaoStatus } from '@/interfaces/medicao';
+import type { MedicaoStatus } from '@/interfaces/medicao';
+
+// O rótulo do tipo de item mora na base (utils/medicaoItem.ts): Medições (admin) usa o mesmo mapa.
+export { ITEM_TIPO_LABEL } from '@/utils/medicaoItem';
 
 /** Linguagem simples para o cliente. */
 export const MEDICAO_STATUS_LABEL: Record<MedicaoStatus, string> = {
@@ -12,10 +15,4 @@ export const MEDICAO_STATUS_BADGE: Record<MedicaoStatus, 'warning' | 'success' |
   PendingApproval: 'warning',
   Approved: 'success',
   InvoiceIssued: 'info',
-};
-
-export const ITEM_TIPO_LABEL: Record<MedicaoItemTipo, string> = {
-  MaoDeObra: 'Mão de obra',
-  Material: 'Material',
-  Equipamento: 'Equipamento',
 };

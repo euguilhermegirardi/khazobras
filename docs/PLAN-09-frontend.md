@@ -48,7 +48,7 @@ sempre "Não iniciada").
 |---|---|---|---|---|
 | A1 | Hub admin ("Meus projetos", SPEC §6 item 1) | ✅ `GET /obras` (admin/master: todas, paginado) | ✅ | `feat/etapas-admin`. Mesma `ObraHubPage` do cliente (props `title`/`description`/`emptyMessage`/`obraPath`), em `/admin`; clicar abre `/admin/obras/:obraId`. Paginação (50 por página) só se `totalItems > pageSize`. Falta: criar/editar obra, avanço % no card (SPEC), Dashboard da obra (placeholder "em construção"). Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
-| A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ⬜ | só o backend foi feito; tela admin ainda não. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend) |
+| A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | 🟨 | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -265,6 +265,31 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     Tela admin deve usar `/resumo` para a tabela e `GET /medicoes/{id}` para o detalhe; listar etapas pelo `etapaNome`.
   - Testes: `Http/MedicaoAdminTests`, `MedicaoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`;
     `FakeLogAuditoriaRepository` novo; `FakeMedicaoRepository` com a API presa à obra (mantém atalhos sem obra para os testes antigos).
+- **Medições (admin, front)** (`feat/medicoes-admin`, 19/10): item "Medições" (ícone `Ruler`) em `ADMIN_NAV.obra` depois de "Gantt
+  editável". **Lista** `/admin/obras/:obraId/medicoes`: tabela paginada (20/página, `keepPreviousData`, `components/Pagination`)
+  com Nº (link para o detalhe), Competência (`formatMonthYearTitle`), Etapa (`etapaNome` ou "—"), Itens, Valor total (BRL),
+  Status (Badge: "Aguardando aprovação do cliente" warning / "Aprovada — emitir NF" success / "NF emitida" info), Nº da NF e três
+  datas (criada, aprovada, NF emitida; "—" quando não há, para a altura da linha ser uniforme). Filtro por status
+  (`NativeSelect` -> `status=`; trocar volta à página 1). **KPIs** (Total, Aguardando aprovação, Aprovadas aguardando NF, NF
+  emitida) = 4 consultas a `/resumo` com `pageSize=1` lendo `totalItems` (1 sem filtro + 1 por status): é a contagem da obra
+  inteira, sem baixar páginas e sem somar só a página; se uma falhar, o KPI mostra "—" e a tabela segue. **Criar**: `Dialog`
+  largo (`sm:max-w-5xl`) com RHF + zod + `useFieldArray` (`medicaoForm.ts`, campos como texto; regras do
+  `CreateMedicaoRequestValidator`: número 1..100000, competência `<input type="month">` 2000..2100, 1..200 itens, descrição ≤255,
+  quantidade > 0 e valor ≥ 0 com até 2 casas, soma ≤ limite da coluna). Número padrão = `max(maior número da página, total) + 1`
+  (a lista é por criação, não por número; é só sugestão, o 409 cai no campo número). Etapa opcional via `hooks/useEtapas`
+  (falhar não bloqueia). Totais do item e geral são **só prévia** (soma em centavos inteiros; o servidor recalcula; o body não
+  leva total). Erros: 400 `Itens[0].Tipo` -> `itens.0.tipo` (campo da linha), `Numero`/`Competencia`/`EtapaId` -> campo, `Itens` ->
+  mensagem da lista, o resto + 403/404/500 em `Alert` (500 com `requestId`); 409 no campo número. Sucesso: fecha, `Alert` de
+  sucesso, volta ao filtro "todos" página 1 e invalida lista/totais/detalhe + `['obra', id, 'medicoes']` (Fechamento do cliente).
+  **Detalhe** `/admin/obras/:obraId/medicoes/:medicaoId`: cabeçalho (competência + etapa pelo nome via `useEtapas`), KPIs
+  (valor, itens, status, criada em), faixa por status ("Aguardando aprovação do cliente" sem ação: **admin não aprova**;
+  "Aprovada em ... Emita a NF" + botão "Emitir NF"; "NF nº X emitida em ..."), tabela de itens somente leitura. `approvedByUserId`
+  não está no tipo nem é exibido. Emitir NF: `Dialog` com `nfNumber` (RHF + zod: obrigatório, ≤50, sem `\p{Cc}`), 400 `NfNumber` no
+  campo, 409/403/404/500 em `Alert`; `onSettled` invalida (inclusive no 409). Sem editar/excluir medição (backend não tem).
+  Medição de outra obra na URL = "não encontrada nesta obra". Base: `utils/medicaoItem.ts` (`ITEM_TIPO_LABEL`, que o Fechamento
+  agora re-exporta); `interfaces/medicao.ts` ganhou `MedicaoResumo`, `CreateMedicao*Request`, `IssueInvoiceRequest` e o comentário
+  de `Medicao` foi corrigido (o cliente nunca recebe `approvedByUserId`). Impacto no Fechamento: nenhum no código (o tipo já omitia
+  o campo); o mock do `Fechamento.test` ainda manda o id para provar que não aparece, o que continua válido como defesa.
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
