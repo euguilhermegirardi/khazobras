@@ -24,6 +24,15 @@ export function formatQuantity(value: number): string {
   return decimal.format(value);
 }
 
+const kbMb = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+
+/** Tamanho de arquivo: 512 → "512 B", 10240 → "10 KB", 1572864 → "1,5 MB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${kbMb.format(bytes / 1024)} KB`;
+  return `${kbMb.format(bytes / (1024 * 1024))} MB`;
+}
+
 const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 
 /** Percentual para exibição, até 2 casas: 80 → "80%", 12.5 → "12,5%". */

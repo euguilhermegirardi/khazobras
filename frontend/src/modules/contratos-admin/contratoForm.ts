@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { CreateContratoRequest } from '@/interfaces/contrato';
-import { parseDecimal } from '@/utils/decimal';
+import { isDataValida } from '@/utils/dates';
+import { parseDecimal, VALOR_MAX } from '@/utils/decimal';
 
 /**
  * Formulário de novo contrato. Campos como texto (é o que os inputs entregam); a conversão fica em `toCreateContratoBody`.
@@ -18,19 +19,12 @@ export interface ContratoFormValues {
 export type ContratoCampo = keyof ContratoFormValues;
 
 export const NUMERO_MAX_LENGTH = 50;
-export const VALOR_MAX = 999_999_999_999.99;
 const ANO_MIN = 2000;
 const ANO_MAX = 2100;
-const DATA = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-/** `true` se o texto é uma data real "yyyy-MM-dd" (rejeita 2026-02-31). */
-export function isDataValida(texto: string): boolean {
-  const partes = DATA.exec(texto);
-  if (!partes) return false;
-  const [ano, mes, dia] = [Number(partes[1]), Number(partes[2]), Number(partes[3])];
-  const data = new Date(ano, mes - 1, dia);
-  return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
-}
+// Subiram para a base (Financeiro admin também usa); re-exportados para os imports e testes deste módulo.
+export { isDataValida } from '@/utils/dates';
+export { VALOR_MAX };
 
 export const contratoFormSchema = z
   .object({ numero: z.string(), valorContratado: z.string(), dataAssinatura: z.string() })

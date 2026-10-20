@@ -50,7 +50,7 @@ sempre "Não iniciada").
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 | A4 | Contratos (SPEC §6 item 9: criar contrato, registrar pagamento) | ✅ `POST /contratos`, `GET /obras/{id}/contratos`, `GET /contratos/{id}`, `POST /contratos/{id}/pagamentos` + `GET /obras/{id}/medicoes/resumo?status=invoice_issued` (seletor) | ✅ | `feat/contratos`, `modules/contratos-admin`, rota `/admin/obras/:obraId/contratos`. Lista de cards + "+ Novo contrato" + "Registrar pagamento" (RHF + zod). Sem editar/excluir (backend não tem). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, front) |
-| A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ⬜ | Só o backend está pronto; a tela admin (`modules/financeiro-admin`) não foi iniciada. Contrato em "Decisões" (Financeiro admin, backend) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
+| A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | 🟨 | Front feito: `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro` (item "Financeiro" entre Medições e Contratos). KPIs internos, tabela com seleção e lote, flag por linha, novo/editar com comprovantes, exclusão com confirmação. Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Financeiro admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -525,6 +525,49 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     `WriteEndpointsAuthorizationTests`; `FakeFinanceiroRepository` espelha o SQL (preso à obra, tudo-ou-nada, limite). **Escrito na
     nuvem sem .NET: `dotnet build` + `dotnet test` no Mac antes do merge** (o SQL novo só roda com Postgres de verdade: conferir à mão
     lista com filtros, resumo, lote, exclusão e remoção de anexo).
+- **Financeiro admin, front** (`feat/financeiro-admin`, 20/10). `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro`, item
+  "Financeiro" (ícone `Wallet`) em `ADMIN_NAV.obra` **entre Medições e Contratos** (ordem do SPEC §6: 7 Medições, 8 Financeiro, 9 Contratos;
+  antes o Contratos vinha logo depois de Medições). Sem Importar/Exportar, sem pagador, sem abas Resumo/Por categoria.
+  - **Nomes reais do contrato** (o pedido dizia `data`/`competencia`; o DTO é `dataLancamento`/`mesCompetencia`): tipo `LancamentoAdmin extends
+    LancamentoCliente` + `visivelCliente`, `createdAt` (`interfaces/financeiroAdmin.ts`; `createdByUserId` vem no JSON mas não é tipado nem exibido).
+    Categoria entra snake_case (`CategoriaRequest`) e sai PascalCase; `utils/lancamentoCategoria` tem `CATEGORIA_LABEL` (subiu de
+    `modules/financeiro`, que re-exporta) e `categoriaParaRequest`.
+  - **Chaves de cache:** `['obra', id, 'financeiro-admin', 'lista'|'resumo', ...]`; toda escrita (criar, editar, excluir, flag unitária e em lote,
+    enviar/remover anexo) invalida essa família **e** `['obra', id, 'financeiro']` (lista do cliente). Categorias: `['financeiro', 'categorias']`,
+    `staleTime: Infinity`; se `GET /financeiro/categorias` falhar, o select usa as 3 categorias do enum (`CATEGORIAS_PADRAO`).
+  - **KPIs** (`GET .../financeiro/resumo`): Total lançado, Liberado ao cliente, Não liberado (+ "N lançamentos"). É custo real, **só no admin**; se
+    falhar (ou enquanto carrega) mostra "—" sem derrubar a tela.
+  - **Tabela** (20/página, `keepPreviousData`, `components/Pagination`): checkbox, Data, Competência (`formatMonthYearTitle`), Categoria (Badge
+    neutro), Descrição (truncate + `title`), Valor (direita, `tabular-nums`), Anexos (clipe + contagem; "—" sem anexo), Visível ao cliente
+    (Badge "Liberado" success / "Oculto" neutro + interruptor), Ações (Editar, Excluir em botões-ícone). `table-fixed` + `colgroup`:
+    **colunas fixas = 744px** (36 + 84 + 128 + 112 + 128 + 56 + 128 + 72; padding de 6px por lado) → em 1280 (998px úteis) a Descrição fica com
+    **~254px** (~239px com barra de rolagem), em 1440 com ~414px; sem rolagem horizontal. Altura de linha uniforme (células de controle com `h-7`).
+  - **Filtros** (visibilidade → `visivelCliente=true|false`; categoria do endpoint; competência `<input type="month">` → `competencia=yyyy-MM`):
+    mudar volta à página 1 e limpa a seleção/confirmação; competência incompleta (navegador sem input de mês) não vai à API (seria 400).
+  - **Flag por linha:** novo `components/ui/switch` (`role="switch"`, `aria-checked`, `loading` com spinner; escrito à mão porque `@radix-ui/react-switch`
+    não está instalado e o registro do shadcn é bloqueado na nuvem; trocar pelo do shadcn quando houver acesso). `PATCH .../visibilidade`, um por vez
+    (as outras linhas travam enquanto uma grava); sucesso e erro em `Alert`.
+  - **Lote:** seleção só da página atual (limpa ao trocar de página/filtro e conta só o que ainda está na lista), barra "N selecionados — Liberar ao
+    cliente / Ocultar do cliente / Limpar seleção", `PATCH .../lancamentos/visibilidade` (trava de 200 ids no cliente; o 400 `errors.Ids`
+    tudo-ou-nada cai como mensagem genérica do servidor num `Alert`). Checkbox do cabeçalho seleciona/limpa a página (estado indeterminado).
+  - **Novo/Editar** (`Dialog`, RHF + zod em `lancamentoForm.ts`, mesmas regras do `LancamentoRegras`: categoria do enum, descrição ≤255, valor > 0 com
+    2 casas e ≤ 999999999999,99, datas e competência entre 2000 e 2100). **`visivelCliente` começa FALSO** com texto explicando que o cliente só vê os
+    liberados; competência = `yyyy-MM` no formulário e `yyyy-MM-01` no corpo. No PUT o formulário manda a flag atual explicitamente. 400 `errors` →
+    campo (`Categoria`, `Descricao`, `Valor`, `DataLancamento`, `MesCompetencia`), o resto + 403/404/500 em `Alert` (500 com `requestId`). Novo lançamento
+    não tem comprovantes (precisam do id): anexar depois, em Editar. A edição usa a versão mais nova da lista (anexos enviados/removidos refletem na hora).
+  - **Comprovantes (Editar):** lista (nome truncado + tamanho + data), Baixar (`apiDownload` + `saveBlob`), Remover com confirmação inline na linha
+    (`DELETE /financeiro/anexos/{id}`), Enviar (`POST .../anexos` multipart, campo `file`; **`apiUpload` novo em `services/apiClient`**). Validação no
+    cliente em `utils/anexo.ts`, espelhando o `FileUploadValidator`: vazio, ≤10 MB, extensão (jpg, jpeg, png, webp, gif, pdf, doc, docx, xls, xlsx, txt);
+    `prepararAnexo` regrava o MIME pela extensão (o backend recusa MIME incompatível); limite de 10 por lançamento (campo travado no limite). Magic bytes
+    e MIME seguem só no servidor. Erros 400 `{ message }`/403/404/500 em `Alert`.
+  - **Excluir:** confirmação inline (`Alert` warning com foco em "Cancelar"): "Excluir definitivamente? Os comprovantes também serão removidos."
+    → `DELETE`; se era o único item da última página, volta uma página.
+  - **Base nova/movida** (módulo não importa módulo): `utils/serverErrors` (`mapServerErrors`; `contratos-admin/serverErrors` re-exporta),
+    `isDataValida` em `utils/dates`, `VALOR_MAX` em `utils/decimal` (`contratoForm` re-exporta), `formatBytes` em `utils/format`, `utils/anexo`,
+    `utils/lancamentoCategoria`, `components/ui/switch`. Testes unitários dos puros: `utils/anexo.test`, `utils/lancamentoCategoria.test`,
+    `modules/financeiro-admin/lancamentoForm.test`.
+  - **Testes antigos afetados:** `ContratosAdmin.test` ("Contratos fica depois de Medições na sidebar do admin") assume que Contratos vem logo
+    depois de Medições; com o Financeiro no meio (ordem do SPEC) o assert fica obsoleto. Não editado (é do tester): trocar por "depois de Financeiro".
 
 ## Registro
 

@@ -39,6 +39,8 @@ type Json = Record<string, unknown> | unknown[];
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: Json;
+  /** Upload multipart: o navegador define o Content-Type (com o boundary), por isso nenhum cabeçalho próprio. */
+  form?: FormData;
   signal?: AbortSignal;
 }
 
@@ -83,7 +85,7 @@ async function send(path: string, options: RequestOptions, headers: Record<strin
     return await fetch(`${baseUrl}${path}`, {
       method: options.method ?? 'GET',
       headers: { ...headers, ...authHeaders() },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.form ?? (options.body === undefined ? undefined : JSON.stringify(options.body)),
       signal: options.signal,
     });
   } catch (error) {
@@ -105,6 +107,12 @@ export async function apiRequest<T = void>(path: string, options: RequestOptions
   const headers: Record<string, string> = options.body === undefined ? {} : { 'Content-Type': 'application/json' };
   const response = await handle(await send(path, options, headers));
   if (response.status === 204) return undefined as T;
+  return (await response.json()) as T;
+}
+
+/** Upload multipart (campo `file` etc.) com Bearer; devolve o JSON da resposta (ex.: 201 do anexo). */
+export async function apiUpload<T>(path: string, form: FormData, signal?: AbortSignal): Promise<T> {
+  const response = await handle(await send(path, { method: 'POST', form, signal }, {}));
   return (await response.json()) as T;
 }
 
