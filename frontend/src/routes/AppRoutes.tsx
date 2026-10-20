@@ -3,6 +3,8 @@ import { homePathFor } from '@/auth/homePath';
 import { useAuth } from '@/auth/useAuth';
 import { LoginPage } from '@/modules/auth/LoginPage';
 import { ADMIN_ROLES, CLIENT_ROLES } from '@/auth/roles';
+import { ContratosPage } from '@/modules/contratos/pages/ContratosPage';
+import { ContratosAdminPage } from '@/modules/contratos-admin/pages/ContratosAdminPage';
 import { CronogramaPage } from '@/modules/cronograma/pages/CronogramaPage';
 import { GanttEditavelPage } from '@/modules/etapas-admin/pages/GanttEditavelPage';
 import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDetalhePage';
@@ -54,6 +56,7 @@ export const AppRoutes = () => {
             element={<FechamentoDetalhePage listaPath={(obraId) => `/cliente/obras/${obraId}/fechamento`} />}
           />
           <Route path="/cliente/obras/:obraId/financeiro" element={<FinanceiroPage />} />
+          <Route path="/cliente/obras/:obraId/contratos" element={<ContratosPage />} />
           <Route path="/cliente/obras/:obraId/projetos" element={<ProjetosPage />} />
           <Route path="/cliente/obras/:obraId/relatorio-fotografico" element={<RelatorioFotograficoPage />} />
           <Route path="/cliente/obras/:obraId/relatorio-mensal" element={<RelatorioMensalPage />} />
@@ -78,6 +81,7 @@ export const AppRoutes = () => {
           <Route path="/admin/obras/:obraId/gantt" element={<GanttEditavelPage />} />
           <Route path="/admin/obras/:obraId/medicoes" element={<MedicoesAdminPage />} />
           <Route path="/admin/obras/:obraId/medicoes/:medicaoId" element={<MedicaoAdminDetalhePage />} />
+          <Route path="/admin/obras/:obraId/contratos" element={<ContratosAdminPage />} />
         </Route>
       </Route>
 

@@ -33,7 +33,7 @@
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
 | 6 | Cronograma (sem Curva S) | ✅ `GET /obras/{id}/etapas` (detalhe preso à obra no SQL) + `percentualConcluido` (script 008; edição pelo Gantt admin) | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, com % concluído ao lado da barra (desde `feat/etapas-admin`); 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
 | 7 | Projetos | ✅ `GET /obras/{id}/projetos` + `GET /projetos/{id}/download` (liberado ao cliente da obra, preso à obra no SQL) | ✅ | `feat/projetos` (empilhada sobre `feat/cronograma`). Cards por etapa, Visualizar (PDF/imagem, nova aba) e Baixar; 219 testes na suíte + 4 e2e. 2 rodadas (design: colunas alinhadas; segurança: só PDF/imagem abrem). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-projetos.md` |
-| 8 | Contratos | ✅ `GET /obras/{id}/contratos` (cliente: DTO reduzido com `totalPago`/`saldoAPagar`) + `GET /contratos/{id}` (com pagamentos) | ⬜ | backend em `feat/contratos` (empilhada sobre `feat/medicoes-admin`, PR #17; mesclar depois dele; sem script SQL). Admin: `POST /contratos` e `POST /contratos/{id}/pagamentos` (tela admin A4 ainda não existe). Contrato em "Decisões" (Contratos, backend). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
+| 8 | Contratos | ✅ `GET /obras/{id}/contratos` (cliente: DTO reduzido com `totalPago`/`saldoAPagar`) + `GET /contratos/{id}` (com pagamentos) | 🟨 | `feat/contratos` (empilhada sobre `feat/medicoes-admin`, PR #17; mesclar depois dele; sem script SQL). Front feito: `modules/contratos`, rota `/cliente/obras/:obraId/contratos` (somente leitura). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, backend e front). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 | 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
 
 Navbar do cliente cresce uma entrada por tela entregue (ordem do SPEC §5).
@@ -49,6 +49,7 @@ sempre "Não iniciada").
 | A1 | Hub admin ("Meus projetos", SPEC §6 item 1) | ✅ `GET /obras` (admin/master: todas, paginado) | ✅ | `feat/etapas-admin`. Mesma `ObraHubPage` do cliente (props `title`/`description`/`emptyMessage`/`obraPath`), em `/admin`; clicar abre `/admin/obras/:obraId`. Paginação (50 por página) só se `totalItems > pageSize`. Falta: criar/editar obra, avanço % no card (SPEC), Dashboard da obra (placeholder "em construção"). Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
+| A4 | Contratos (SPEC §6 item 9: criar contrato, registrar pagamento) | ✅ `POST /contratos`, `GET /obras/{id}/contratos`, `GET /contratos/{id}`, `POST /contratos/{id}/pagamentos` + `GET /obras/{id}/medicoes/resumo?status=invoice_issued` (seletor) | 🟨 | `feat/contratos`, `modules/contratos-admin`, rota `/admin/obras/:obraId/contratos`. Lista de cards + "+ Novo contrato" + "Registrar pagamento" (RHF + zod). Sem editar/excluir (backend não tem). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, front) |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -324,6 +325,30 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   agora re-exporta); `interfaces/medicao.ts` ganhou `MedicaoResumo`, `CreateMedicao*Request`, `IssueInvoiceRequest` e o comentário
   de `Medicao` foi corrigido (o cliente nunca recebe `approvedByUserId`). Impacto no Fechamento: nenhum no código (o tipo já omitia
   o campo); o mock do `Fechamento.test` ainda manda o id para provar que não aparece, o que continua válido como defesa.
+- **Contratos (cliente e admin, front)** (`feat/contratos`, 20/10). Item "Contratos" (ícone `FileSignature`) na sidebar do cliente
+  depois de "Financeiro" (SPEC §5 item 6) e em `ADMIN_NAV.obra` depois de "Medições". Rotas `/cliente/obras/:obraId/contratos`
+  (`modules/contratos`, só leitura) e `/admin/obras/:obraId/contratos` (`modules/contratos-admin`).
+  - **Base compartilhada** (módulo não importa módulo): `components/ContratoCard` (número, data de assinatura ou "Data de
+    assinatura não informada", dl com Valor contratado/Pago/Saldo, `ProgressBar` do pago, slot de ações e de conteúdo),
+    `ContratosKpis` (Valor contratado total / Total pago / Saldo; **só renderiza com 2+ contratos**), `PagamentosSecao` (4 estados)
+    e `PagamentosTabela` (Data, Valor à direita `tabular-nums`, Forma truncada com `title`, "Medição nº N" ou "—"; 4 colunas,
+    `table-fixed` + `colgroup` mesmo assim, para as colunas não "dançarem" entre cards); `interfaces/contrato.ts` (tipo do
+    cliente sem `createdAt`/`updatedAt`/`contratoId`; o do admin estende); `utils/contrato.ts` (`somarContratos` em centavos,
+    `saldoExibicao`, `percentualPago`) e `utils/decimal.ts` (`parseDecimal` subiu de `medicoes-admin/medicaoForm`, que re-exporta).
+  - **Saldo negativo** = rótulo "Pago a mais" com o valor sem sinal, em `text-danger` (KPI e card); saldo positivo "Saldo a pagar" em
+    `warning`. A barra marca 100% só com saldo quitado (arredonda para baixo; 99,6% mostra 99%).
+  - **Pagamentos: carga de todos os cards de uma vez** (cada card faz `GET /contratos/{id}` ao montar), em vez de expandir sob
+    demanda: uma obra tem poucos contratos, é mais simples e não esconde pagamento. Erro/vazio/carregando são por card (não derruba a página).
+  - **Chaves de cache:** cliente `['obra', id, 'contratos', 'lista'|'detalhe', cid]`; admin `['obra', id, 'contratos-admin', ...]`.
+    Criar contrato/registrar pagamento invalida as duas famílias (sucesso fecha o diálogo e mostra `Alert` discreto).
+  - **Novo contrato** (Dialog): número ≤50 sem caracteres de controle, valor > 0 com até 2 casas (aceita vírgula, ≤ NUMERIC(14,2)),
+    data de assinatura opcional 2000..2100 (`<input type="date">`). 400 `errors` -> campo (`Numero`, `ValorContratado`,
+    `DataAssinatura`; o resto em `Alert`), 409 -> campo número, 403/404/500 em `Alert` (500 com `requestId`).
+  - **Registrar pagamento** (Dialog por contrato): valor > 0, data (padrão hoje; máximo amanhã, local; mínimo ano 2000, igual ao
+    backend), forma opcional ≤50, medição opcional via `NativeSelect` ("Medição nº N — Competência — valor") de
+    `GET /obras/{id}/medicoes/resumo?status=invoice_issued&pageIndex=0&pageSize=100`. **Limite:** só a 1ª página (100 mais novas);
+    falha ao carregar não bloqueia (hint, "Sem medição"). 400 `ReferenteMedicaoId` -> campo da medição. Sem editar/excluir.
+  - Testes antigos ajustados: nenhum (só o re-export de `parseDecimal` mantém `medicaoForm.test` válido).
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
