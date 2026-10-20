@@ -67,6 +67,8 @@ public sealed class FinanceiroLancamentoAcessoTests : IClassFixture<ApiFactory>
                 services.AddSingleton<IFinanceiroLancamentoRepository>(financeiro);
                 services.AddSingleton<IUserObraRepository>(vinculos);
                 services.AddSingleton<IStorageService>(new FakeStorageService());
+                // O PATCH de visibilidade grava auditoria: sem isto tentaria o Postgres real.
+                services.AddSingleton<ILogAuditoriaRepository>(new FakeLogAuditoriaRepository());
             }))
             .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 

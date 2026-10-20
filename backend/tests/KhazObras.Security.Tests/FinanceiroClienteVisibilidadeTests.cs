@@ -18,7 +18,11 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
 
     public FinanceiroClienteVisibilidadeTests()
     {
-        _service = new FinanceiroService(FinanceiroRepository, new FakeStorageService());
+        _service = new FinanceiroService(
+            FinanceiroRepository,
+            new FakeStorageService(),
+            ObraRepository,
+            new LogAuditoriaService(new FakeLogAuditoriaRepository()));
     }
 
     private async Task<FinanceiroLancamento> SeedLancamentoAsync(Guid obraId, bool visivel, string descricao = "Cimento")
@@ -51,12 +55,16 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
     [Fact]
     public async Task Novo_lancamento_nasce_oculto_para_o_cliente()
     {
-        var created = await _service.CreateAsync(
+        await CreateObraAsync();
+
+        var result = await _service.CreateAsync(
             new CreateFinanceiroLancamentoRequest(
                 ObraId, "material", "Areia", 800m,
                 DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow)),
             AdminUserId);
 
+        Assert.Equal(FinanceiroCreateStatus.Created, result.Status);
+        var created = result.Lancamento!;
         Assert.False(created.VisivelCliente);
         Assert.Null(_service.ToClienteView(created));
     }

@@ -220,7 +220,7 @@ public sealed class FinanceiroAnexoDownloadTests : IClassFixture<ApiFactory>
     public async Task Service_nao_devolve_anexo_de_outra_obra_nem_oculto_para_cliente()
     {
         var c = await CriarCenarioAsync();
-        var service = new FinanceiroService(c.Financeiro, c.Storage);
+        var service = new FinanceiroService(c.Financeiro, c.Storage, new FakeObraRepository(), new LogAuditoriaService(new FakeLogAuditoriaRepository()));
 
         var certo = await service.DownloadAnexoAsync(c.AnexoLiberadoId, c.ObraId, somenteVisiveisCliente: true);
         var obraErrada = await service.DownloadAnexoAsync(c.AnexoLiberadoId, Guid.NewGuid(), somenteVisiveisCliente: false);

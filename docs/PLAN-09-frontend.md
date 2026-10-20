@@ -50,6 +50,7 @@ sempre "Não iniciada").
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 | A4 | Contratos (SPEC §6 item 9: criar contrato, registrar pagamento) | ✅ `POST /contratos`, `GET /obras/{id}/contratos`, `GET /contratos/{id}`, `POST /contratos/{id}/pagamentos` + `GET /obras/{id}/medicoes/resumo?status=invoice_issued` (seletor) | ✅ | `feat/contratos`, `modules/contratos-admin`, rota `/admin/obras/:obraId/contratos`. Lista de cards + "+ Novo contrato" + "Registrar pagamento" (RHF + zod). Sem editar/excluir (backend não tem). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, front) |
+| A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ⬜ | Só o backend está pronto; a tela admin (`modules/financeiro-admin`) não foi iniciada. Contrato em "Decisões" (Financeiro admin, backend) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -66,7 +67,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   confirmar com o engenheiro se o esperado é esse ou somar só os saldos positivos.
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
-- Auditoria: só medições e contratos/pagamentos gravam `log_auditoria` (criar, aprovar, emitir NF, criar contrato, registrar pagamento). Os demais endpoints de escrita (inclusive
+- Auditoria: medições, contratos/pagamentos e financeiro (editar, excluir, visibilidade, remover anexo) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
   Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
@@ -81,9 +82,14 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (sem paginação) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo; não existem no
   schema); sem editar/excluir medição nem itens; sem unicidade de número de NF; a auditoria é gravada depois do UPDATE, fora
   da transação (falha ao gravar = 500 com a medição já alterada).
+- Financeiro (backlog, o backend do admin está pronto: ver Decisões): sem lixeira/soft delete (exclusão é definitiva); sem
+  auditoria de `POST /financeiro/lancamentos` nem de upload de anexo; sem CRUD de categorias (tabela `categorias` sem uso,
+  `categoria_id` nulo; exigiria script novo); lote só por ids (sem "liberar tudo do filtro"); o limite de 10 anexos pode estourar
+  em 1 sob corrida de uploads simultâneos fora do `INSERT` condicional (aceito); os testes HTTP usam repositório falso, então o SQL
+  novo (filtros, resumo, lote, exclusão) não é coberto por teste automático (integração com Postgres).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
-- PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
+- PUT/PATCH/DELETE nos módulos que ainda não têm (Financeiro já tem); `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
 - Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta; plugada só em Medições)
 - PDF consolidado (Fase 10)
@@ -480,6 +486,45 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Testes antigos ajustados por causa do campo novo/da decisão mudada: fixtures de `Cronograma.test`, `timeline.test` e
   `e2e/cronograma` (+ mock), nomes acessíveis das barras (", N% concluído"), remoção do assert "cliente não vê %" e o
   `ProtectedRoute.test` (admin em `/admin` agora vê "Meus projetos").
+- **Financeiro admin, backend** (`feat/financeiro-admin`, 20/10; sem script SQL; contrato completo em `backend/docs/API.md` →
+  Módulo Financeiro). Pronto para a tela admin "Financeiro — edição completa" (SPEC §6 item 8):
+  - **Lista admin** `GET /obras/{id}/financeiro/lancamentos`: Admin/Master recebem **todos** (liberados ou não) no DTO completo
+    (`visivelCliente`, `createdByUserId`, `anexos`); cliente, só os liberados no DTO reduzido. Filtros opcionais só do admin
+    (`visivelCliente=true|false`, `categoria`, `competencia=yyyy-MM`; inválido = 400 `{ message }`), todos parametrizados no SQL
+    (contagem e itens); o cliente os ignora. Ordem estável: `data_lancamento DESC, created_at DESC, id`.
+  - **Resumo** `GET /obras/{id}/financeiro/resumo` (`AdminOrMaster`): `totalLancado`, `totalLiberadoCliente`, `totalNaoLiberado`,
+    `quantidadeLancamentos/Liberada/NaoLiberada` num SQL agregado (`WHERE obra_id`, `FILTER`). Tem custo real: cliente = 403 (teste).
+  - **Edição** `PUT /financeiro/lancamentos/{id}`: resolve `obra_id` → `EnsureAccessAsync` → valida → `UPDATE ... WHERE id AND
+    obra_id`. Mesmos campos do POST **sem `obraId`** (ignorado se vier); `visivelCliente` omitido mantém o atual. 200 com DTO admin.
+    Auditoria `lancamento_editado` com ids e **nomes** dos campos alterados (sem valores nem texto livre; nada alterado = sem registro).
+  - **Exclusão** `DELETE /financeiro/lancamentos/{id}` (204): **hard delete**, aceito porque a única FK para o lançamento é a dos
+    anexos (`ON DELETE CASCADE`, schema 003). As chaves do R2 são lidas e o lançamento apagado na mesma transação; depois os
+    arquivos saem do R2 (falha no R2 não vira 500: 204 + `LogWarning`, objeto órfão). Auditoria `lancamento_excluido`
+    (`quantidadeAnexos`). Decisão de produto em aberto no backlog: lixeira/soft delete, que exigiria coluna nova.
+  - **Visibilidade**: o PATCH unitário audita `lancamento_visibilidade_alterada` (`statusAnterior`/`statusNovo`: `oculto`|`liberado`;
+    sem registro se não mudou). **Lote** `PATCH /obras/{id}/financeiro/lancamentos/visibilidade` `{ ids, visivelCliente }`: máx. 200,
+    um único `UPDATE ... WHERE id = ANY(@Ids) AND obra_id = @ObraId` que só grava se a contagem bater (tudo-ou-nada, sem transação
+    explícita); id inexistente ou de outra obra = o mesmo 400 `errors.Ids` genérico, sem alterar nenhum. Um registro de auditoria por
+    lançamento que mudou (`lote: true`). 200 `{ atualizados, visivelCliente }`.
+  - **Anexos**: upload só de Admin/Master (já era), agora resolve a obra sem carregar o lançamento, e limita a **10 por lançamento**
+    (400 `{ message }`; checagem antes do R2 e de novo no `INSERT ... SELECT ... WHERE COUNT < max`; se a corrida estourar, o arquivo
+    é apagado do R2). `DELETE /financeiro/anexos/{id}` (204): anexo → obra → acesso → `DELETE ... USING ... WHERE l.obra_id` → R2;
+    auditoria `lancamento_anexo_removido` (na entidade do lançamento).
+  - **Categorias**: `categoria` é o enum `item_tipo` (`mao_de_obra`, `material`, `equipamento`); a tabela `categorias` do SPEC §9 não é
+    usada (`categoria_id` nulo) e **não mudamos schema**. `GET /financeiro/categorias` (`AdminOrMaster`) devolve `[{ valor, rotulo }]`
+    para o select. Pegadinha de contrato: **entra** snake_case, **sai** PascalCase (`MaoDeObra`); o POST/PUT aceitam os dois.
+  - **Varredura do módulo (violações corrigidas)**: `POST /financeiro/lancamentos` validava o corpo **antes** do acesso e, com obra
+    inexistente, dava 500 (FK) → agora acesso → validação → 404 se a obra não existe; o upload carregava o lançamento inteiro antes do
+    acesso (agora `ResolveLancamentoAsync` + `WHERE id AND obra_id`); o validator aceitava valor com mais de 2 casas ou acima de
+    `NUMERIC(14,2)` e datas absurdas (500 no INSERT) → limites iguais aos de Medições/Contratos (datas 2000–2100); anexos e lista com
+    ordem não determinística → `ORDER BY` estável.
+  - Auditoria: entidade `financeiro_lancamento` (consultável por `/auditoria/financeiro_lancamento/{id}`, Master); `user_id` = token.
+    Payloads só com ids, status e nomes de campos. Gravada depois do UPDATE, fora da transação (como Medições/Contratos).
+  - Testes: `Http/FinanceiroAdminTests` (lista admin x cliente, filtros, resumo 403, PUT/DELETE/lote/anexos com 403 antes do corpo,
+    outra obra, 404, 400, auditoria, limite de anexos, storage falhando), `FinanceiroValidatorTests`, rotas novas em
+    `WriteEndpointsAuthorizationTests`; `FakeFinanceiroRepository` espelha o SQL (preso à obra, tudo-ou-nada, limite). **Escrito na
+    nuvem sem .NET: `dotnet build` + `dotnet test` no Mac antes do merge** (o SQL novo só roda com Postgres de verdade: conferir à mão
+    lista com filtros, resumo, lote, exclusão e remoção de anexo).
 
 ## Registro
 
