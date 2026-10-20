@@ -276,7 +276,9 @@ test('validação local: valor com 3 casas decimais é recusado e não chega ao 
   expect(chamadas.postsContrato).toHaveLength(0);
 });
 
-test('"Contratos" está na sidebar do admin depois de "Medições" e leva à tela da obra', async ({ page }) => {
+test('"Contratos" está na sidebar do admin depois de "Financeiro" (Medições, Financeiro, Contratos) e leva à tela da obra', async ({
+  page,
+}) => {
   await mockApi(page);
   await entrarComo(page, 'Admin');
 
@@ -284,7 +286,7 @@ test('"Contratos" está na sidebar do admin depois de "Medições" e leva à tel
   const nav = page.getByRole('navigation', { name: 'Navegação principal' });
   const nomes = (await nav.getByRole('link').allTextContents()).map((t) => t.trim());
   const i = nomes.indexOf('Contratos');
-  expect(nomes[i - 1]).toBe('Medições');
+  expect(nomes.slice(i - 2, i + 1)).toEqual(['Medições', 'Financeiro', 'Contratos']);
   await nav.getByRole('link', { name: 'Contratos' }).click();
   await expect(page).toHaveURL(`/admin/obras/${OBRA}/contratos`);
 });
