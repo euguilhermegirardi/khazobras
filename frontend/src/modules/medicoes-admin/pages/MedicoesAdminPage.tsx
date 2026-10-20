@@ -99,7 +99,7 @@ export const MedicoesAdminPage = () => {
           </Alert>
         )}
 
-        <MedicoesKpis obraId={obraId} />
+        <MedicoesKpis obraId={obraId} total={total.data} />
 
         {vazioSemFiltro ? (
           <div className="rounded-xl border border-dashed bg-card p-7 text-center text-muted-foreground">
