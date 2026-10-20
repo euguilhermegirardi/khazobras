@@ -385,47 +385,89 @@ Cria medição para uma obra. Estados: `pending_approval` → `approved` → `in
 
 **Autorização:** Admin, Master
 
+Ordem de verificação em todos os endpoints com id: 404 (medição/obra inexistente) → 403 (sem acesso à obra) →
+400 (corpo/parâmetros inválidos) → 409 (transição inválida). Enums em requests: snake_case; em respostas: PascalCase.
+Cliente recebe a visão reduzida (`MedicaoClienteResponse`, sem `approvedByUserId`); Admin/Master, a completa.
+Toda mudança de status grava `log_auditoria` (`entidade = "medicao"`; ações `medicao_criada`, `medicao_aprovada`,
+`medicao_nf_emitida`; payload só com ids e status).
+
 **Request:**
-```bash
-curl -X POST http://localhost:5285/medicoes \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "obraId": "770e8400-e29b-41d4-a716-446655440000",
-    "etapaId": "880e8400-e29b-41d4-a716-446655440000",
-    "mesReferencia": "2026-10",
-    "valor": 50000.00,
-    "descricao": "Medição de 50% da fundação"
-  }'
+```json
+{
+  "obraId": "770e8400-e29b-41d4-a716-446655440000",
+  "etapaId": "880e8400-e29b-41d4-a716-446655440000",
+  "numero": 3,
+  "competencia": "2026-10-01",
+  "itens": [
+    { "tipo": "mao_de_obra", "descricao": "Alvenaria", "quantidade": 10, "valorUnitario": 500.00 },
+    { "tipo": "material", "descricao": "Cimento", "quantidade": 2.5, "valorUnitario": 100.10 }
+  ]
+}
 ```
 
-**Response (201 Created):**
+`etapaId` é opcional e, se enviado, precisa ser da mesma obra (400 `errors.EtapaId`). `numero` é único por obra (409).
+`tipo`: `mao_de_obra`, `material` ou `equipamento`. Quantidade > 0; valor unitário >= 0; no máximo 2 casas decimais.
+O total de cada item e da medição é calculado no servidor.
+
+**Response (201 Created, `Location: /medicoes/{id}`):**
 ```json
 {
   "id": "990e8400-e29b-41d4-a716-446655440000",
   "obraId": "770e8400-e29b-41d4-a716-446655440000",
   "etapaId": "880e8400-e29b-41d4-a716-446655440000",
-  "mesReferencia": "2026-10",
-  "valor": 50000.00,
-  "descricao": "Medição de 50% da fundação",
+  "numero": 3,
+  "competencia": "2026-10-01",
+  "valorTotal": 5250.25,
   "status": "PendingApproval",
-  "createdAt": "2026-10-12T10:00:00Z"
+  "approvedAt": null,
+  "approvedByUserId": null,
+  "nfNumber": null,
+  "nfIssuedAt": null,
+  "createdAt": "2026-10-12T10:00:00Z",
+  "itens": [
+    { "id": "...", "tipo": "MaoDeObra", "descricao": "Alvenaria", "quantidade": 10, "valorUnitario": 500.00, "valorTotal": 5000.00 }
+  ]
 }
 ```
 
+**Erros:** 400 `{ "errors": { "Itens[0].Tipo": ["..."] } }`, 403, 404 (obra inexistente), 409 `{ "message": "..." }`.
+
 ### 2. Listar Medições de uma Obra
-**GET** `/medicoes?obraId={id}&pageIndex=0&pageSize=10`
+**GET** `/obras/{obraId}/medicoes`
 
-Lista todas as medições de uma obra (paginado).
+Array puro (sem paginação) com itens. Cliente: `MedicaoClienteResponse` (mesmos campos, sem `approvedByUserId`).
 
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
+**Autorização:** Qualquer usuário com acesso à obra
+
+### 2b. Lista de acompanhamento (admin)
+**GET** `/obras/{obraId}/medicoes/resumo?pageIndex=0&pageSize=20&status=approved`
+
+Paginada (`pageIndex >= 0`, `pageSize` 1..100, senão 400), mais nova primeiro, sem itens. `status` opcional:
+`pending_approval`, `approved` ou `invoice_issued`.
+
+**Autorização:** Admin, Master
+
+```json
+{
+  "totalItems": 1, "pageIndex": 0, "pageSize": 20,
+  "items": [
+    {
+      "id": "990e8400-e29b-41d4-a716-446655440000", "obraId": "770e8400-e29b-41d4-a716-446655440000",
+      "etapaId": "880e8400-e29b-41d4-a716-446655440000", "etapaNome": "Fundação",
+      "numero": 3, "competencia": "2026-10-01", "valorTotal": 5250.25, "status": "Approved",
+      "quantidadeItens": 2, "createdAt": "2026-10-12T10:00:00Z", "approvedAt": "2026-10-13T09:00:00Z",
+      "nfIssuedAt": null, "nfNumber": null
+    }
+  ]
+}
+```
 
 ### 3. Obter Medição por ID
 **GET** `/medicoes/{id}`
 
-Retorna detalhes de uma medição específica.
+Retorna a medição com itens (cliente: visão reduzida).
 
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
+**Autorização:** Qualquer usuário com acesso à obra da medição
 
 ### 4. Aprovar Medição
 **POST** `/medicoes/{id}/approve`
@@ -434,57 +476,25 @@ Aprova medição (transição: `pending_approval` → `approved`). Realizado pel
 
 **Autorização:** Client (propriedade da obra)
 
-**Request:**
-```bash
-curl -X POST http://localhost:5285/medicoes/990e8400-e29b-41d4-a716-446655440000/approve \
-  -H "Authorization: Bearer <token>"
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": "990e8400-e29b-41d4-a716-446655440000",
-  "obraId": "770e8400-e29b-41d4-a716-446655440000",
-  "etapaId": "880e8400-e29b-41d4-a716-446655440000",
-  "mesReferencia": "2026-10",
-  "valor": 50000.00,
-  "descricao": "Medição de 50% da fundação",
-  "status": "Approved",
-  "approvedAt": "2026-10-12T15:30:00Z",
-  "createdAt": "2026-10-12T10:00:00Z"
-}
-```
+Sem corpo. Resposta 200 na visão do cliente (`MedicaoClienteResponse`, sem `approvedByUserId`). Admin/Master = 403;
+medição que não está `pending_approval` = 409.
 
 ### 5. Emitir Nota Fiscal
-**POST** `/medicoes/{id}/invoice`
+**POST** `/medicoes/{id}/issue-invoice`
 
 Emite nota fiscal para medição (transição: `approved` → `invoice_issued`). Somente Admin/Master.
 
 **Autorização:** Admin, Master
 
 **Request:**
-```bash
-curl -X POST http://localhost:5285/medicoes/990e8400-e29b-41d4-a716-446655440000/invoice \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "numeroNota": "NF-2026-001",
-    "dataEmissao": "2026-10-12"
-  }'
+```json
+{ "nfNumber": "NF-2026-001" }
 ```
 
-**Response (200 OK):**
-```json
-{
-  "id": "990e8400-e29b-41d4-a716-446655440000",
-  "obraId": "770e8400-e29b-41d4-a716-446655440000",
-  "valor": 50000.00,
-  "status": "InvoiceIssued",
-  "numeroNota": "NF-2026-001",
-  "dataEmissao": "2026-10-12",
-  "invoicedAt": "2026-10-12T16:00:00Z"
-}
-```
+`nfNumber`: obrigatório, até 50 caracteres, sem caracteres de controle (400 `{ "errors": { "NfNumber": ["..."] } }`).
+Medição fora de `approved` = 409 `{ "message": "..." }`.
+
+**Response (200 OK):** `MedicaoResponse` completo, com `"status": "InvoiceIssued"`, `nfNumber` e `nfIssuedAt`.
 
 ---
 

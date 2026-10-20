@@ -1,0 +1,301 @@
+{
+  "GET /obras/a1/medicoes/resumo": {
+    "totalItems": 6,
+    "pageIndex": 0,
+    "pageSize": 20,
+    "items": [
+      {
+        "id": "m6",
+        "obraId": "a1",
+        "etapaId": "e05",
+        "etapaNome": "Alvenaria",
+        "numero": 6,
+        "competencia": "2026-10-01",
+        "valorTotal": 48249.9,
+        "status": "PendingApproval",
+        "quantidadeItens": 4,
+        "createdAt": "2026-10-12T15:00:00Z",
+        "approvedAt": null,
+        "nfIssuedAt": null,
+        "nfNumber": null
+      },
+      {
+        "id": "m5",
+        "obraId": "a1",
+        "etapaId": "e05",
+        "etapaNome": "Alvenaria",
+        "numero": 5,
+        "competencia": "2026-09-01",
+        "valorTotal": 62300,
+        "status": "Approved",
+        "quantidadeItens": 3,
+        "createdAt": "2026-09-28T15:00:00Z",
+        "approvedAt": "2026-10-02T15:00:00Z",
+        "nfIssuedAt": null,
+        "nfNumber": null
+      },
+      {
+        "id": "m4",
+        "obraId": "a1",
+        "etapaId": null,
+        "etapaNome": null,
+        "numero": 4,
+        "competencia": "2026-08-01",
+        "valorTotal": 51890.25,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 5,
+        "createdAt": "2026-08-27T15:00:00Z",
+        "approvedAt": "2026-09-01T15:00:00Z",
+        "nfIssuedAt": "2026-09-05T15:00:00Z",
+        "nfNumber": "NF-2026-0187"
+      },
+      {
+        "id": "m3",
+        "obraId": "a1",
+        "etapaId": "e04",
+        "etapaNome": "Estrutura de concreto",
+        "numero": 3,
+        "competencia": "2026-07-01",
+        "valorTotal": 74100,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 6,
+        "createdAt": "2026-07-28T15:00:00Z",
+        "approvedAt": "2026-08-03T15:00:00Z",
+        "nfIssuedAt": "2026-08-07T15:00:00Z",
+        "nfNumber": "NF-2026-0152"
+      },
+      {
+        "id": "m2",
+        "obraId": "a1",
+        "etapaId": "e03",
+        "etapaNome": "Fundação e baldrame",
+        "numero": 2,
+        "competencia": "2026-06-01",
+        "valorTotal": 39870.4,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 3,
+        "createdAt": "2026-06-26T15:00:00Z",
+        "approvedAt": "2026-07-01T15:00:00Z",
+        "nfIssuedAt": "2026-07-04T15:00:00Z",
+        "nfNumber": "NF-2026-0121"
+      },
+      {
+        "id": "m1",
+        "obraId": "a1",
+        "etapaId": "e02",
+        "etapaNome": "Locação e escavação",
+        "numero": 1,
+        "competencia": "2026-05-01",
+        "valorTotal": 18500,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 2,
+        "createdAt": "2026-05-29T15:00:00Z",
+        "approvedAt": "2026-06-03T15:00:00Z",
+        "nfIssuedAt": "2026-06-08T15:00:00Z",
+        "nfNumber": "NF-2026-0098"
+      }
+    ]
+  },
+  "GET /obras/a1/etapas": [
+    {
+      "id": "e02",
+      "obraId": "a1",
+      "nome": "Locação e escavação",
+      "ordem": 2,
+      "percentualPeso": 6,
+      "dataInicioPrevista": "2026-03-23",
+      "dataFimPrevista": "2026-04-17",
+      "dataInicioReal": "2026-03-26",
+      "dataFimReal": "2026-04-22",
+      "status": "concluida",
+      "percentualConcluido": 100,
+      "createdAt": "2026-02-10T12:00:00Z"
+    },
+    {
+      "id": "e03",
+      "obraId": "a1",
+      "nome": "Fundação e baldrame",
+      "ordem": 3,
+      "percentualPeso": 12,
+      "dataInicioPrevista": "2026-04-20",
+      "dataFimPrevista": "2026-06-12",
+      "dataInicioReal": "2026-04-23",
+      "dataFimReal": "2026-06-19",
+      "status": "concluida",
+      "percentualConcluido": 100,
+      "createdAt": "2026-02-10T12:00:00Z"
+    },
+    {
+      "id": "e04",
+      "obraId": "a1",
+      "nome": "Estrutura de concreto",
+      "ordem": 4,
+      "percentualPeso": 16,
+      "dataInicioPrevista": "2026-06-15",
+      "dataFimPrevista": "2026-08-14",
+      "dataInicioReal": "2026-06-22",
+      "dataFimReal": "2026-08-21",
+      "status": "concluida",
+      "percentualConcluido": 100,
+      "createdAt": "2026-02-10T12:00:00Z"
+    },
+    {
+      "id": "e05",
+      "obraId": "a1",
+      "nome": "Alvenaria",
+      "ordem": 5,
+      "percentualPeso": 12,
+      "dataInicioPrevista": "2026-08-17",
+      "dataFimPrevista": "2026-10-09",
+      "dataInicioReal": "2026-08-24",
+      "dataFimReal": null,
+      "status": "em_andamento",
+      "percentualConcluido": 85,
+      "createdAt": "2026-02-10T12:00:00Z"
+    }
+  ],
+  "GET /medicoes/m5": {
+    "id": "m5",
+    "obraId": "a1",
+    "etapaId": "e05",
+    "numero": 5,
+    "competencia": "2026-09-01",
+    "valorTotal": 62300,
+    "status": "Approved",
+    "approvedAt": "2026-10-02T15:00:00Z",
+    "approvedByUserId": "00000000-0000-0000-0000-0000000000aa",
+    "nfNumber": null,
+    "nfIssuedAt": null,
+    "createdAt": "2026-09-28T15:00:00Z",
+    "itens": [
+      {
+        "id": "i51",
+        "tipo": "MaoDeObra",
+        "descricao": "Pedreiros e serventes (levantamento de alvenaria, 2º pavimento)",
+        "quantidade": 320,
+        "valorUnitario": 95,
+        "valorTotal": 30400
+      },
+      {
+        "id": "i52",
+        "tipo": "Material",
+        "descricao": "Bloco cerâmico 14x19x29",
+        "quantidade": 8500,
+        "valorUnitario": 3.2,
+        "valorTotal": 27200
+      },
+      {
+        "id": "i53",
+        "tipo": "Equipamento",
+        "descricao": "Locação de betoneira 400 L (mês)",
+        "quantidade": 1,
+        "valorUnitario": 4700,
+        "valorTotal": 4700
+      }
+    ]
+  },
+  "GET /medicoes/m6": {
+    "id": "m6",
+    "obraId": "a1",
+    "etapaId": "e05",
+    "numero": 6,
+    "competencia": "2026-10-01",
+    "valorTotal": 48249.9,
+    "status": "PendingApproval",
+    "approvedAt": null,
+    "approvedByUserId": null,
+    "nfNumber": null,
+    "nfIssuedAt": null,
+    "createdAt": "2026-10-12T15:00:00Z",
+    "itens": [
+      {
+        "id": "i61",
+        "tipo": "MaoDeObra",
+        "descricao": "Equipe de alvenaria (3º pavimento)",
+        "quantidade": 280,
+        "valorUnitario": 95,
+        "valorTotal": 26600
+      },
+      {
+        "id": "i62",
+        "tipo": "Material",
+        "descricao": "Argamassa de assentamento",
+        "quantidade": 420,
+        "valorUnitario": 18.5,
+        "valorTotal": 7770
+      },
+      {
+        "id": "i63",
+        "tipo": "Material",
+        "descricao": "Bloco cerâmico 14x19x29",
+        "quantidade": 3200,
+        "valorUnitario": 3.2,
+        "valorTotal": 10240
+      },
+      {
+        "id": "i64",
+        "tipo": "Equipamento",
+        "descricao": "Andaime tubular (diária)",
+        "quantidade": 15,
+        "valorUnitario": 242.66,
+        "valorTotal": 3639.9
+      }
+    ]
+  },
+  "GET /medicoes/m4": {
+    "id": "m4",
+    "obraId": "a1",
+    "etapaId": null,
+    "numero": 4,
+    "competencia": "2026-08-01",
+    "valorTotal": 51890.25,
+    "status": "InvoiceIssued",
+    "approvedAt": "2026-09-01T15:00:00Z",
+    "approvedByUserId": "00000000-0000-0000-0000-0000000000aa",
+    "nfNumber": "NF-2026-0187",
+    "nfIssuedAt": "2026-09-05T15:00:00Z",
+    "createdAt": "2026-08-27T15:00:00Z",
+    "itens": [
+      {
+        "id": "i41",
+        "tipo": "MaoDeObra",
+        "descricao": "Equipe de acabamento",
+        "quantidade": 200,
+        "valorUnitario": 110,
+        "valorTotal": 22000
+      },
+      {
+        "id": "i42",
+        "tipo": "Material",
+        "descricao": "Revestimento cerâmico 60x60",
+        "quantidade": 480.5,
+        "valorUnitario": 47.5,
+        "valorTotal": 22823.75
+      },
+      {
+        "id": "i43",
+        "tipo": "Equipamento",
+        "descricao": "Caçamba de entulho",
+        "quantidade": 6,
+        "valorUnitario": 177.75,
+        "valorTotal": 1066.5
+      },
+      {
+        "id": "i44",
+        "tipo": "Material",
+        "descricao": "Rejunte flexível",
+        "quantidade": 40,
+        "valorUnitario": 12.5,
+        "valorTotal": 500
+      },
+      {
+        "id": "i45",
+        "tipo": "MaoDeObra",
+        "descricao": "Serviço de limpeza pós-obra",
+        "quantidade": 1,
+        "valorUnitario": 5500,
+        "valorTotal": 5500
+      }
+    ]
+  }
+}

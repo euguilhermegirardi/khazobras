@@ -54,6 +54,7 @@ export const ADMIN_NAV: NavConfig = {
   obra: [
     { label: 'Dashboard', to: '/admin/obras/:obraId', icon: LayoutDashboard, end: true },
     { label: 'Gantt editável', to: '/admin/obras/:obraId/gantt', icon: ChartNoAxesGantt },
+    { label: 'Medições', to: '/admin/obras/:obraId/medicoes', icon: Ruler },
   ],
   // Itens da empresa (Pipeline, Rentabilidade, Histórico, Administração) entram com as suas telas.
   empresa: [],

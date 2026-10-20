@@ -54,6 +54,8 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         { "POST", "/obras" },
         { "POST", "/etapas" },
         { "POST", "/medicoes" },
+        { "POST", $"/medicoes/{Id}/issue-invoice" },
+        { "GET", $"/obras/{Id}/medicoes/resumo" },
         { "POST", "/financeiro/lancamentos" },
         { "POST", $"/financeiro/lancamentos/{Id}/anexos" },
         { "PATCH", $"/financeiro/lancamentos/{Id}/visibilidade" },

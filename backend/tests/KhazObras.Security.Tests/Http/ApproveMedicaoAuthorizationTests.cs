@@ -54,6 +54,8 @@ public sealed class ApproveMedicaoAuthorizationTests : IClassFixture<ApiFactory>
             {
                 services.AddSingleton<IMedicaoRepository>(medicoes);
                 services.AddSingleton<IUserObraRepository>(vinculos);
+                // A aprovacao grava auditoria (SPEC secao 8): sem banco nos testes.
+                services.AddSingleton<ILogAuditoriaRepository>(new FakeLogAuditoriaRepository());
             }))
             .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 

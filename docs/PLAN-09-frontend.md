@@ -48,6 +48,7 @@ sempre "Não iniciada").
 |---|---|---|---|---|
 | A1 | Hub admin ("Meus projetos", SPEC §6 item 1) | ✅ `GET /obras` (admin/master: todas, paginado) | ✅ | `feat/etapas-admin`. Mesma `ObraHubPage` do cliente (props `title`/`description`/`emptyMessage`/`obraPath`), em `/admin`; clicar abre `/admin/obras/:obraId`. Paginação (50 por página) só se `totalItems > pageSize`. Falta: criar/editar obra, avanço % no card (SPEC), Dashboard da obra (placeholder "em construção"). Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
+| A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -56,16 +57,18 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
-- Auditoria: nenhum endpoint de escrita grava `log_auditoria` (inclusive `PUT /etapas`); decidir junto com a integração do log.
+- Auditoria: só as medições gravam `log_auditoria` (criar, aprovar, emitir NF). Os demais endpoints de escrita (inclusive
+  `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
-- Medições (achados do Fechamento): (B3) `MedicaoResponse` devolve `ApprovedByUserId` (id interno) ao cliente — criar DTO
-  reduzido para a visão cliente, como no Financeiro (o front já ignora o campo); `GET /obras/{id}/medicoes` não é paginado
-  (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
+- Medições (backlog, o resto do módulo está pronto: ver Decisões): `GET /obras/{id}/medicoes` do cliente segue array puro
+  (sem paginação) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo; não existem no
+  schema); sem editar/excluir medição nem itens; sem unicidade de número de NF; a auditoria é gravada depois do UPDATE, fora
+  da transação (falha ao gravar = 500 com a medição já alterada).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
-- Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta, não plugada)
+- Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta; plugada só em Medições)
 - PDF consolidado (Fase 10)
 
 ## Decisões
@@ -229,6 +232,65 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   vira `Alert` sem derrubar a lista. Tipo `ProjetoDocumento` (`interfaces/projeto.ts`). Mudança na base: `useEtapas` saiu de
   `modules/relatorio-fotografico` para `hooks/useEtapas.ts` (mesma chave `['obra', id, 'etapas']`), porque Projetos também o usa
   (módulo não importa módulo). Agrupamento puro em `modules/projetos/agrupar.ts`.
+- **Medições, backend** (`feat/medicoes-admin`, 19/10; sem script SQL; escrito na nuvem sem .NET: validar com `dotnet build` e
+  `dotnet test`). Resolve o B3 e prepara a tela admin A3.
+  - **Padrão de acesso em todos os endpoints:** resolve só o `obra_id` (404) → `EnsureAccessAsync` (403) → leitura/escrita
+    com `WHERE id AND obra_id` (inclusive os dois `UPDATE` condicionais) → validação do corpo (400) → regra de estado (409).
+    `issue-invoice` passou de `RequireAuthorization()` + checagem manual para a política `AdminOrMaster` + `EnsureAccessAsync`.
+    `POST /medicoes` agora checa o acesso à obra do corpo **antes** de validar. `MedicaoRepository.GetByIdAsync` (sem obra) removido.
+  - **B3:** cliente recebe `MedicaoClienteResponse` (= `MedicaoResponse` sem `approvedByUserId`) em `GET /obras/{id}/medicoes`
+    (continua array puro), `GET /medicoes/{id}` e `POST /medicoes/{id}/approve`. Admin/Master seguem com `MedicaoResponse`
+    completo. Custo real/margem: não existem em `medicoes`/`medicao_itens`; `valorUnitario`/`valorTotal` dos itens são o
+    medido/cobrado do cliente (previsto/contratado), então nada a esconder; qualquer campo novo de custo exige DTO separado.
+  - **Criar** (`POST /medicoes`, `AdminOrMaster`) → 201 `MedicaoResponse` + `Location`. Body `{ obraId, etapaId?, numero,
+    competencia "yyyy-MM-dd", itens: [{ tipo "mao_de_obra"|"material"|"equipamento", descricao ≤255, quantidade > 0,
+    valorUnitario ≥ 0 }] }`. Validações: numero 1..100000; competência 2000..2100; 1..200 itens; quantidade e valor com no
+    máximo 2 casas e dentro de NUMERIC(12,2)/(14,2); soma cabe em NUMERIC(14,2). O total (item e medição) é **calculado no
+    servidor** (arredonda 2 casas), o corpo não aceita total. Obra inexistente = 404; `etapaId` de outra obra ou inexistente =
+    400 `{ errors: { EtapaId: [...] } }`; número repetido na obra = 409 `{ message }` (também na corrida, pela violação do UNIQUE).
+  - **Lista de acompanhamento (admin):** `GET /obras/{obraId}/medicoes/resumo?pageIndex=0&pageSize=20&status=` (`AdminOrMaster`),
+    `{ totalItems, pageIndex, pageSize, items }`, mais nova primeiro, `pageIndex >= 0` e `pageSize` 1..100 (400 `{ message }`),
+    `status` opcional em snake_case (`pending_approval|approved|invoice_issued`, senão 400). Item: `id, obraId, etapaId,
+    etapaNome, numero, competencia, valorTotal, status (PascalCase), quantidadeItens, createdAt, approvedAt, nfIssuedAt, nfNumber`.
+    O nome da etapa vem de JOIN preso à mesma obra. O detalhe com itens é `GET /medicoes/{id}`. Itens da lista do cliente
+    e do admin agora vêm numa consulta só (`ANY(@Ids)`, sem N+1).
+  - **Emitir NF** (`POST /medicoes/{id}/issue-invoice`, `AdminOrMaster`) body `{ nfNumber }` (obrigatório, ≤50, sem
+    caracteres de controle; 400 `{ errors: { NfNumber: [...] } }`); só a partir de `approved` (senão 409 `{ message }`); 200
+    `MedicaoResponse` completo.
+  - **Auditoria (SPEC §8):** `MedicaoService` grava em `log_auditoria` (`LogAuditoriaService`, sem schema novo) com
+    `entidade = "medicao"`, `entidade_id` = id da medição, `user_id` = usuário do token e ação `medicao_criada`,
+    `medicao_aprovada` ou `medicao_nf_emitida`. `detalhes` só com `obraId`, `numero`, `statusAnterior`, `statusNovo` (sem
+    valores, descrições nem número de NF). Gravada depois do `UPDATE`, fora da transação (backlog: atomicidade).
+  - **Para o front:** o tipo `Medicao` do cliente continua válido (omite `approvedByUserId`; o backend agora também omite).
+    Tela admin deve usar `/resumo` para a tabela e `GET /medicoes/{id}` para o detalhe; listar etapas pelo `etapaNome`.
+  - Testes: `Http/MedicaoAdminTests`, `MedicaoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`;
+    `FakeLogAuditoriaRepository` novo; `FakeMedicaoRepository` com a API presa à obra (mantém atalhos sem obra para os testes antigos).
+- **Medições (admin, front)** (`feat/medicoes-admin`, 19/10): item "Medições" (ícone `Ruler`) em `ADMIN_NAV.obra` depois de "Gantt
+  editável". **Lista** `/admin/obras/:obraId/medicoes`: tabela paginada (20/página, `keepPreviousData`, `components/Pagination`)
+  com Nº (link para o detalhe), Competência (`formatMonthYearTitle`), Etapa (`etapaNome` ou "—"), Itens, Valor total (BRL),
+  Status (Badge: "Aguardando aprovação do cliente" warning / "Aprovada — emitir NF" success / "NF emitida" info), Nº da NF e três
+  datas (criada, aprovada, NF emitida; "—" quando não há, para a altura da linha ser uniforme; células sem quebra de linha, NF
+  incluída, mas o Nº da NF trunca com `title`, pois aceita até 50 caracteres; tabela `table-fixed` + `colgroup` (880px fixos com padding de 6px por célula: NF 112, Competência 128; Etapa flexível e truncada, ≥ ~118px em 1280) para caber em 1280 sem rolar, e o "← Voltar" do detalhe tem a altura do botão para o cabeçalho não pular entre status). Filtro por status
+  (`NativeSelect` -> `status=`; trocar volta à página 1). **KPIs** (Total, Aguardando aprovação, Aprovadas aguardando NF, NF
+  emitida) = 4 consultas a `/resumo` com `pageSize=1` lendo `totalItems` (1 sem filtro + 1 por status): é a contagem da obra
+  inteira, sem baixar páginas e sem somar só a página; se uma falhar, o KPI mostra "—" e a tabela segue. **Criar**: `Dialog`
+  largo (`sm:max-w-5xl`) com RHF + zod + `useFieldArray` (`medicaoForm.ts`, campos como texto; regras do
+  `CreateMedicaoRequestValidator`: número 1..100000, competência `<input type="month">` 2000..2100, 1..200 itens, descrição ≤255,
+  quantidade > 0 e valor ≥ 0 com até 2 casas, soma ≤ limite da coluna). Número padrão = `max(maior número da página, total) + 1`
+  (a lista é por criação, não por número; é só sugestão, o 409 cai no campo número). Etapa opcional via `hooks/useEtapas`
+  (falhar não bloqueia). Totais do item e geral são **só prévia** (soma em centavos inteiros; o servidor recalcula; o body não
+  leva total). Erros: 400 `Itens[0].Tipo` -> `itens.0.tipo` (campo da linha), `Numero`/`Competencia`/`EtapaId` -> campo, `Itens` ->
+  mensagem da lista, o resto + 403/404/500 em `Alert` (500 com `requestId`); 409 no campo número. Sucesso: fecha, `Alert` de
+  sucesso, volta ao filtro "todos" página 1 e invalida lista/totais/detalhe + `['obra', id, 'medicoes']` (Fechamento do cliente).
+  **Detalhe** `/admin/obras/:obraId/medicoes/:medicaoId`: cabeçalho (competência + etapa pelo nome via `useEtapas`), KPIs
+  (valor, itens, status, criada em), faixa por status ("Aguardando aprovação do cliente" sem ação: **admin não aprova**;
+  "Aprovada em ... Emita a NF" + botão "Emitir NF"; "NF nº X emitida em ..."), tabela de itens somente leitura. `approvedByUserId`
+  não está no tipo nem é exibido. Emitir NF: `Dialog` com `nfNumber` (RHF + zod: obrigatório, ≤50, sem `\p{Cc}`), 400 `NfNumber` no
+  campo, 409/403/404/500 em `Alert`; `onSettled` invalida (inclusive no 409). Sem editar/excluir medição (backend não tem).
+  Medição de outra obra na URL = "não encontrada nesta obra". Base: `utils/medicaoItem.ts` (`ITEM_TIPO_LABEL`, que o Fechamento
+  agora re-exporta); `interfaces/medicao.ts` ganhou `MedicaoResumo`, `CreateMedicao*Request`, `IssueInvoiceRequest` e o comentário
+  de `Medicao` foi corrigido (o cliente nunca recebe `approvedByUserId`). Impacto no Fechamento: nenhum no código (o tipo já omitia
+  o campo); o mock do `Fechamento.test` ainda manda o id para provar que não aparece, o que continua válido como defesa.
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
@@ -277,6 +339,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-19 — `feat/medicoes-admin`: feat(medicoes): DTO reduzido ao cliente, acesso preso a obra, validacao, lista admin e auditoria; docs(medicoes): API.md atualizada e registro no PLAN-09; feat(medicoes-admin): tipos do admin, rotulo de item na base e plano da tela A3; feat(medicoes-admin): lista de acompanhamento, criacao de medicao e emissao de NF; test: medicoes-admin lista, criar, detalhe, emitir NF, papel e e2e com mocks de captura; fix(medicoes-admin): passa o total da página ao MedicoesKpis e evita consulta duplicada; fix(medicoes-admin): NF sem quebra de linha na lista e link Voltar alinhado ao botao no detalhe; fix(medicoes-admin): tabela da lista cabe em 1280 com table-fixed e colgroup; fix(medicoes-admin): larguras da tabela pelo conteudo real (NF 112px com truncate+title, Competencia 128px); docs: capturas de medicoes-admin (claro, escuro, 1280). Arquivos: outros (1), backend (10), testes backend (6), docs (13), front (5), front/rotas-layouts (2), modules/fechamento (1), modules/medicoes-admin (21), infra (1).
 - 2026-10-19 — `feat/etapas-admin`: feat(etapas): PUT /etapas/{id} com percentual concluido (script 008); docs: CLAUDE.md cita os scripts 001..008; feat(etapas-admin): hub admin e Gantt editável com edição de etapas; % concluído no cronograma do cliente; docs: registro; docs: registro (base feat/projetos); test: etapas-admin (hub admin, Gantt editável, zod, e2e e mocks de captura) e % no cronograma do cliente; docs: capturas do Gantt editável, hub admin e cronograma com %; docs: relatório da manhã do Gantt editável; harness: builder não apaga assert obsoleto, reporta ao tester. Arquivos: infra (1), outros (1), backend (8), testes backend (2), banco (1), docs (10), front (16), front/rotas-layouts (4), modules/cronograma (4), modules/etapas-admin (12), modules/obras (4).
 - 2026-10-19 — `feat/projetos`: fix(projetos): download preso a obra e liberado ao cliente, upload valida etapa; feat(projetos): tela do cliente com documentos por etapa, visualizar e baixar; test: projetos (unit, página, e2e e mocks de captura); fix(projetos): colunas de largura fixa e igual em todos os cards; fix(projetos): visualizar só PDF/imagem pelo blob.type, espaço na rota; docs: capturas de projetos (claro, escuro, 1280); test: projetos cobre regra de tipos do openBlobInNewTab (html/svg/vazio baixam); docs: relatório da manhã de Projetos. Arquivos: backend (4), testes backend (2), docs (4), front (6), front/rotas-layouts (2), modules/projetos (10), modules/relatorio-fotografico (3).
 - 2026-10-18 — `feat/cronograma`: fix(etapas): detalhe preso a obra, acesso antes da validacao no POST, ordenacao da lista; feat(cronograma): tela do cliente com KPIs e linha do tempo mensal das etapas; test: cronograma (vitest, e2e e mocks de captura); fix(cronograma): meses de largura flexível, linhas mais altas, Hoje e período realizado com a mesma cor da legenda; harness: checklist visual cobre respiro de texto, legenda igual ao elemento e timeline cabendo no card; docs: capturas do cronograma (claro, escuro, 1280); test: cronograma - testes unitarios de timeline (barBox, todayLeft, buildRange); docs: relatório da manhã do Cronograma; harness: plano:registro com --base para branch empilhada. Arquivos: infra (3), backend (4), testes backend (2), docs (4), front (5), front/rotas-layouts (2), modules/cronograma (11).

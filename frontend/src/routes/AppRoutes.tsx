@@ -8,6 +8,8 @@ import { GanttEditavelPage } from '@/modules/etapas-admin/pages/GanttEditavelPag
 import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDetalhePage';
 import { FechamentoPage } from '@/modules/fechamento/pages/FechamentoPage';
 import { FinanceiroPage } from '@/modules/financeiro/pages/FinanceiroPage';
+import { MedicaoAdminDetalhePage } from '@/modules/medicoes-admin/pages/MedicaoAdminDetalhePage';
+import { MedicoesAdminPage } from '@/modules/medicoes-admin/pages/MedicoesAdminPage';
 import { ObraHubPage } from '@/modules/obras/pages/ObraHubPage';
 import { ProjetosPage } from '@/modules/projetos/pages/ProjetosPage';
 import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage';
@@ -74,6 +76,8 @@ export const AppRoutes = () => {
           />
           <Route path="/admin/obras/:obraId" element={<AdminObraDashboardPage />} />
           <Route path="/admin/obras/:obraId/gantt" element={<GanttEditavelPage />} />
+          <Route path="/admin/obras/:obraId/medicoes" element={<MedicoesAdminPage />} />
+          <Route path="/admin/obras/:obraId/medicoes/:medicaoId" element={<MedicaoAdminDetalhePage />} />
         </Route>
       </Route>
 
