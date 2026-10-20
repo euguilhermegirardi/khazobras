@@ -27,7 +27,7 @@ export const MedicaoLinha = ({ medicao, to }: MedicaoLinhaProps) => (
       </Link>
     </TableCell>
     <TableCell className="whitespace-nowrap">{formatMonthYearTitle(medicao.competencia)}</TableCell>
-    <TableCell className="max-w-44 truncate text-muted-foreground" title={medicao.etapaNome ?? undefined}>
+    <TableCell className="truncate text-muted-foreground" title={medicao.etapaNome ?? undefined}>
       {medicao.etapaNome ?? SEM_VALOR}
     </TableCell>
     <TableCell className="text-right">{medicao.quantidadeItens}</TableCell>

@@ -12,7 +12,20 @@ interface MedicoesTabelaProps {
 export const MedicoesTabela = ({ obraId, medicoes }: MedicoesTabelaProps) => (
   <Card>
     <CardContent>
-      <Table>
+      <Table className="table-fixed">
+        {/* Larguras fixas somam ~880px; a Etapa (sem largura) leva o resto e trunca. Cabe em 1280 sem rolar. */}
+        <colgroup>
+          <col className="w-14" />
+          <col className="w-30" />
+          <col />
+          <col className="w-12" />
+          <col className="w-26" />
+          <col className="w-50" />
+          <col className="w-20" />
+          <col className="w-22" />
+          <col className="w-22" />
+          <col className="w-24" />
+        </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead>Nº</TableHead>
