@@ -10,6 +10,7 @@ import { DashboardClientePage } from '@/modules/dashboard/pages/DashboardCliente
 import { GanttEditavelPage } from '@/modules/etapas-admin/pages/GanttEditavelPage';
 import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDetalhePage';
 import { FechamentoPage } from '@/modules/fechamento/pages/FechamentoPage';
+import { FinanceiroAdminPage } from '@/modules/financeiro-admin/pages/FinanceiroAdminPage';
 import { FinanceiroPage } from '@/modules/financeiro/pages/FinanceiroPage';
 import { MedicaoAdminDetalhePage } from '@/modules/medicoes-admin/pages/MedicaoAdminDetalhePage';
 import { MedicoesAdminPage } from '@/modules/medicoes-admin/pages/MedicoesAdminPage';
@@ -82,6 +83,7 @@ export const AppRoutes = () => {
           <Route path="/admin/obras/:obraId/gantt" element={<GanttEditavelPage />} />
           <Route path="/admin/obras/:obraId/medicoes" element={<MedicoesAdminPage />} />
           <Route path="/admin/obras/:obraId/medicoes/:medicaoId" element={<MedicaoAdminDetalhePage />} />
+          <Route path="/admin/obras/:obraId/financeiro" element={<FinanceiroAdminPage />} />
           <Route path="/admin/obras/:obraId/contratos" element={<ContratosAdminPage />} />
         </Route>
       </Route>
