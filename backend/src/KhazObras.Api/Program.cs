@@ -52,6 +52,9 @@ builder.Services.AddScoped<IMedicaoRepository, MedicaoRepository>();
 builder.Services.AddScoped<MedicaoService>();
 builder.Services.AddScoped<IContratoRepository, ContratoRepository>();
 builder.Services.AddScoped<ContratoService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<IDashboardClienteRepository, DashboardClienteRepository>();
+builder.Services.AddScoped<DashboardClienteService>();
 builder.Services.AddScoped<IFinanceiroLancamentoRepository, FinanceiroLancamentoRepository>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<IRelatorioFotograficoRepository, RelatorioFotograficoRepository>();
@@ -614,6 +617,25 @@ app.MapGet("/obras/{obraId:guid}/contratos", async (Guid obraId, ContratoService
 .RequireAuthorization()
 .WithName("GetContratosByObra")
 .WithDescription("Lista os contratos de uma obra com total pago e saldo a pagar calculados no servidor (cliente: visão reduzida)");
+
+app.MapGet("/obras/{obraId:guid}/dashboard", async (Guid obraId, DashboardClienteService dashboardService, ObraAccessService accessService, ClaimsPrincipal principal, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    // DTO unico e seguro para qualquer papel: so valores contratados/medidos, nunca custo real nem margem.
+    var dashboard = await dashboardService.GetAsync(obraId, cancellationToken);
+    return dashboard is null ? Results.NotFound() : Results.Ok(dashboard);
+})
+.RequireAuthorization()
+.WithName("GetDashboardCliente")
+.WithDescription("Dashboard da obra para o cliente: avanço físico, prazo, valores contratado/medido, avanço por etapa e medido por mês (DTO único, sem custo real nem margem)");
 
 app.MapGet("/contratos/{id:guid}", async (Guid id, ContratoService contratoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

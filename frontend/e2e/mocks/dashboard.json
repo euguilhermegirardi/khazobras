@@ -1,0 +1,106 @@
+{
+  "GET /obras/a1/dashboard": {
+    "obra": {
+      "id": "a1",
+      "nome": "Residencial Aurora",
+      "dataInicio": "2025-10-06",
+      "dataPrevisaoTermino": "2026-12-31",
+      "status": "EmAndamento"
+    },
+    "avancoFisicoPercentual": 58.5,
+    "prazo": { "diasRestantes": 72, "dataPrevisaoTermino": "2026-12-31" },
+    "valores": {
+      "valorContratado": 552055,
+      "valorMedidoAcumulado": 366386.55,
+      "valorRestante": 185668.45,
+      "totalPago": 310000
+    },
+    "avancoPorEtapa": [
+      {
+        "etapaId": "e1",
+        "nome": "Terraplenagem e Locação",
+        "ordem": 1,
+        "percentualConcluido": 100,
+        "status": "concluida",
+        "dataInicioPrevista": "2025-10-06",
+        "dataFimPrevista": "2025-11-14"
+      },
+      {
+        "etapaId": "e2",
+        "nome": "Fundações",
+        "ordem": 2,
+        "percentualConcluido": 100,
+        "status": "concluida",
+        "dataInicioPrevista": "2025-11-17",
+        "dataFimPrevista": "2026-01-30"
+      },
+      {
+        "etapaId": "e3",
+        "nome": "Alvenaria de Vedação",
+        "ordem": 3,
+        "percentualConcluido": 100,
+        "status": "concluida",
+        "dataInicioPrevista": "2026-02-02",
+        "dataFimPrevista": "2026-04-17"
+      },
+      {
+        "etapaId": "e4",
+        "nome": "Estrutura (Lajes e Vigas)",
+        "ordem": 4,
+        "percentualConcluido": 100,
+        "status": "concluida",
+        "dataInicioPrevista": "2026-02-16",
+        "dataFimPrevista": "2026-05-29"
+      },
+      {
+        "etapaId": "e5",
+        "nome": "Revestimento Interno (Reboco) com um nome bem comprido para testar o corte do texto",
+        "ordem": 5,
+        "percentualConcluido": 98,
+        "status": "em_andamento",
+        "dataInicioPrevista": "2026-04-20",
+        "dataFimPrevista": "2026-08-14"
+      },
+      {
+        "etapaId": "e6",
+        "nome": "Revestimento Externo (Reboco)",
+        "ordem": 6,
+        "percentualConcluido": 100,
+        "status": "concluida",
+        "dataInicioPrevista": "2026-05-04",
+        "dataFimPrevista": "2026-08-28"
+      },
+      {
+        "etapaId": "e7",
+        "nome": "Cobertura (Telhado)",
+        "ordem": 7,
+        "percentualConcluido": 80,
+        "status": "em_andamento",
+        "dataInicioPrevista": "2026-08-03",
+        "dataFimPrevista": "2026-10-30"
+      },
+      {
+        "etapaId": "e8",
+        "nome": "Impermeabilização",
+        "ordem": 8,
+        "percentualConcluido": 0,
+        "status": "nao_iniciada",
+        "dataInicioPrevista": null,
+        "dataFimPrevista": null
+      }
+    ],
+    "medidoPorMes": [
+      { "competencia": "2025-11-01", "valorMedido": 28500, "valorMedidoAcumulado": 28500 },
+      { "competencia": "2025-12-01", "valorMedido": 12000.5, "valorMedidoAcumulado": 40500.5 },
+      { "competencia": "2026-02-01", "valorMedido": 35000, "valorMedidoAcumulado": 75500.5 },
+      { "competencia": "2026-03-01", "valorMedido": 41000, "valorMedidoAcumulado": 116500.5 },
+      { "competencia": "2026-04-01", "valorMedido": 22000, "valorMedidoAcumulado": 138500.5 },
+      { "competencia": "2026-05-01", "valorMedido": 18500, "valorMedidoAcumulado": 157000.5 },
+      { "competencia": "2026-06-01", "valorMedido": 61000.05, "valorMedidoAcumulado": 218000.55 },
+      { "competencia": "2026-07-01", "valorMedido": 26386, "valorMedidoAcumulado": 244386.55 },
+      { "competencia": "2026-08-01", "valorMedido": 52000, "valorMedidoAcumulado": 296386.55 },
+      { "competencia": "2026-09-01", "valorMedido": 34000, "valorMedidoAcumulado": 330386.55 },
+      { "competencia": "2026-10-01", "valorMedido": 36000, "valorMedidoAcumulado": 366386.55 }
+    ]
+  }
+}

@@ -6,6 +6,7 @@ import { ADMIN_ROLES, CLIENT_ROLES } from '@/auth/roles';
 import { ContratosPage } from '@/modules/contratos/pages/ContratosPage';
 import { ContratosAdminPage } from '@/modules/contratos-admin/pages/ContratosAdminPage';
 import { CronogramaPage } from '@/modules/cronograma/pages/CronogramaPage';
+import { DashboardClientePage } from '@/modules/dashboard/pages/DashboardClientePage';
 import { GanttEditavelPage } from '@/modules/etapas-admin/pages/GanttEditavelPage';
 import { FechamentoDetalhePage } from '@/modules/fechamento/pages/FechamentoDetalhePage';
 import { FechamentoPage } from '@/modules/fechamento/pages/FechamentoPage';
@@ -17,7 +18,7 @@ import { ProjetosPage } from '@/modules/projetos/pages/ProjetosPage';
 import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage';
 import { RelatorioMensalPage } from '@/modules/relatorio-mensal/pages/RelatorioMensalPage';
 import { AdminLayout, ClientLayout } from '@/layouts/RoleLayouts';
-import { AdminObraDashboardPage, ClientObraPage, ForbiddenPage, NotFoundPage } from './pages';
+import { AdminObraDashboardPage, ForbiddenPage, NotFoundPage } from './pages';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const RootRedirect = () => {
@@ -45,7 +46,7 @@ export const AppRoutes = () => {
               />
             }
           />
-          <Route path="/cliente/obras/:obraId" element={<ClientObraPage />} />
+          <Route path="/cliente/obras/:obraId" element={<DashboardClientePage />} />
           <Route path="/cliente/obras/:obraId/cronograma" element={<CronogramaPage />} />
           <Route
             path="/cliente/obras/:obraId/fechamento"

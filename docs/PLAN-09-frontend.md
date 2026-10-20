@@ -34,7 +34,7 @@
 | 6 | Cronograma (sem Curva S) | ✅ `GET /obras/{id}/etapas` (detalhe preso à obra no SQL) + `percentualConcluido` (script 008; edição pelo Gantt admin) | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, com % concluído ao lado da barra (desde `feat/etapas-admin`); 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
 | 7 | Projetos | ✅ `GET /obras/{id}/projetos` + `GET /projetos/{id}/download` (liberado ao cliente da obra, preso à obra no SQL) | ✅ | `feat/projetos` (empilhada sobre `feat/cronograma`). Cards por etapa, Visualizar (PDF/imagem, nova aba) e Baixar; 219 testes na suíte + 4 e2e. 2 rodadas (design: colunas alinhadas; segurança: só PDF/imagem abrem). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-projetos.md` |
 | 8 | Contratos | ✅ `GET /obras/{id}/contratos` (cliente: DTO reduzido com `totalPago`/`saldoAPagar`) + `GET /contratos/{id}` (com pagamentos) | ✅ | `feat/contratos` (empilhada sobre `feat/medicoes-admin`, PR #17; mesclar depois dele; sem script SQL). Front feito: `modules/contratos`, rota `/cliente/obras/:obraId/contratos` (somente leitura). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, backend e front). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
-| 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
+| 9 | Dashboard | ✅ `GET /obras/{id}/dashboard` (DTO único `DashboardClienteResponse`: avanço físico, prazo, valores contratado/medido, avanço por etapa, medido por mês) | ✅ | `feat/dashboard-cliente` (empilhada sobre `feat/contratos`, PR #18; o PR terá base `main` e dirá "mesclar depois do #18"; sem script SQL). Front feito: `modules/dashboard`, rota `/cliente/obras/:obraId` (4 KPIs + "Avanço por etapa" + gráfico "Custo acumulado — todos os meses" com Recharts; somente leitura). Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Dashboard do cliente, backend e front). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 Navbar do cliente cresce uma entrada por tela entregue (ordem do SPEC §5).
 
@@ -68,7 +68,15 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
 - Auditoria: só medições e contratos/pagamentos gravam `log_auditoria` (criar, aprovar, emitir NF, criar contrato, registrar pagamento). Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
-- Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
+- Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
+  Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
+  Backlog do dashboard do cliente: sem integração com Postgres nos testes (os HTTP usam repositório falso, então o SQL de
+  `DashboardClienteRepository` não é coberto por teste automático); `diasRestantes` usa fuso fixo UTC-3 (sem tabela de fusos).
+  Security-reviewer (20/10, informativo): o peso das etapas pode ser estimado por um cliente que cruze várias leituras de
+  `avancoFisicoPercentual` e `percentualConcluido` (não é custo nem margem; confirmar com o engenheiro se o peso é confidencial);
+  `etapas.status` sai em snake_case, fora da convenção PascalCase do front (só consistência de contrato).
+  Visual (design-reviewer): o card do gráfico fica com ~70px de espaço vazio no fim quando o card de etapas é mais alto
+  (opcional: subir a altura do gráfico para ~340px).
 - Medições (backlog, o resto do módulo está pronto: ver Decisões): `GET /obras/{id}/medicoes` do cliente segue array puro
   (sem paginação) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo; não existem no
   schema); sem editar/excluir medição nem itens; sem unicidade de número de NF; a auditoria é gravada depois do UPDATE, fora
@@ -84,7 +92,8 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 - Token em `sessionStorage` (V1). Sem refresh; sessão expira em 8h.
 - Componentes: **shadcn/ui** (Tailwind 4, tema por variáveis CSS em `src/index.css`), código em `src/components/ui/`.
-  Instalados: Button, Card, Badge, Skeleton, Table, Tabs, Alert. Recharts entra com o Dashboard.
+  Instalados: Button, Card, Badge, Skeleton, Table, Tabs, Alert (+ Dialog, Input, NativeSelect). Recharts 3.10.1 (fixa, de
+  25/07/2026) entrou com o Dashboard do cliente.
 - Estado: TanStack Query (servidor) + `useState`/`useReducer` (local) + Context só para a sessão. Sem Zustand.
 - E2E: Playwright em **Chromium** (instalado com o Fechamento, `frontend/e2e/*.e2e.ts`). Era WebKit, mas o Playwright 1.64
   não baixa navegadores no macOS 13 (Mac do usuário): lá usa o Google Chrome instalado (`channel: 'chrome'`, automático;
@@ -355,6 +364,77 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     `GET /obras/{id}/medicoes/resumo?status=invoice_issued&pageIndex=0&pageSize=100`. **Limite:** só a 1ª página (100 mais novas);
     falha ao carregar não bloqueia (hint, "Sem medição"). 400 `ReferenteMedicaoId` -> campo da medição. Sem editar/excluir.
   - Testes antigos ajustados: nenhum (só o re-export de `parseDecimal` mantém `medicaoForm.test` válido).
+- **Dashboard do cliente, backend** (`feat/dashboard-cliente`, 20/10; sem script SQL, sem schema novo). `GET /obras/{obraId}/dashboard`,
+  `RequireAuthorization()`; padrão `EnsureAccessAsync` (cliente de outra obra ou obra inexistente para cliente = 403) → consultas
+  presas a `obra_id` → 404 se a obra não existe (só Admin/Master chegam a esse 404). **DTO único** `DashboardClienteResponse`
+  para qualquer papel (Admin/Master recebem o mesmo JSON; o DTO com KPIs internos vem em outra fase). Um round-trip ao banco:
+  `QueryMultiple` com 4 consultas agregadas (obra, etapas, medições aprovadas por mês, pagamentos dos contratos), todas com
+  `WHERE obra_id = @ObraId`. Auditoria: não (leitura). Formato (camelCase; datas `yyyy-MM-dd`; decimais como número JSON):
+  ```json
+  {
+    "obra": { "id": "770e8400-...", "nome": "Residencial Aurora", "dataInicio": "2026-01-10",
+              "dataPrevisaoTermino": "2026-12-31", "status": "EmAndamento" },
+    "avancoFisicoPercentual": 70.0,
+    "prazo": { "diasRestantes": 72, "dataPrevisaoTermino": "2026-12-31" },
+    "valores": { "valorContratado": 100000.00, "valorMedidoAcumulado": 50000.00, "valorRestante": 50000.00, "totalPago": 12000.00 },
+    "avancoPorEtapa": [
+      { "etapaId": "aa0e8400-...", "nome": "Fundacao", "ordem": 1, "percentualConcluido": 100.00, "status": "concluida",
+        "dataInicioPrevista": "2026-02-01", "dataFimPrevista": "2026-03-15" }
+    ],
+    "medidoPorMes": [
+      { "competencia": "2026-08-01", "valorMedido": 30000.00, "valorMedidoAcumulado": 30000.00 },
+      { "competencia": "2026-10-01", "valorMedido": 20000.00, "valorMedidoAcumulado": 50000.00 }
+    ]
+  }
+  ```
+  - **"Custo acumulado" para o cliente = `valores.valorMedidoAcumulado`**: soma de `valor_total` das medições `approved` +
+    `invoice_issued` (o que ele já aprovou; custo para ELE), nunca o custo real da empresa. A API não tem campo, rótulo nem consulta
+    de custo real/margem/lançamentos do financeiro (regra 7 do CLAUDE.md); o teste varre o JSON por `custo`, `margem`, `peso`,
+    `storageKey`, ids de usuário e pelo valor de um lançamento semeado. `valorRestante = valorContratado − valorMedidoAcumulado`
+    (pode ser **negativo**: o front mostra "Excedeu em R$ X"). `totalPago` = soma dos pagamentos dos contratos da obra (extra,
+    para a tela; o rótulo "Custo acumulado" NÃO é o total pago).
+  - **Avanço físico**: `Σ(percentualConcluido × peso) / Σ(peso)`, com peso negativo tratado como 0; se `Σ(peso) = 0`, média simples;
+    sem etapas = 0; arredondado a **uma casa** (afastando de zero). Calculado no servidor (service) sobre as etapas já lidas,
+    sem consulta extra. `avancoPorEtapa` **não traz o peso** (é critério interno de gestão), nem datas reais, nem `createdAt`;
+    traz `etapaId`, `nome`, `ordem`, `percentualConcluido`, `status` (`nao_iniciada | em_andamento | concluida`) e as datas
+    previstas; ordenado por `ordem` (desempate pela data de início prevista). Datas previstas podem ser `null`.
+  - **Prazo**: `diasRestantes = dataPrevisaoTermino − hoje` (negativo = atrasado, 0 = vence hoje; `null` sem data de previsão).
+    "Hoje" = data UTC do servidor − 3h (America/Sao_Paulo, sem horário de verão), via `TimeProvider` injetado
+    (`TimeProvider.System` em produção; os testes trocam por relógio fixo). 02:00 UTC ainda é o dia anterior.
+  - **`medidoPorMes`**: um item por mês de competência **que tem medição aprovada**, em ordem crescente, **sem preencher meses
+    vazios** (nem zeros entre o primeiro e o último; o front completa a escala do gráfico se quiser). `competencia` é sempre o dia 1
+    (`date_trunc('month')`: duas medições do mesmo mês somam numa linha). `valorMedidoAcumulado` é corrido até aquele mês e o do
+    último item é igual a `valores.valorMedidoAcumulado`. Medição `pending_approval` e de outra obra nunca entram. Sem medição =
+    lista vazia.
+  - `obra.status` segue o mesmo formato do `GET /obras/{id}` (nome do enum: `EmAndamento | Concluida | Pausada`).
+- **Dashboard do cliente, front** (`feat/dashboard-cliente`, 20/10). `modules/dashboard`, rota `/cliente/obras/:obraId` (item
+  "Dashboard" da sidebar, `end`; substitui o placeholder `ClientObraPage`, removido; o do admin `/admin/obras/:obraId` segue
+  placeholder). Tipos em `interfaces/dashboard.ts` (sem campos internos). Chave `['obra', id, 'dashboard']`. Título da página = nome
+  da obra (enquanto carrega, "Dashboard"). Layout `lg:grid-cols-5`: "Avanço por etapa" (2 colunas) + gráfico (3), cards esticados à mesma altura (sem `items-start`).
+  - **KPIs:** Avanço físico (`58,5%`, hint "Calculado a partir das etapas"); Prazo restante (`72 dias` verde + "Previsão: dd/mm/aaaa";
+    `Vence hoje` âmbar; `Prazo vencido há N dias` vermelho + "Previsão era ..."; `Sem prazo definido` neutro; os textos longos em 15px
+    para caber em 1280); **Custo acumulado** = `valorMedidoAcumulado`, hint "medições aprovadas" + "Pago: R$ x"; **Valor restante** com
+    "de R$ contratado". Decisão: `totalPago` vai como linha secundária do card Custo acumulado (o "de R$ contratado" já ocupa o hint do
+    Valor restante), e nunca como o valor principal. Restante negativo: o rótulo vira **"Acima do contratado"** e o valor sai sem
+    sinal, em danger (igual ao "Pago a mais" de Contratos); zero = verde; positivo = âmbar. Regras em `kpis.ts` (puro, testado).
+  - **Avanço por etapa:** linha = `ProgressBar` (nome truncado com `title` + % à direita) + `Badge` do `utils/etapaStatus` (mesmo
+    tom na barra e no badge); `h-11` em todas; ordem do backend; vazio tracejado. `ProgressBar` ganhou `truncate`/`title` no
+    rótulo e `gap-2` (nome longo não encosta no %).
+  - **Gráfico (Recharts, `ComposedChart`):** barras `valorMedido` (`--chart-1`) + linha com pontos `valorMedidoAcumulado`
+    (`--chart-3`, âmbar: sem verde/vermelho de status, legível por daltônicos); cores em `constants.ts` e usadas também na legenda
+    feita à mão (8d). Eixo X `Mar/26` (`formatMonthYearShort`); eixo Y compacto em BRL (`R$ 100 mil`, `formatCurrencyCompact` em
+    `utils/format`) com teto redondo de 4 intervalos (`maximoDoEixo`, evita "R$ 95 mil/190 mil"); tooltip em BRL completo; grade só
+    horizontal tracejada; sem animação; altura fixa 280px; `ResponsiveContainer` com `initialDimension`. Todo mês tem rótulo até 12
+    meses; acima, `interval` numérico fixo `ceil(meses/10)-1` (espaçamento regular; 30 meses = a cada 3). Meses sem medição entre o primeiro e o último são **completados no front** (`completarMeses`:
+    medido 0, acumulado mantido; sem completar se o intervalo passar de 120 meses). `role="img"` + `aria-label` (período e acumulado
+    final) e **tabela `sr-only`** (Mês, Medido no mês, Acumulado) fora do `img`, para leitor de tela; sem botão "Ver tabela". 1 mês =
+    uma barra e um ponto; vazio = "Ainda não há medições aprovadas".
+  - **Base de teste:** `test/setup.ts` ganhou um stub mínimo de `ResizeObserver` (o `ResponsiveContainer` o exige; jsdom não tem). Sem
+    layout real no jsdom: o gráfico renderiza com a `initialDimension`; teste que dependa de medida é e2e. Mock de captura em
+    `e2e/mocks/dashboard.json`.
+  - Erros: `ErrorState` com retry (403 = "Você não tem permissão para esta ação."; 500 com requestId). Obra sem etapas/medições não é
+    erro (cada card mostra o vazio). Sem status da obra na tela (a constante de rótulo mora em `modules/obras`).
+  - Testes antigos afetados: nenhum falhou (placeholder do Dashboard do cliente não tinha teste).
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
@@ -403,6 +483,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-20 — `feat/dashboard-cliente`: feat(dashboard): GET /obras/{id}/dashboard com DTO unico seguro para o cliente, 4 consultas agregadas presas a obra e relogio injetavel; docs: registro; feat(dashboard): base do grafico (recharts 3.10.1 fixa, tipos, moeda compacta, stub de ResizeObserver) e rotulo truncado na ProgressBar; feat(dashboard): tela Dashboard do cliente com 4 KPIs, avanco por etapa e grafico de custo acumulado; test: dashboard do cliente (estados, KPIs, etapas, gráfico, papéis, regra 7); test: dashboard ProgressBar (rótulo truncado) e formatCurrencyCompact; test: dashboard e2e (Chromium) e mock de estresse para captura; fix(dashboard): eixo X com passo fixo e cards da linha com a mesma altura; docs: capturas do dashboard do cliente (claro, escuro, 1280, estresse). Arquivos: outros (1), backend (6), testes backend (2), docs (6), front (12), modules/dashboard (16), front/rotas-layouts (2).
 - 2026-10-20 — `feat/contratos`: feat(contratos): contratos e pagamentos com DTO reduzido ao cliente, totais no SQL, acesso preso a obra e auditoria; docs: registro; feat(contratos): telas Contratos do cliente (somente leitura) e do admin (novo contrato, registrar pagamento); docs: registro; test: contratos (cliente e admin) com Vitest + MSW; test: contratos e2e (cliente e admin) e mocks de captura; docs: capturas de contratos e contratos-admin (claro, escuro, 1280). Arquivos: outros (1), backend (17), testes backend (4), docs (6), front (13), front/rotas-layouts (2), modules/contratos-admin (14), modules/contratos (5), modules/medicoes-admin (1).
 - 2026-10-19 — `feat/medicoes-admin`: feat(medicoes): DTO reduzido ao cliente, acesso preso a obra, validacao, lista admin e auditoria; docs(medicoes): API.md atualizada e registro no PLAN-09; feat(medicoes-admin): tipos do admin, rotulo de item na base e plano da tela A3; feat(medicoes-admin): lista de acompanhamento, criacao de medicao e emissao de NF; test: medicoes-admin lista, criar, detalhe, emitir NF, papel e e2e com mocks de captura; fix(medicoes-admin): passa o total da página ao MedicoesKpis e evita consulta duplicada; fix(medicoes-admin): NF sem quebra de linha na lista e link Voltar alinhado ao botao no detalhe; fix(medicoes-admin): tabela da lista cabe em 1280 com table-fixed e colgroup; fix(medicoes-admin): larguras da tabela pelo conteudo real (NF 112px com truncate+title, Competencia 128px); docs: capturas de medicoes-admin (claro, escuro, 1280). Arquivos: outros (1), backend (10), testes backend (6), docs (13), front (5), front/rotas-layouts (2), modules/fechamento (1), modules/medicoes-admin (21), infra (1).
 - 2026-10-19 — `feat/etapas-admin`: feat(etapas): PUT /etapas/{id} com percentual concluido (script 008); docs: CLAUDE.md cita os scripts 001..008; feat(etapas-admin): hub admin e Gantt editável com edição de etapas; % concluído no cronograma do cliente; docs: registro; docs: registro (base feat/projetos); test: etapas-admin (hub admin, Gantt editável, zod, e2e e mocks de captura) e % no cronograma do cliente; docs: capturas do Gantt editável, hub admin e cronograma com %; docs: relatório da manhã do Gantt editável; harness: builder não apaga assert obsoleto, reporta ao tester. Arquivos: infra (1), outros (1), backend (8), testes backend (2), banco (1), docs (10), front (16), front/rotas-layouts (4), modules/cronograma (4), modules/etapas-admin (12), modules/obras (4).

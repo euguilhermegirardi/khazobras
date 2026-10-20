@@ -24,8 +24,10 @@ export const ProgressBar = ({ label, value, tone = 'info', hideLabel = false }: 
 
   return (
     <div>
-      <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-        <span className={hideLabel ? 'sr-only' : undefined}>{label}</span>
+      <div className="mb-1 flex justify-between gap-2 text-xs text-muted-foreground">
+        <span className={hideLabel ? 'sr-only' : 'min-w-0 truncate'} title={hideLabel ? undefined : label}>
+          {label}
+        </span>
         <span className="ml-auto">{pct}%</span>
       </div>
       <div

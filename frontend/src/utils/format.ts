@@ -5,6 +5,18 @@ export function formatCurrency(value: number): string {
   return currency.format(value);
 }
 
+const currencyCompact = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+/** Eixo de gráfico: 50000 → "R$ 50 mil", 1250000 → "R$ 1,3 mi". Só exibição. */
+export function formatCurrencyCompact(value: number): string {
+  return currencyCompact.format(value);
+}
+
 const decimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
 
 /** Quantidades (até 3 casas) para exibição. */
