@@ -19,6 +19,7 @@
 6. [Módulo Etapas](#módulo-etapas)
 7. [Módulo Medições](#módulo-medições)
    - 7b. [Módulo Contratos e Pagamentos](#módulo-contratos-e-pagamentos)
+   - 7c. [Módulo Dashboard do Cliente](#módulo-dashboard-do-cliente)
 8. [Módulo Financeiro](#módulo-financeiro)
 9. [Módulo Relatórios Fotográficos](#módulo-relatórios-fotográficos)
 10. [Módulo Relatórios Mensais](#módulo-relatórios-mensais)
@@ -613,6 +614,57 @@ são aceitas. Não há limite de soma ao valor contratado.
 
 Auditoria: `entidade = "pagamento"`, ação `pagamento_registrado`, `detalhes` = `{ obraId, contratoId, valor, referenteMedicaoId }`
 (valor entra por ser auditoria financeira; só o Master lê o log).
+
+---
+
+## Módulo Dashboard do Cliente
+
+Resumo da obra para a tela Dashboard do cliente (SPEC §5 item 2). Sem schema novo: lê `obras`, `etapas`, `medicoes`,
+`contratos` e `pagamentos`. Leitura, sem auditoria. Datas em `yyyy-MM-dd`; valores como número JSON (`decimal`).
+
+### 1. Dashboard da Obra
+**GET** `/obras/{obraId}/dashboard`
+
+**Autorização:** qualquer usuário autenticado com acesso à obra (cliente de outra obra = 403; Admin/Master sempre).
+Ordem: 401 → 403 (sem acesso) → 404 (obra inexistente; só Admin/Master chegam aqui, o cliente recebe 403).
+
+**DTO único** (`DashboardClienteResponse`): Admin/Master recebem exatamente o mesmo JSON do cliente. **Nunca** traz custo real,
+margem, lançamentos do financeiro, peso das etapas, `storageKey` nem ids de usuário (regra 7 do CLAUDE.md).
+
+**Response (200):**
+```json
+{
+  "obra": { "id": "770e8400-e29b-41d4-a716-446655440000", "nome": "Residencial Aurora", "dataInicio": "2026-01-10",
+            "dataPrevisaoTermino": "2026-12-31", "status": "EmAndamento" },
+  "avancoFisicoPercentual": 70.0,
+  "prazo": { "diasRestantes": 72, "dataPrevisaoTermino": "2026-12-31" },
+  "valores": { "valorContratado": 100000.00, "valorMedidoAcumulado": 50000.00, "valorRestante": 50000.00, "totalPago": 12000.00 },
+  "avancoPorEtapa": [
+    { "etapaId": "aa0e8400-e29b-41d4-a716-446655440000", "nome": "Fundacao", "ordem": 1, "percentualConcluido": 100.00,
+      "status": "concluida", "dataInicioPrevista": "2026-02-01", "dataFimPrevista": "2026-03-15" }
+  ],
+  "medidoPorMes": [
+    { "competencia": "2026-08-01", "valorMedido": 30000.00, "valorMedidoAcumulado": 30000.00 },
+    { "competencia": "2026-10-01", "valorMedido": 20000.00, "valorMedidoAcumulado": 50000.00 }
+  ]
+}
+```
+
+| Campo | Regra |
+|---|---|
+| `obra.status` | `EmAndamento`, `Concluida` ou `Pausada` (igual ao `GET /obras/{id}`). `dataInicio`/`dataPrevisaoTermino` podem ser `null`. |
+| `avancoFisicoPercentual` | Média de `percentualConcluido` ponderada pelo peso das etapas (`Σ(pct × peso) / Σ(peso)`); pesos todos 0 = média simples; sem etapas = 0. Uma casa decimal. |
+| `prazo.diasRestantes` | `dataPrevisaoTermino − hoje`; **negativo = atrasado**, 0 = vence hoje, `null` sem data de previsão. "Hoje" = data UTC do servidor menos 3h (America/Sao_Paulo). |
+| `valores.valorContratado` | `obras.valor_contratado`. |
+| `valores.valorMedidoAcumulado` | Soma de `valor_total` das medições `approved` e `invoice_issued` da obra (o que o cliente já aprovou). É o "Custo acumulado" da tela do cliente: custo **para ele**, nunca o custo real da empresa. |
+| `valores.valorRestante` | `valorContratado − valorMedidoAcumulado`; **pode ser negativo**. |
+| `valores.totalPago` | Soma dos pagamentos dos contratos da obra. |
+| `avancoPorEtapa` | Ordenado por `ordem`. `status`: `nao_iniciada`, `em_andamento` ou `concluida`. Datas previstas podem ser `null`. Sem peso. |
+| `medidoPorMes` | Um item por mês de competência com medição aprovada (`competencia` = dia 1), em ordem crescente, **sem meses vazios**. `valorMedidoAcumulado` é corrido; o último item é igual a `valores.valorMedidoAcumulado`. Medição `pending_approval` não entra. Sem medição = `[]`. |
+
+Uma única ida ao banco (4 consultas agregadas, todas com `WHERE obra_id`).
+
+**Erros:** 401 sem token, 403 sem acesso à obra, 404 obra inexistente (Admin/Master).
 
 ---
 

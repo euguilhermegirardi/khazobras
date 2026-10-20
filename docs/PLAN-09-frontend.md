@@ -34,7 +34,7 @@
 | 6 | Cronograma (sem Curva S) | ✅ `GET /obras/{id}/etapas` (detalhe preso à obra no SQL) + `percentualConcluido` (script 008; edição pelo Gantt admin) | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, com % concluído ao lado da barra (desde `feat/etapas-admin`); 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
 | 7 | Projetos | ✅ `GET /obras/{id}/projetos` + `GET /projetos/{id}/download` (liberado ao cliente da obra, preso à obra no SQL) | ✅ | `feat/projetos` (empilhada sobre `feat/cronograma`). Cards por etapa, Visualizar (PDF/imagem, nova aba) e Baixar; 219 testes na suíte + 4 e2e. 2 rodadas (design: colunas alinhadas; segurança: só PDF/imagem abrem). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-projetos.md` |
 | 8 | Contratos | ✅ `GET /obras/{id}/contratos` (cliente: DTO reduzido com `totalPago`/`saldoAPagar`) + `GET /contratos/{id}` (com pagamentos) | ✅ | `feat/contratos` (empilhada sobre `feat/medicoes-admin`, PR #17; mesclar depois dele; sem script SQL). Front feito: `modules/contratos`, rota `/cliente/obras/:obraId/contratos` (somente leitura). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, backend e front). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
-| 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
+| 9 | Dashboard | ✅ `GET /obras/{id}/dashboard` (DTO único `DashboardClienteResponse`: avanço físico, prazo, valores contratado/medido, avanço por etapa, medido por mês) | ⬜ | `feat/dashboard-cliente` (empilhada sobre `feat/contratos`, PR #18; o PR terá base `main` e dirá "mesclar depois do #18"; sem script SQL). Só o backend está feito; falta o front (cards + seções). Contrato em "Decisões" (Dashboard do cliente, backend). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 Navbar do cliente cresce uma entrada por tela entregue (ordem do SPEC §5).
 
@@ -68,7 +68,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
 - Auditoria: só medições e contratos/pagamentos gravam `log_auditoria` (criar, aprovar, emitir NF, criar contrato, registrar pagamento). Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
-- Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
+- Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
+  Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
+  Backlog do dashboard do cliente: sem integração com Postgres nos testes (os HTTP usam repositório falso, então o SQL de
+  `DashboardClienteRepository` não é coberto por teste automático); `diasRestantes` usa fuso fixo UTC-3 (sem tabela de fusos).
 - Medições (backlog, o resto do módulo está pronto: ver Decisões): `GET /obras/{id}/medicoes` do cliente segue array puro
   (sem paginação) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo; não existem no
   schema); sem editar/excluir medição nem itens; sem unicidade de número de NF; a auditoria é gravada depois do UPDATE, fora
@@ -355,6 +358,49 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     `GET /obras/{id}/medicoes/resumo?status=invoice_issued&pageIndex=0&pageSize=100`. **Limite:** só a 1ª página (100 mais novas);
     falha ao carregar não bloqueia (hint, "Sem medição"). 400 `ReferenteMedicaoId` -> campo da medição. Sem editar/excluir.
   - Testes antigos ajustados: nenhum (só o re-export de `parseDecimal` mantém `medicaoForm.test` válido).
+- **Dashboard do cliente, backend** (`feat/dashboard-cliente`, 20/10; sem script SQL, sem schema novo). `GET /obras/{obraId}/dashboard`,
+  `RequireAuthorization()`; padrão `EnsureAccessAsync` (cliente de outra obra ou obra inexistente para cliente = 403) → consultas
+  presas a `obra_id` → 404 se a obra não existe (só Admin/Master chegam a esse 404). **DTO único** `DashboardClienteResponse`
+  para qualquer papel (Admin/Master recebem o mesmo JSON; o DTO com KPIs internos vem em outra fase). Um round-trip ao banco:
+  `QueryMultiple` com 4 consultas agregadas (obra, etapas, medições aprovadas por mês, pagamentos dos contratos), todas com
+  `WHERE obra_id = @ObraId`. Auditoria: não (leitura). Formato (camelCase; datas `yyyy-MM-dd`; decimais como número JSON):
+  ```json
+  {
+    "obra": { "id": "770e8400-...", "nome": "Residencial Aurora", "dataInicio": "2026-01-10",
+              "dataPrevisaoTermino": "2026-12-31", "status": "EmAndamento" },
+    "avancoFisicoPercentual": 70.0,
+    "prazo": { "diasRestantes": 72, "dataPrevisaoTermino": "2026-12-31" },
+    "valores": { "valorContratado": 100000.00, "valorMedidoAcumulado": 50000.00, "valorRestante": 50000.00, "totalPago": 12000.00 },
+    "avancoPorEtapa": [
+      { "etapaId": "aa0e8400-...", "nome": "Fundacao", "ordem": 1, "percentualConcluido": 100.00, "status": "concluida",
+        "dataInicioPrevista": "2026-02-01", "dataFimPrevista": "2026-03-15" }
+    ],
+    "medidoPorMes": [
+      { "competencia": "2026-08-01", "valorMedido": 30000.00, "valorMedidoAcumulado": 30000.00 },
+      { "competencia": "2026-10-01", "valorMedido": 20000.00, "valorMedidoAcumulado": 50000.00 }
+    ]
+  }
+  ```
+  - **"Custo acumulado" para o cliente = `valores.valorMedidoAcumulado`**: soma de `valor_total` das medições `approved` +
+    `invoice_issued` (o que ele já aprovou; custo para ELE), nunca o custo real da empresa. A API não tem campo, rótulo nem consulta
+    de custo real/margem/lançamentos do financeiro (regra 7 do CLAUDE.md); o teste varre o JSON por `custo`, `margem`, `peso`,
+    `storageKey`, ids de usuário e pelo valor de um lançamento semeado. `valorRestante = valorContratado − valorMedidoAcumulado`
+    (pode ser **negativo**: o front mostra "Excedeu em R$ X"). `totalPago` = soma dos pagamentos dos contratos da obra (extra,
+    para a tela; o rótulo "Custo acumulado" NÃO é o total pago).
+  - **Avanço físico**: `Σ(percentualConcluido × peso) / Σ(peso)`, com peso negativo tratado como 0; se `Σ(peso) = 0`, média simples;
+    sem etapas = 0; arredondado a **uma casa** (afastando de zero). Calculado no servidor (service) sobre as etapas já lidas,
+    sem consulta extra. `avancoPorEtapa` **não traz o peso** (é critério interno de gestão), nem datas reais, nem `createdAt`;
+    traz `etapaId`, `nome`, `ordem`, `percentualConcluido`, `status` (`nao_iniciada | em_andamento | concluida`) e as datas
+    previstas; ordenado por `ordem` (desempate pela data de início prevista). Datas previstas podem ser `null`.
+  - **Prazo**: `diasRestantes = dataPrevisaoTermino − hoje` (negativo = atrasado, 0 = vence hoje; `null` sem data de previsão).
+    "Hoje" = data UTC do servidor − 3h (America/Sao_Paulo, sem horário de verão), via `TimeProvider` injetado
+    (`TimeProvider.System` em produção; os testes trocam por relógio fixo). 02:00 UTC ainda é o dia anterior.
+  - **`medidoPorMes`**: um item por mês de competência **que tem medição aprovada**, em ordem crescente, **sem preencher meses
+    vazios** (nem zeros entre o primeiro e o último; o front completa a escala do gráfico se quiser). `competencia` é sempre o dia 1
+    (`date_trunc('month')`: duas medições do mesmo mês somam numa linha). `valorMedidoAcumulado` é corrido até aquele mês e o do
+    último item é igual a `valores.valorMedidoAcumulado`. Medição `pending_approval` e de outra obra nunca entram. Sem medição =
+    lista vazia.
+  - `obra.status` segue o mesmo formato do `GET /obras/{id}` (nome do enum: `EmAndamento | Concluida | Pausada`).
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
