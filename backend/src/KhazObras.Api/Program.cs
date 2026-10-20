@@ -350,12 +350,6 @@ app.MapGet("/obras/{obraId:guid}/etapas",async (Guid obraId, EtapaService etapaS
 
 app.MapPost("/medicoes", async (CreateMedicaoRequest request, IValidator<CreateMedicaoRequest> validator, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var validation = await validator.ValidateAsync(request);
-    if (!validation.IsValid)
-    {
-        return Results.ValidationProblem(validation.ToDictionary());
-    }
-
     try
     {
         await accessService.EnsureAccessAsync(principal, request.ObraId);
@@ -365,35 +359,70 @@ app.MapPost("/medicoes", async (CreateMedicaoRequest request, IValidator<CreateM
         return Results.Forbid();
     }
 
-    var result = await medicaoService.CreateAsync(request);
-    return Results.Created($"/medicoes/{result.Id}", result);
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var created = await medicaoService.CreateAsync(request, userId);
+
+    if (created.Status == MedicaoCreateStatus.ObraNaoEncontrada)
+    {
+        return Results.NotFound();
+    }
+
+    if (created.Status == MedicaoCreateStatus.EtapaInvalida)
+    {
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["EtapaId"] = ["A etapa informada nao existe nesta obra."]
+        });
+    }
+
+    if (created.Status == MedicaoCreateStatus.NumeroDuplicado)
+    {
+        return Results.Conflict(new { message = "Ja existe uma medicao com este numero nesta obra." });
+    }
+
+    return Results.Created($"/medicoes/{created.Medicao!.Id}", created.Medicao);
 })
 .RequireAuthorization("AdminOrMaster")
 .WithName("CreateMedicao")
-.WithDescription("Cria medição para uma obra. Estados: pending_approval → approved → invoice_issued");
+.WithDescription("Cria medição para uma obra (somente Admin/Master). Estados: pending_approval → approved → invoice_issued. Etapa precisa ser da mesma obra; número único por obra (409)");
 
 app.MapGet("/medicoes/{id:guid}", async (Guid id, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var result = await medicaoService.GetByIdAsync(id);
-    if (result is null)
+    var obraId = await medicaoService.ResolveMedicaoAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, result.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
-    return Results.Ok(result);
+    var result = await medicaoService.GetByIdAndObraAsync(id, obraId.Value);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    // Cliente recebe a visão reduzida (sem ApprovedByUserId); Admin/Master, a completa.
+    return accessService.IsAdminOrMaster(principal)
+        ? Results.Ok(result)
+        : Results.Ok(MedicaoService.ToClienteView(result));
 })
 .RequireAuthorization()
 .WithName("GetMedicaoById")
-.WithDescription("Retorna detalhes de uma medição específica");
+.WithDescription("Retorna detalhes de uma medição (cliente: visão reduzida, sem ids internos de usuário)");
 
 app.MapGet("/obras/{obraId:guid}/medicoes", async (Guid obraId, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -407,23 +436,58 @@ app.MapGet("/obras/{obraId:guid}/medicoes", async (Guid obraId, MedicaoService m
     }
 
     var result = await medicaoService.GetByObraIdAsync(obraId);
-    return Results.Ok(result);
+
+    // Array puro (contrato do Fechamento). Cliente recebe a visão reduzida; Admin/Master, a completa.
+    if (accessService.IsAdminOrMaster(principal))
+    {
+        return Results.Ok(result);
+    }
+
+    return Results.Ok(result.Select(MedicaoService.ToClienteView).ToList());
 })
 .RequireAuthorization()
 .WithName("GetMedicoesByObra")
-.WithDescription("Lista todas as medições de uma obra");
+.WithDescription("Lista todas as medições de uma obra, com itens, sem paginação (cliente: visão reduzida, sem ids internos de usuário)");
+
+app.MapGet("/obras/{obraId:guid}/medicoes/resumo", async (Guid obraId, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal, int pageIndex = 0, int pageSize = 20, string? status = null) =>
+{
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    if (pageIndex < 0 || pageSize < 1 || pageSize > 100)
+    {
+        return Results.BadRequest(new { message = "pageIndex deve ser >= 0 e pageSize deve estar entre 1 e 100." });
+    }
+
+    if (!MedicaoService.TryParseStatusFiltro(status, out var statusFiltro))
+    {
+        return Results.BadRequest(new { message = "status deve ser pending_approval, approved ou invoice_issued." });
+    }
+
+    var result = await medicaoService.GetResumoPagedByObraIdAsync(obraId, pageIndex, pageSize, statusFiltro);
+    return Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("GetMedicoesResumoByObra")
+.WithDescription("Lista de acompanhamento das medições da obra (paginada, mais nova primeiro, sem itens; filtro opcional por status). Somente Admin/Master");
 
 app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal principal, MedicaoService medicaoService, ObraAccessService accessService) =>
 {
-    var existing = await medicaoService.GetByIdAsync(id);
-    if (existing is null)
+    var obraId = await medicaoService.ResolveMedicaoAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, existing.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
@@ -434,8 +498,10 @@ app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal princ
 
     try
     {
-        var result = await medicaoService.ApproveAsync(id, userId);
-        return Results.Ok(result);
+        var result = await medicaoService.ApproveAsync(id, obraId.Value, userId);
+        return result is null
+            ? Results.NotFound()
+            : Results.Ok(MedicaoService.ToClienteView(result));
     }
     catch (InvalidOperationException ex)
     {
@@ -444,34 +510,46 @@ app.MapPost("/medicoes/{id:guid}/approve", async (Guid id, ClaimsPrincipal princ
 })
 .RequireAuthorization("ClientOnly")
 .WithName("ApproveMedicao")
-.WithDescription("Aprova medição (transição: pending_approval → approved). Somente o cliente da obra; Admin/Master recebem 403");
+.WithDescription("Aprova medição (transição: pending_approval → approved). Somente o cliente da obra; Admin/Master recebem 403. Resposta na visão do cliente");
 
-app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceRequest request, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceRequest request, IValidator<IssueInvoiceRequest> validator, MedicaoService medicaoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var existing = await medicaoService.GetByIdAsync(id);
-    if (existing is null)
+    var obraId = await medicaoService.ResolveMedicaoAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
-    if (!accessService.IsAdminOrMaster(principal))
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
     try
     {
-        var result = await medicaoService.IssueInvoiceAsync(id, request.NfNumber);
-        return Results.Ok(result);
+        var result = await medicaoService.IssueInvoiceAsync(id, obraId.Value, request.NfNumber, userId);
+        return result is null ? Results.NotFound() : Results.Ok(result);
     }
     catch (InvalidOperationException ex)
     {
         return Results.Conflict(new { message = ex.Message });
     }
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
 .WithName("IssueMedicaoInvoice")
-.WithDescription("Emite nota fiscal para medição (transição: approved → invoice_issued). Somente Admin/Master");
+.WithDescription("Emite nota fiscal para medição (transição: approved → invoice_issued; outro status = 409). Somente Admin/Master");
 
 app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest request, IValidator<CreateFinanceiroLancamentoRequest> validator, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {

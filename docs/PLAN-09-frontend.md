@@ -48,6 +48,7 @@ sempre "Não iniciada").
 |---|---|---|---|---|
 | A1 | Hub admin ("Meus projetos", SPEC §6 item 1) | ✅ `GET /obras` (admin/master: todas, paginado) | ✅ | `feat/etapas-admin`. Mesma `ObraHubPage` do cliente (props `title`/`description`/`emptyMessage`/`obraPath`), em `/admin`; clicar abre `/admin/obras/:obraId`. Paginação (50 por página) só se `totalItems > pageSize`. Falta: criar/editar obra, avanço % no card (SPEC), Dashboard da obra (placeholder "em construção"). Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
+| A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ⬜ | só o backend foi feito; tela admin ainda não. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend) |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -56,16 +57,18 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
-- Auditoria: nenhum endpoint de escrita grava `log_auditoria` (inclusive `PUT /etapas`); decidir junto com a integração do log.
+- Auditoria: só as medições gravam `log_auditoria` (criar, aprovar, emitir NF). Os demais endpoints de escrita (inclusive
+  `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
-- Medições (achados do Fechamento): (B3) `MedicaoResponse` devolve `ApprovedByUserId` (id interno) ao cliente — criar DTO
-  reduzido para a visão cliente, como no Financeiro (o front já ignora o campo); `GET /obras/{id}/medicoes` não é paginado
-  (array puro) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo).
+- Medições (backlog, o resto do módulo está pronto: ver Decisões): `GET /obras/{id}/medicoes` do cliente segue array puro
+  (sem paginação) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo; não existem no
+  schema); sem editar/excluir medição nem itens; sem unicidade de número de NF; a auditoria é gravada depois do UPDATE, fora
+  da transação (falha ao gravar = 500 com a medição já alterada).
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
-- Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta, não plugada)
+- Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta; plugada só em Medições)
 - PDF consolidado (Fase 10)
 
 ## Decisões
@@ -229,6 +232,39 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   vira `Alert` sem derrubar a lista. Tipo `ProjetoDocumento` (`interfaces/projeto.ts`). Mudança na base: `useEtapas` saiu de
   `modules/relatorio-fotografico` para `hooks/useEtapas.ts` (mesma chave `['obra', id, 'etapas']`), porque Projetos também o usa
   (módulo não importa módulo). Agrupamento puro em `modules/projetos/agrupar.ts`.
+- **Medições, backend** (`feat/medicoes-admin`, 19/10; sem script SQL; escrito na nuvem sem .NET: validar com `dotnet build` e
+  `dotnet test`). Resolve o B3 e prepara a tela admin A3.
+  - **Padrão de acesso em todos os endpoints:** resolve só o `obra_id` (404) → `EnsureAccessAsync` (403) → leitura/escrita
+    com `WHERE id AND obra_id` (inclusive os dois `UPDATE` condicionais) → validação do corpo (400) → regra de estado (409).
+    `issue-invoice` passou de `RequireAuthorization()` + checagem manual para a política `AdminOrMaster` + `EnsureAccessAsync`.
+    `POST /medicoes` agora checa o acesso à obra do corpo **antes** de validar. `MedicaoRepository.GetByIdAsync` (sem obra) removido.
+  - **B3:** cliente recebe `MedicaoClienteResponse` (= `MedicaoResponse` sem `approvedByUserId`) em `GET /obras/{id}/medicoes`
+    (continua array puro), `GET /medicoes/{id}` e `POST /medicoes/{id}/approve`. Admin/Master seguem com `MedicaoResponse`
+    completo. Custo real/margem: não existem em `medicoes`/`medicao_itens`; `valorUnitario`/`valorTotal` dos itens são o
+    medido/cobrado do cliente (previsto/contratado), então nada a esconder; qualquer campo novo de custo exige DTO separado.
+  - **Criar** (`POST /medicoes`, `AdminOrMaster`) → 201 `MedicaoResponse` + `Location`. Body `{ obraId, etapaId?, numero,
+    competencia "yyyy-MM-dd", itens: [{ tipo "mao_de_obra"|"material"|"equipamento", descricao ≤255, quantidade > 0,
+    valorUnitario ≥ 0 }] }`. Validações: numero 1..100000; competência 2000..2100; 1..200 itens; quantidade e valor com no
+    máximo 2 casas e dentro de NUMERIC(12,2)/(14,2); soma cabe em NUMERIC(14,2). O total (item e medição) é **calculado no
+    servidor** (arredonda 2 casas), o corpo não aceita total. Obra inexistente = 404; `etapaId` de outra obra ou inexistente =
+    400 `{ errors: { EtapaId: [...] } }`; número repetido na obra = 409 `{ message }` (também na corrida, pela violação do UNIQUE).
+  - **Lista de acompanhamento (admin):** `GET /obras/{obraId}/medicoes/resumo?pageIndex=0&pageSize=20&status=` (`AdminOrMaster`),
+    `{ totalItems, pageIndex, pageSize, items }`, mais nova primeiro, `pageIndex >= 0` e `pageSize` 1..100 (400 `{ message }`),
+    `status` opcional em snake_case (`pending_approval|approved|invoice_issued`, senão 400). Item: `id, obraId, etapaId,
+    etapaNome, numero, competencia, valorTotal, status (PascalCase), quantidadeItens, createdAt, approvedAt, nfIssuedAt, nfNumber`.
+    O nome da etapa vem de JOIN preso à mesma obra. O detalhe com itens é `GET /medicoes/{id}`. Itens da lista do cliente
+    e do admin agora vêm numa consulta só (`ANY(@Ids)`, sem N+1).
+  - **Emitir NF** (`POST /medicoes/{id}/issue-invoice`, `AdminOrMaster`) body `{ nfNumber }` (obrigatório, ≤50, sem
+    caracteres de controle; 400 `{ errors: { NfNumber: [...] } }`); só a partir de `approved` (senão 409 `{ message }`); 200
+    `MedicaoResponse` completo.
+  - **Auditoria (SPEC §8):** `MedicaoService` grava em `log_auditoria` (`LogAuditoriaService`, sem schema novo) com
+    `entidade = "medicao"`, `entidade_id` = id da medição, `user_id` = usuário do token e ação `medicao_criada`,
+    `medicao_aprovada` ou `medicao_nf_emitida`. `detalhes` só com `obraId`, `numero`, `statusAnterior`, `statusNovo` (sem
+    valores, descrições nem número de NF). Gravada depois do `UPDATE`, fora da transação (backlog: atomicidade).
+  - **Para o front:** o tipo `Medicao` do cliente continua válido (omite `approvedByUserId`; o backend agora também omite).
+    Tela admin deve usar `/resumo` para a tabela e `GET /medicoes/{id}` para o detalhe; listar etapas pelo `etapaNome`.
+  - Testes: `Http/MedicaoAdminTests`, `MedicaoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`;
+    `FakeLogAuditoriaRepository` novo; `FakeMedicaoRepository` com a API presa à obra (mantém atalhos sem obra para os testes antigos).
 - Shell: "← Minhas obras" (volta ao hub) fica no `AppShell` e aparece em toda tela da obra, não só no Dashboard.
   Hover dos itens da sidebar: fundo escuro e texto claro (tokens `--sidebar-hover`, `--sidebar-hover-empresa`,
   `--sidebar-hover-foreground`), azul no bloco da obra e verde no da empresa. Pedido do Guilherme (18/10).
