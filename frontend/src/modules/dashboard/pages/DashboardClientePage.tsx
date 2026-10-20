@@ -52,7 +52,7 @@ export const DashboardClientePage = () => {
     <PageSection title={data.obra.nome} description={DESCRICAO}>
       <div className="flex flex-col gap-3.5">
         <DashboardKpis dashboard={data} />
-        <div className="grid items-start gap-3.5 lg:grid-cols-5">
+        <div className="grid gap-3.5 lg:grid-cols-5">
           <EtapasAvancoCard etapas={data.avancoPorEtapa} />
           <CustoAcumuladoCard medidoPorMes={data.medidoPorMes} />
         </div>

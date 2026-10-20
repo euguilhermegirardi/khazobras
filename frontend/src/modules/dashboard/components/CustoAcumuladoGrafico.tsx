@@ -10,6 +10,8 @@ interface CustoAcumuladoGraficoProps {
 
 /** Até aqui todo mês tem rótulo no eixo X (cabe em 1280); acima, o Recharts pula alguns. */
 const MESES_TODOS_ROTULOS = 12;
+/** Rótulos no máximo ~10: passo fixo (espaçamento regular, o último rótulo não cola na borda do card). */
+const ROTULOS_MAXIMOS = 10;
 const TICK = { fill: 'var(--muted-foreground)', fontSize: 11 };
 const EIXO = { stroke: 'var(--border)' };
 const TOOLTIP_BOX = {
@@ -19,6 +21,10 @@ const TOOLTIP_BOX = {
   color: 'var(--card-foreground)',
   fontSize: 12,
 };
+
+/** `interval` do Recharts é quantos rótulos pular entre dois exibidos (0 = todos). */
+const intervaloDoEixo = (meses: number): number =>
+  meses <= MESES_TODOS_ROTULOS ? 0 : Math.ceil(meses / ROTULOS_MAXIMOS) - 1;
 
 /**
  * Barras (medido no mês) + linha (acumulado). Sem 3D, só grade horizontal leve. Largura segue o card; altura fixa.
@@ -33,14 +39,7 @@ export const CustoAcumuladoGrafico = ({ serie }: CustoAcumuladoGraficoProps) => 
     >
       <ComposedChart data={serie} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} accessibilityLayer={false}>
         <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
-        <XAxis
-          dataKey="rotulo"
-          tick={TICK}
-          axisLine={EIXO}
-          tickLine={false}
-          interval={serie.length <= MESES_TODOS_ROTULOS ? 0 : 'preserveStartEnd'}
-          minTickGap={8}
-        />
+        <XAxis dataKey="rotulo" tick={TICK} axisLine={EIXO} tickLine={false} interval={intervaloDoEixo(serie.length)} />
         <YAxis
           tick={TICK}
           axisLine={false}
