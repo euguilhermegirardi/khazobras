@@ -1,0 +1,76 @@
+{
+  "GET /obras/a1/contratos": [
+    {
+      "id": "c1",
+      "obraId": "a1",
+      "numero": "CT-2026/01",
+      "valorContratado": 180000,
+      "dataAssinatura": "2026-03-02",
+      "totalPago": 192500.5,
+      "saldoAPagar": -12500.5
+    },
+    {
+      "id": "c2",
+      "obraId": "a1",
+      "numero": "CT-2026/02",
+      "valorContratado": 85000,
+      "dataAssinatura": "2026-08-18",
+      "totalPago": 30000,
+      "saldoAPagar": 55000
+    }
+  ],
+  "GET /contratos/c1": {
+    "id": "c1",
+    "obraId": "a1",
+    "numero": "CT-2026/01",
+    "valorContratado": 180000,
+    "dataAssinatura": "2026-03-02",
+    "totalPago": 192500.5,
+    "saldoAPagar": -12500.5,
+    "pagamentos": [
+      {
+        "id": "p3",
+        "referenteMedicaoId": "m4",
+        "referenteMedicaoNumero": 4,
+        "valor": 62500.5,
+        "dataPagamento": "2026-09-10",
+        "formaPagamento": "TED"
+      },
+      {
+        "id": "p2",
+        "referenteMedicaoId": "m2",
+        "referenteMedicaoNumero": 2,
+        "valor": 80000,
+        "dataPagamento": "2026-07-15",
+        "formaPagamento": "Pix"
+      },
+      {
+        "id": "p1",
+        "referenteMedicaoId": null,
+        "referenteMedicaoNumero": null,
+        "valor": 50000,
+        "dataPagamento": "2026-04-02",
+        "formaPagamento": null
+      }
+    ]
+  },
+  "GET /contratos/c2": {
+    "id": "c2",
+    "obraId": "a1",
+    "numero": "CT-2026/02",
+    "valorContratado": 85000,
+    "dataAssinatura": "2026-08-18",
+    "totalPago": 30000,
+    "saldoAPagar": 55000,
+    "pagamentos": [
+      {
+        "id": "p4",
+        "referenteMedicaoId": "m3",
+        "referenteMedicaoNumero": 3,
+        "valor": 30000,
+        "dataPagamento": "2026-09-25",
+        "formaPagamento": "Pix"
+      }
+    ]
+  }
+}

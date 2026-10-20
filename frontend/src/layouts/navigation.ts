@@ -3,6 +3,7 @@ import {
   CalendarDays,
   Camera,
   ChartNoAxesGantt,
+  FileSignature,
   FileText,
   FolderOpen,
   LayoutDashboard,
@@ -42,6 +43,7 @@ export const CLIENT_NAV: NavConfig = {
     { label: 'Cronograma', to: '/cliente/obras/:obraId/cronograma', icon: CalendarDays },
     { label: 'Fechamento', to: '/cliente/obras/:obraId/fechamento', icon: Ruler },
     { label: 'Financeiro', to: '/cliente/obras/:obraId/financeiro', icon: Wallet },
+    { label: 'Contratos', to: '/cliente/obras/:obraId/contratos', icon: FileSignature },
     { label: 'Relatório fotográfico', to: '/cliente/obras/:obraId/relatorio-fotografico', icon: Camera },
     { label: 'Relatório mensal', to: '/cliente/obras/:obraId/relatorio-mensal', icon: FileText },
     { label: 'Projetos', to: '/cliente/obras/:obraId/projetos', icon: FolderOpen },
@@ -55,6 +57,7 @@ export const ADMIN_NAV: NavConfig = {
     { label: 'Dashboard', to: '/admin/obras/:obraId', icon: LayoutDashboard, end: true },
     { label: 'Gantt editável', to: '/admin/obras/:obraId/gantt', icon: ChartNoAxesGantt },
     { label: 'Medições', to: '/admin/obras/:obraId/medicoes', icon: Ruler },
+    { label: 'Contratos', to: '/admin/obras/:obraId/contratos', icon: FileSignature },
   ],
   // Itens da empresa (Pipeline, Rentabilidade, Histórico, Administração) entram com as suas telas.
   empresa: [],

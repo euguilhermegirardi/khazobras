@@ -1,0 +1,159 @@
+{
+  "GET /obras/a1/contratos": [
+    {
+      "id": "c1",
+      "obraId": "a1",
+      "numero": "CT-2026/01",
+      "valorContratado": 180000,
+      "dataAssinatura": "2026-03-02",
+      "totalPago": 192500.5,
+      "saldoAPagar": -12500.5,
+      "createdAt": "2026-03-03T12:00:00Z",
+      "updatedAt": "2026-03-03T12:00:00Z"
+    },
+    {
+      "id": "c2",
+      "obraId": "a1",
+      "numero": "CT-2026/02",
+      "valorContratado": 85000,
+      "dataAssinatura": "2026-08-18",
+      "totalPago": 30000,
+      "saldoAPagar": 55000,
+      "createdAt": "2026-08-19T12:00:00Z",
+      "updatedAt": "2026-08-19T12:00:00Z"
+    }
+  ],
+  "GET /contratos/c1": {
+    "id": "c1",
+    "obraId": "a1",
+    "numero": "CT-2026/01",
+    "valorContratado": 180000,
+    "dataAssinatura": "2026-03-02",
+    "totalPago": 192500.5,
+    "saldoAPagar": -12500.5,
+    "createdAt": "2026-03-03T12:00:00Z",
+    "updatedAt": "2026-03-03T12:00:00Z",
+    "pagamentos": [
+      {
+        "id": "p3",
+        "contratoId": "c1",
+        "referenteMedicaoId": "m4",
+        "referenteMedicaoNumero": 4,
+        "valor": 62500.5,
+        "dataPagamento": "2026-09-10",
+        "formaPagamento": "TED",
+        "createdAt": "2026-09-10T18:00:00Z"
+      },
+      {
+        "id": "p2",
+        "contratoId": "c1",
+        "referenteMedicaoId": "m2",
+        "referenteMedicaoNumero": 2,
+        "valor": 80000,
+        "dataPagamento": "2026-07-15",
+        "formaPagamento": "Pix",
+        "createdAt": "2026-07-15T18:00:00Z"
+      },
+      {
+        "id": "p1",
+        "contratoId": "c1",
+        "referenteMedicaoId": null,
+        "referenteMedicaoNumero": null,
+        "valor": 50000,
+        "dataPagamento": "2026-04-02",
+        "formaPagamento": null,
+        "createdAt": "2026-04-02T18:00:00Z"
+      }
+    ]
+  },
+  "GET /contratos/c2": {
+    "id": "c2",
+    "obraId": "a1",
+    "numero": "CT-2026/02",
+    "valorContratado": 85000,
+    "dataAssinatura": "2026-08-18",
+    "totalPago": 30000,
+    "saldoAPagar": 55000,
+    "createdAt": "2026-08-19T12:00:00Z",
+    "updatedAt": "2026-08-19T12:00:00Z",
+    "pagamentos": [
+      {
+        "id": "p4",
+        "contratoId": "c2",
+        "referenteMedicaoId": "m3",
+        "referenteMedicaoNumero": 3,
+        "valor": 30000,
+        "dataPagamento": "2026-09-25",
+        "formaPagamento": "Pix",
+        "createdAt": "2026-09-25T18:00:00Z"
+      }
+    ]
+  },
+  "GET /obras/a1/medicoes/resumo": {
+    "totalItems": 4,
+    "pageIndex": 0,
+    "pageSize": 100,
+    "items": [
+      {
+        "id": "m4",
+        "obraId": "a1",
+        "etapaId": null,
+        "etapaNome": null,
+        "numero": 4,
+        "competencia": "2026-08-01",
+        "valorTotal": 51890.25,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 5,
+        "createdAt": "2026-08-27T15:00:00Z",
+        "approvedAt": "2026-09-01T15:00:00Z",
+        "nfIssuedAt": "2026-09-05T15:00:00Z",
+        "nfNumber": "NF-2026-0187"
+      },
+      {
+        "id": "m3",
+        "obraId": "a1",
+        "etapaId": "e04",
+        "etapaNome": "Estrutura de concreto",
+        "numero": 3,
+        "competencia": "2026-07-01",
+        "valorTotal": 74100,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 6,
+        "createdAt": "2026-07-28T15:00:00Z",
+        "approvedAt": "2026-08-03T15:00:00Z",
+        "nfIssuedAt": "2026-08-07T15:00:00Z",
+        "nfNumber": "NF-2026-0152"
+      },
+      {
+        "id": "m2",
+        "obraId": "a1",
+        "etapaId": "e03",
+        "etapaNome": "Fundação e baldrame",
+        "numero": 2,
+        "competencia": "2026-06-01",
+        "valorTotal": 39870.4,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 3,
+        "createdAt": "2026-06-26T15:00:00Z",
+        "approvedAt": "2026-07-01T15:00:00Z",
+        "nfIssuedAt": "2026-07-04T15:00:00Z",
+        "nfNumber": "NF-2026-0121"
+      },
+      {
+        "id": "m1",
+        "obraId": "a1",
+        "etapaId": "e02",
+        "etapaNome": "Locação e escavação",
+        "numero": 1,
+        "competencia": "2026-05-01",
+        "valorTotal": 18500,
+        "status": "InvoiceIssued",
+        "quantidadeItens": 2,
+        "createdAt": "2026-05-29T15:00:00Z",
+        "approvedAt": "2026-06-03T15:00:00Z",
+        "nfIssuedAt": "2026-06-08T15:00:00Z",
+        "nfNumber": "NF-2026-0098"
+      }
+    ]
+  }
+}

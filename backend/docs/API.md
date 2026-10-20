@@ -18,6 +18,7 @@
 5. [Módulo Obras](#módulo-obras)
 6. [Módulo Etapas](#módulo-etapas)
 7. [Módulo Medições](#módulo-medições)
+   - 7b. [Módulo Contratos e Pagamentos](#módulo-contratos-e-pagamentos)
 8. [Módulo Financeiro](#módulo-financeiro)
 9. [Módulo Relatórios Fotográficos](#módulo-relatórios-fotográficos)
 10. [Módulo Relatórios Mensais](#módulo-relatórios-mensais)
@@ -495,6 +496,123 @@ Emite nota fiscal para medição (transição: `approved` → `invoice_issued`).
 Medição fora de `approved` = 409 `{ "message": "..." }`.
 
 **Response (200 OK):** `MedicaoResponse` completo, com `"status": "InvoiceIssued"`, `nfNumber` e `nfIssuedAt`.
+
+---
+
+## Módulo Contratos e Pagamentos
+
+Contratos da obra e pagamentos recebidos do cliente (SPEC §5 item 6, §8). Tabelas `contratos` e `pagamentos` (script 004,
+sem schema novo). Datas em `yyyy-MM-dd`; valores em `decimal` com no máximo 2 casas (`NUMERIC(14,2)`, até
+999.999.999.999,99). Enums: nenhum. Sem `PUT`/`DELETE` e sem upload do documento no V1.
+
+Ordem de verificação em todos os endpoints: 404 (contrato/obra inexistente) → 403 (sem acesso à obra) → 400 (corpo) →
+409 (número repetido). `storage_key` nunca é exposta. Cliente nunca recebe custo real/margem: só valor contratado e o
+que ele pagou.
+
+`totalPago` = `SUM(pagamentos.valor)` (SQL agregado, sem N+1). `saldoAPagar` = `valorContratado - totalPago` e **pode ser
+negativo** (a API não impede pagamento acima do contratado: adiantamentos e aditivos existem).
+
+### 1. Criar Contrato
+**POST** `/contratos`
+
+**Autorização:** Admin, Master (cliente = 403, mesmo com corpo inválido)
+
+**Request:**
+```json
+{ "obraId": "770e8400-e29b-41d4-a716-446655440000", "numero": "CT-2026/01", "valorContratado": 125000.55, "dataAssinatura": "2026-03-15" }
+```
+
+`numero`: obrigatório, até 50 caracteres, sem caracteres de controle, único por obra (409, inclusive em corrida pela UNIQUE;
+espaços nas pontas são removidos antes de comparar). `valorContratado` > 0. `dataAssinatura` opcional (2000..2100).
+
+**Response (201 Created, `Location: /contratos/{id}`):** `ContratoResponse`
+```json
+{
+  "id": "aa0e8400-e29b-41d4-a716-446655440000", "obraId": "770e8400-e29b-41d4-a716-446655440000",
+  "numero": "CT-2026/01", "valorContratado": 125000.55, "dataAssinatura": "2026-03-15",
+  "totalPago": 0, "saldoAPagar": 125000.55,
+  "createdAt": "2026-10-19T10:00:00Z", "updatedAt": "2026-10-19T10:00:00Z"
+}
+```
+
+**Erros:** 400 `{ "errors": { "Numero": ["..."], "ValorContratado": ["..."] } }`, 403, 404 (obra inexistente),
+409 `{ "message": "Ja existe um contrato com este numero nesta obra." }`.
+
+Auditoria: `log_auditoria` com `entidade = "contrato"`, ação `contrato_criado`, `detalhes` = `{ obraId, numero, valorContratado }`.
+
+### 2. Listar Contratos de uma Obra
+**GET** `/obras/{obraId}/contratos`
+
+Array puro (poucos contratos por obra; sem paginação), mais antigo primeiro.
+
+**Autorização:** Qualquer usuário com acesso à obra (cliente de outra obra = 403)
+
+Admin/Master: `ContratoResponse` (mesmo JSON do 201). Cliente: `ContratoClienteResponse`:
+```json
+[
+  {
+    "id": "aa0e8400-e29b-41d4-a716-446655440000", "obraId": "770e8400-e29b-41d4-a716-446655440000",
+    "numero": "CT-2026/01", "valorContratado": 125000.55, "dataAssinatura": "2026-03-15",
+    "totalPago": 5500.50, "saldoAPagar": 119500.05
+  }
+]
+```
+Sem `createdAt`, `updatedAt` nem `storageKey`.
+
+### 3. Obter Contrato por ID (com pagamentos)
+**GET** `/contratos/{id}`
+
+**Autorização:** Qualquer usuário com acesso à obra do contrato. Pagamentos ordenados por `dataPagamento` desc
+(depois `createdAt` desc). Sem paginação.
+
+Admin/Master: `ContratoDetalheResponse` (campos de `ContratoResponse` + `pagamentos` de `PagamentoResponse`).
+Cliente: `ContratoDetalheClienteResponse`:
+```json
+{
+  "id": "aa0e8400-e29b-41d4-a716-446655440000", "obraId": "770e8400-e29b-41d4-a716-446655440000",
+  "numero": "CT-2026/01", "valorContratado": 125000.55, "dataAssinatura": "2026-03-15",
+  "totalPago": 5500.50, "saldoAPagar": 119500.05,
+  "pagamentos": [
+    { "id": "bb0e8400-e29b-41d4-a716-446655440000", "referenteMedicaoId": "990e8400-e29b-41d4-a716-446655440000",
+      "referenteMedicaoNumero": 3, "valor": 2500.50, "dataPagamento": "2026-06-01", "formaPagamento": "TED" },
+    { "id": "cc0e8400-e29b-41d4-a716-446655440000", "referenteMedicaoId": null,
+      "referenteMedicaoNumero": null, "valor": 3000.00, "dataPagamento": "2026-04-01", "formaPagamento": null }
+  ]
+}
+```
+Para Admin/Master, cada pagamento também traz `contratoId` e `createdAt`.
+
+### 4. Registrar Pagamento
+**POST** `/contratos/{id}/pagamentos`
+
+**Autorização:** Admin, Master (cliente = 403, mesmo com corpo inválido)
+
+**Request:**
+```json
+{ "valor": 2500.50, "dataPagamento": "2026-06-01", "formaPagamento": "TED", "referenteMedicaoId": "990e8400-e29b-41d4-a716-446655440000" }
+```
+
+`valor` > 0. `dataPagamento` obrigatória, de 2000 até **hoje + 1 dia** (UTC; pagamento já recebido, o dia a mais cobre fuso).
+`formaPagamento` opcional (≤ 50, vazio vira `null`). `referenteMedicaoId` opcional: a medição precisa ser **da mesma obra do
+contrato** e estar com **NF emitida** (`invoice_issued`, SPEC §8); senão 400 `errors.ReferenteMedicaoId` com a mesma
+mensagem para inexistente, de outra obra ou sem NF (não revela medições de outras obras). Várias parcelas da mesma medição
+são aceitas. Não há limite de soma ao valor contratado.
+
+**Response (201 Created, `Location: /contratos/{id}`):** `PagamentoResponse`
+```json
+{
+  "id": "bb0e8400-e29b-41d4-a716-446655440000", "contratoId": "aa0e8400-e29b-41d4-a716-446655440000",
+  "referenteMedicaoId": "990e8400-e29b-41d4-a716-446655440000", "referenteMedicaoNumero": null,
+  "valor": 2500.50, "dataPagamento": "2026-06-01", "formaPagamento": "TED", "createdAt": "2026-10-19T10:00:00Z"
+}
+```
+(`referenteMedicaoNumero` só vem preenchido nas leituras; no 201 é `null`.)
+
+**Erros:** 400 `{ "errors": { "Valor": ["..."], "DataPagamento": ["..."], "ReferenteMedicaoId": ["A medicao informada deve ser desta obra e ter nota fiscal emitida."] } }`,
+403, 404 (contrato inexistente).
+
+Auditoria: `entidade = "pagamento"`, ação `pagamento_registrado`, `detalhes` = `{ obraId, contratoId, valor, referenteMedicaoId }`
+(valor entra por ser auditoria financeira; só o Master lê o log).
 
 ---
 
