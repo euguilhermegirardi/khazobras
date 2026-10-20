@@ -1,0 +1,31 @@
+import { KpiCard } from '@/components/KpiCard';
+import { useMedicoesTotal } from '../hooks';
+
+interface MedicoesKpisProps {
+  obraId: string;
+}
+
+/**
+ * Contagens da obra inteira (não só da página): 1 consulta por status com `pageSize=1`, lendo `totalItems`.
+ * Enquanto carrega ou se uma consulta falhar, o indicador mostra "—" (a tabela segue funcionando).
+ */
+export const MedicoesKpis = ({ obraId }: MedicoesKpisProps) => {
+  // Hooks
+  const total = useMedicoesTotal(obraId);
+  const aguardando = useMedicoesTotal(obraId, 'pending_approval');
+  const aprovadas = useMedicoesTotal(obraId, 'approved');
+  const comNf = useMedicoesTotal(obraId, 'invoice_issued');
+
+  // Functions
+  const valor = (consulta: { data: number | undefined }) => consulta.data ?? '—';
+
+  // Return
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <KpiCard label="Total de medições" value={valor(total)} tone="info" />
+      <KpiCard label="Aguardando aprovação" value={valor(aguardando)} tone="warning" />
+      <KpiCard label="Aprovadas, aguardando NF" value={valor(aprovadas)} tone="success" />
+      <KpiCard label="NF emitida" value={valor(comNf)} tone="neutral" />
+    </div>
+  );
+};
