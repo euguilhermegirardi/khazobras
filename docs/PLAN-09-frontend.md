@@ -51,7 +51,7 @@ sempre "Não iniciada").
 | A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 | A4 | Contratos (SPEC §6 item 9: criar contrato, registrar pagamento) | ✅ `POST /contratos`, `GET /obras/{id}/contratos`, `GET /contratos/{id}`, `POST /contratos/{id}/pagamentos` + `GET /obras/{id}/medicoes/resumo?status=invoice_issued` (seletor) | ✅ | `feat/contratos`, `modules/contratos-admin`, rota `/admin/obras/:obraId/contratos`. Lista de cards + "+ Novo contrato" + "Registrar pagamento" (RHF + zod). Sem editar/excluir (backend não tem). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, front) |
 | A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ✅ | Front feito: `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro` (item "Financeiro" entre Medições e Contratos). KPIs internos, tabela com seleção e lote, flag por linha, novo/editar com comprovantes, exclusão com confirmação. Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Financeiro admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
-| A6 | Relatório fotográfico (SPEC §6 item 11: criar/editar relatório, upload e gestão das fotos) | ✅ backend (`feat/fotos-admin`, empilhada sobre `feat/financeiro-admin`, PR #20; o PR terá base `main` e dirá "mesclar depois do #20"; sem script SQL): `GET /obras/{id}/relatorios-fotograficos` (com `quantidadeFotos`), `POST/PUT/DELETE /relatorios-fotograficos[/{id}]`, `POST /relatorios-fotograficos/{id}/fotos`, `PATCH /fotos/{id}`, `DELETE /fotos/{id}`, `PATCH /relatorios-fotograficos/{id}/fotos/ordem` | 🟨 | Falta o front (`modules/relatorio-fotografico-admin`), testes da tela, design e segurança. Contrato em "Decisões" (Relatório fotográfico admin, backend) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
+| A6 | Relatório fotográfico (SPEC §6 item 11: criar/editar relatório, upload e gestão das fotos) | ✅ backend (`feat/fotos-admin`, empilhada sobre `feat/financeiro-admin`, PR #20; o PR terá base `main` e dirá "mesclar depois do #20"; sem script SQL): `GET /obras/{id}/relatorios-fotograficos` (com `quantidadeFotos`), `POST/PUT/DELETE /relatorios-fotograficos[/{id}]`, `POST /relatorios-fotograficos/{id}/fotos`, `PATCH /fotos/{id}`, `DELETE /fotos/{id}`, `PATCH /relatorios-fotograficos/{id}/fotos/ordem` | 🟨 | Front feito: `modules/relatorio-fotografico-admin`, rotas `/admin/obras/:obraId/relatorio-fotografico` (lista) e `.../:relatorioId` (gerenciador de fotos). Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Relatório fotográfico admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -641,6 +641,35 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     `modules/financeiro-admin/lancamentoForm.test`.
   - **Testes antigos afetados:** `ContratosAdmin.test` ("Contratos fica depois de Medições na sidebar do admin") assume que Contratos vem logo
     depois de Medições; com o Financeiro no meio (ordem do SPEC) o assert fica obsoleto. Não editado (é do tester): trocar por "depois de Financeiro".
+
+- **Relatório fotográfico admin, front** (`feat/fotos-admin`, 20/10). `modules/relatorio-fotografico-admin`; item "Relatório fotográfico" (ícone `Camera`)
+  em `ADMIN_NAV.obra` **depois de Contratos** (SPEC §6 item 11; Rentabilidade, item 10, ainda não existe; Projetos admin virá depois).
+  - **Rotas:** lista `/admin/obras/:obraId/relatorio-fotografico` e gerenciador `.../relatorio-fotografico/:relatorioId` (página, não Dialog: o
+    `ImageDialog` e o Dialog do Radix disputam o foco). Detalhe lê `GET /relatorios-fotograficos/{id}`; relatório de outra obra na URL =
+    "não encontrado nesta obra".
+  - **Lista:** tabs Mensal/Etapa (como no cliente), cards em 3 colunas de altura uniforme (título = `tituloDoRelatorio`, badge do tipo, título digitado,
+    data de registro, N fotos, "Gerenciar fotos", Editar, Excluir). Sem capa (o backend não tem miniatura: seria baixar a imagem inteira por card).
+    Excluir = confirmação inline "Excluir definitivamente este relatório e suas N fotos?" (lista e detalhe). Criar/editar abre a aba do tipo salvo.
+  - **Formulário (Dialog, RHF + zod):** tipo, etapa (select de `useEtapas`), título (obrigatório, ≤150), competência (`<input type="month">`, opcional,
+    2000–2100). O backend **não** exige etapa no tipo `etapa` nem competência no tipo `mensal`: a UI só sugere ("Recomendado no tipo Etapa...") sem travar.
+    PUT manda os 4 campos (`null` limpa). 400 por campo (`EtapaId`, `Titulo`...), 403/404/500 em `Alert` (500 com requestId). O diálogo só monta o form com as
+    etapas resolvidas (select nativo não reaplica o valor se as opções chegam depois).
+  - **Fotos:** grade de 4 colunas (240px no 1280, 280px no 1440; cartão 265/295px de altura, igual para todos, com/sem descrição, data ou confirmação).
+    Por foto: miniatura (blob autenticado, `components/FotoMiniatura`, ampliar), descrição e data truncadas, "N de M", setas, Editar (Dialog; PATCH só com os
+    campos alterados, vazio = `null`), Remover (confirmação inline na própria linha). **Reordenar** por setas (acessível por teclado; arrastar não foi feito):
+    troca com a vizinha, renumera 0..n-1 e manda só as fotos cuja ordem mudou; atualização otimista no detalhe com rollback (`onError`), uma troca por vez
+    (sem `disabled`, para não perder o foco), foco devolvido ao botão depois de mover, `aria-live` com a nova posição.
+  - **Upload:** `<input multiple>` dentro de uma label tracejada (soltar arquivos é só atalho), validação em `utils/foto` (jpg/jpeg/png/webp/gif, ≤10 MB,
+    nome ≤255, vazio; limite de 100 contando as do servidor + fila; repetido = recusado), prévia local (object URL revogado), descrição e data do **lote**, fila
+    **sequencial** (um POST por arquivo; `dataFoto`/`descricao` na query, `file` no multipart; sem `ordem` = fim), progresso (`ProgressBar`), status por
+    arquivo, mensagem do 400 `{ message }` na linha, "Tentar de novo (N)", "Cancelar fila" (o envio em andamento **termina**, não é abortado, porque poderia
+    gravar no servidor mesmo assim; pendentes viram "cancelada"), erro 403/404/401/rede interrompe a fila e deixa o resto pendente. Ao fim da rodada invalida a lista.
+  - **Cache:** lista `['obra', id, 'relatorios-fotograficos']` (a mesma do cliente) e detalhe sob o mesmo prefixo; toda escrita invalida o prefixo.
+    `useRelatoriosFotograficos` subiu para `hooks/` (o `modules/relatorio-fotografico/hooks.ts` reexporta; o `api.ts` dele saiu).
+  - **Base nova/movida:** `components/FotoMiniatura` (FotoThumb do cliente usa), `components/ErroAlert` + `utils/erros` (financeiro-admin reexporta),
+    `utils/foto`, `utils/relatorioFotografico` (`tituloDoRelatorio`, `ordenarFotos`, rótulos), `interfaces/relatorioFotografico` (requests e `quantidadeFotos`).
+    Testes unitários dos puros: `utils/foto`, `reordenar`, `uploadFila`, `fotoForm`, `relatorioForm`.
+  - **Testes antigos afetados:** nenhum falhou (871 verdes). O de ordem do menu do admin só vale se não assumir que Contratos é o último item.
 
 ## Registro
 

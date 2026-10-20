@@ -1,8 +1,2 @@
-import { useQuery } from '@tanstack/react-query';
-import { listRelatoriosFotograficos } from './api';
-
-export const useRelatoriosFotograficos = (obraId: string) =>
-  useQuery({
-    queryKey: ['obra', obraId, 'relatorios-fotograficos'] as const,
-    queryFn: ({ signal }) => listRelatoriosFotograficos(obraId, signal),
-  });
+// Subiu para a base (`hooks/useRelatoriosFotograficos`): o admin lê a mesma lista e divide o cache.
+export { useRelatoriosFotograficos } from '@/hooks/useRelatoriosFotograficos';
