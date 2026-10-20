@@ -33,7 +33,7 @@
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
 | 6 | Cronograma (sem Curva S) | ✅ `GET /obras/{id}/etapas` (detalhe preso à obra no SQL) + `percentualConcluido` (script 008; edição pelo Gantt admin) | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, com % concluído ao lado da barra (desde `feat/etapas-admin`); 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
 | 7 | Projetos | ✅ `GET /obras/{id}/projetos` + `GET /projetos/{id}/download` (liberado ao cliente da obra, preso à obra no SQL) | ✅ | `feat/projetos` (empilhada sobre `feat/cronograma`). Cards por etapa, Visualizar (PDF/imagem, nova aba) e Baixar; 219 testes na suíte + 4 e2e. 2 rodadas (design: colunas alinhadas; segurança: só PDF/imagem abrem). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-projetos.md` |
-| 8 | Contratos | ❌ sem endpoints | ⬜ | lacuna: módulo Contratos/Pagamentos |
+| 8 | Contratos | ✅ `GET /obras/{id}/contratos` (cliente: DTO reduzido com `totalPago`/`saldoAPagar`) + `GET /contratos/{id}` (com pagamentos) | ⬜ | backend em `feat/contratos` (empilhada sobre `feat/medicoes-admin`, PR #17; mesclar depois dele; sem script SQL). Admin: `POST /contratos` e `POST /contratos/{id}/pagamentos` (tela admin A4 ainda não existe). Contrato em "Decisões" (Contratos, backend). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 | 9 | Dashboard | ❌ sem KPIs/custo acumulado | ⬜ | lacuna: Dashboard/KPIs |
 
 Navbar do cliente cresce uma entrada por tela entregue (ordem do SPEC §5).
@@ -54,10 +54,12 @@ sempre "Não iniciada").
 
 Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (provavelmente com script `009_*.sql`+):
 
-- Contratos e pagamentos (endpoints) — bloqueia Contratos e parcelas do Financeiro do cliente
+- Contratos (backlog, o módulo está pronto: ver Decisões): sem editar/excluir contrato nem pagamento (estorno/correção),
+  sem upload/download do documento do contrato (`storage_key` sem uso), sem aditivos, sem paginação do detalhe, sem unicidade
+  de pagamento por medição, e a auditoria é gravada depois do `INSERT`, fora da transação (como nas medições).
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
-- Auditoria: só as medições gravam `log_auditoria` (criar, aprovar, emitir NF). Os demais endpoints de escrita (inclusive
+- Auditoria: só medições e contratos/pagamentos gravam `log_auditoria` (criar, aprovar, emitir NF, criar contrato, registrar pagamento). Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard / KPIs / Curva S / Rentabilidade / comparativo entre obras — bloqueia Dashboard
 - Medições (backlog, o resto do módulo está pronto: ver Decisões): `GET /obras/{id}/medicoes` do cliente segue array puro
@@ -265,6 +267,37 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     Tela admin deve usar `/resumo` para a tabela e `GET /medicoes/{id}` para o detalhe; listar etapas pelo `etapaNome`.
   - Testes: `Http/MedicaoAdminTests`, `MedicaoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`;
     `FakeLogAuditoriaRepository` novo; `FakeMedicaoRepository` com a API presa à obra (mantém atalhos sem obra para os testes antigos).
+- **Contratos, backend** (`feat/contratos`, 19/10; sem script SQL: usa as tabelas do script 004; escrito na nuvem sem .NET:
+  validar com `dotnet build` e `dotnet test`). Absorve "Pagamentos" (SPEC §5 item 6, §8). Detalhe dos contratos em `backend/docs/API.md`.
+  - **Padrão de acesso em todos os endpoints:** resolve só o `obra_id` (404) → `EnsureAccessAsync` (403) → leitura/escrita
+    com `WHERE ... AND obra_id` → validação do corpo (400) → regra de estado (409). `POST /contratos` checa o acesso à obra do corpo
+    **antes** de validar (cliente = 403 pela política `AdminOrMaster`, mesmo com corpo inválido).
+  - **Endpoints:** `POST /contratos` (201 + `Location`; número único por obra = 409, inclusive na corrida pela UNIQUE),
+    `GET /obras/{obraId}/contratos` (array puro), `GET /contratos/{id}` (contrato + pagamentos por data desc),
+    `POST /contratos/{id}/pagamentos` (201, `Location` = contrato). Sem `PUT`/`DELETE` no V1.
+  - **Cliente (DTO reduzido):** `{ id, obraId, numero, valorContratado, dataAssinatura, totalPago, saldoAPagar }`; no detalhe,
+    `pagamentos: [{ id, referenteMedicaoId, referenteMedicaoNumero, valor, dataPagamento, formaPagamento }]`. Sem `createdAt`,
+    `updatedAt`, `contratoId`, `storageKey`. Ele vê o que **pagou** (valor recebido pela empresa, não custo); nenhuma coluna de
+    custo/margem entra nas consultas (teste varre o JSON do cliente por "custo"/"margem"). **A `storage_key` não é exposta a
+    ninguém** (nem ao admin): sem upload, ela não tem uso.
+  - **Totais:** `totalPago` = `SUM(pagamentos.valor)` no SQL (`LEFT JOIN` + `GROUP BY c.id`, uma consulta para a lista toda);
+    `saldoAPagar` = `valorContratado - totalPago`, **pode ser negativo** (não se impede pagamento acima do contratado:
+    adiantamentos/aditivos). O front deve tratar saldo negativo (ex.: "pago a mais").
+  - **Pagamento:** `valor` > 0 (2 casas, ≤ NUMERIC(14,2)); `dataPagamento` de 2000 até **hoje + 1 dia (UTC)** — decisão: já foi
+    recebido, então data futura é erro de digitação, e o dia a mais cobre fuso; `formaPagamento` ≤ 50 (livre, vazio = null);
+    `referenteMedicaoId` opcional: precisa ser da **mesma obra** e estar `invoice_issued` (SPEC §8), senão 400
+    `errors.ReferenteMedicaoId` com mensagem única (inexistente, de outra obra e sem NF são indistinguíveis). A regra também está
+    no próprio `INSERT ... SELECT` (contrato da obra + medição da obra com NF), então não há janela entre checar e gravar.
+    Várias parcelas por medição são aceitas.
+  - **Auditoria (SPEC §8):** `LogAuditoriaService`, `user_id` = token. `contrato_criado` (`entidade "contrato"`, `detalhes`
+    `{ obraId, numero, valorContratado }`) e `pagamento_registrado` (`entidade "pagamento"`, `detalhes` `{ obraId, contratoId,
+    valor, referenteMedicaoId }`). Decisão: o valor entra no payload por ser auditoria financeira (diferente das medições, que só
+    gravam ids/status); o log é lido só pelo Master.
+  - **Para o front:** o Financeiro do cliente pode compor "Valor contratado", "Pago" e "Saldo" só com `GET /obras/{id}/contratos`
+    (somar entre contratos no front) e as parcelas com `GET /contratos/{id}` (`pagamentos`); a tela Contratos (cliente) usa os
+    dois. `referenteMedicaoNumero` vem das leituras (no 201 do pagamento é `null`).
+  - Testes: `Http/ContratoAcessoTests`, `ContratoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`;
+    `FakeContratoRepository` novo (espelha o SQL: preso à obra, SUM, UNIQUE e o INSERT condicional).
 - **Medições (admin, front)** (`feat/medicoes-admin`, 19/10): item "Medições" (ícone `Ruler`) em `ADMIN_NAV.obra` depois de "Gantt
   editável". **Lista** `/admin/obras/:obraId/medicoes`: tabela paginada (20/página, `keepPreviousData`, `components/Pagination`)
   com Nº (link para o detalhe), Competência (`formatMonthYearTitle`), Etapa (`etapaNome` ou "—"), Itens, Valor total (BRL),
@@ -339,6 +372,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-10-19 — `feat/contratos`: (sem commits ainda; descreva o que está staged).
 - 2026-10-19 — `feat/medicoes-admin`: feat(medicoes): DTO reduzido ao cliente, acesso preso a obra, validacao, lista admin e auditoria; docs(medicoes): API.md atualizada e registro no PLAN-09; feat(medicoes-admin): tipos do admin, rotulo de item na base e plano da tela A3; feat(medicoes-admin): lista de acompanhamento, criacao de medicao e emissao de NF; test: medicoes-admin lista, criar, detalhe, emitir NF, papel e e2e com mocks de captura; fix(medicoes-admin): passa o total da página ao MedicoesKpis e evita consulta duplicada; fix(medicoes-admin): NF sem quebra de linha na lista e link Voltar alinhado ao botao no detalhe; fix(medicoes-admin): tabela da lista cabe em 1280 com table-fixed e colgroup; fix(medicoes-admin): larguras da tabela pelo conteudo real (NF 112px com truncate+title, Competencia 128px); docs: capturas de medicoes-admin (claro, escuro, 1280). Arquivos: outros (1), backend (10), testes backend (6), docs (13), front (5), front/rotas-layouts (2), modules/fechamento (1), modules/medicoes-admin (21), infra (1).
 - 2026-10-19 — `feat/etapas-admin`: feat(etapas): PUT /etapas/{id} com percentual concluido (script 008); docs: CLAUDE.md cita os scripts 001..008; feat(etapas-admin): hub admin e Gantt editável com edição de etapas; % concluído no cronograma do cliente; docs: registro; docs: registro (base feat/projetos); test: etapas-admin (hub admin, Gantt editável, zod, e2e e mocks de captura) e % no cronograma do cliente; docs: capturas do Gantt editável, hub admin e cronograma com %; docs: relatório da manhã do Gantt editável; harness: builder não apaga assert obsoleto, reporta ao tester. Arquivos: infra (1), outros (1), backend (8), testes backend (2), banco (1), docs (10), front (16), front/rotas-layouts (4), modules/cronograma (4), modules/etapas-admin (12), modules/obras (4).
 - 2026-10-19 — `feat/projetos`: fix(projetos): download preso a obra e liberado ao cliente, upload valida etapa; feat(projetos): tela do cliente com documentos por etapa, visualizar e baixar; test: projetos (unit, página, e2e e mocks de captura); fix(projetos): colunas de largura fixa e igual em todos os cards; fix(projetos): visualizar só PDF/imagem pelo blob.type, espaço na rota; docs: capturas de projetos (claro, escuro, 1280); test: projetos cobre regra de tipos do openBlobInNewTab (html/svg/vazio baixam); docs: relatório da manhã de Projetos. Arquivos: backend (4), testes backend (2), docs (4), front (6), front/rotas-layouts (2), modules/projetos (10), modules/relatorio-fotografico (3).

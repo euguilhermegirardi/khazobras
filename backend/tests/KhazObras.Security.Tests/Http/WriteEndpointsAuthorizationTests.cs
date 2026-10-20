@@ -56,6 +56,8 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         { "POST", "/medicoes" },
         { "POST", $"/medicoes/{Id}/issue-invoice" },
         { "GET", $"/obras/{Id}/medicoes/resumo" },
+        { "POST", "/contratos" },
+        { "POST", $"/contratos/{Id}/pagamentos" },
         { "POST", "/financeiro/lancamentos" },
         { "POST", $"/financeiro/lancamentos/{Id}/anexos" },
         { "PATCH", $"/financeiro/lancamentos/{Id}/visibilidade" },
@@ -92,6 +94,7 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         { "POST", "/obras" },
         { "POST", "/etapas" },
         { "POST", "/medicoes" },
+        { "POST", "/contratos" },
         { "POST", "/financeiro/lancamentos" },
         { "POST", "/relatorios-mensais" },
     };

@@ -8,6 +8,7 @@ using KhazObras.Application.Dtos.RelatoriosFotograficos;
 using KhazObras.Application.Dtos.RelatoriosMensais;
 using KhazObras.Application.Dtos.Financeiro;
 using KhazObras.Application.Dtos.Medicoes;
+using KhazObras.Application.Dtos.Contratos;
 using KhazObras.Application.Dtos.Etapas;
 using KhazObras.Infrastructure.Storage;
 using FluentValidation;
@@ -49,6 +50,8 @@ builder.Services.AddScoped<IEtapaRepository, EtapaRepository>();
 builder.Services.AddScoped<EtapaService>();
 builder.Services.AddScoped<IMedicaoRepository, MedicaoRepository>();
 builder.Services.AddScoped<MedicaoService>();
+builder.Services.AddScoped<IContratoRepository, ContratoRepository>();
+builder.Services.AddScoped<ContratoService>();
 builder.Services.AddScoped<IFinanceiroLancamentoRepository, FinanceiroLancamentoRepository>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<IRelatorioFotograficoRepository, RelatorioFotograficoRepository>();
@@ -550,6 +553,144 @@ app.MapPost("/medicoes/{id:guid}/issue-invoice", async (Guid id, IssueInvoiceReq
 .RequireAuthorization("AdminOrMaster")
 .WithName("IssueMedicaoInvoice")
 .WithDescription("Emite nota fiscal para medição (transição: approved → invoice_issued; outro status = 409). Somente Admin/Master");
+
+app.MapPost("/contratos", async (CreateContratoRequest request, IValidator<CreateContratoRequest> validator, ContratoService contratoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, request.ObraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var created = await contratoService.CreateAsync(request, userId);
+
+    if (created.Status == ContratoCreateStatus.ObraNaoEncontrada)
+    {
+        return Results.NotFound();
+    }
+
+    if (created.Status == ContratoCreateStatus.NumeroDuplicado)
+    {
+        return Results.Conflict(new { message = "Ja existe um contrato com este numero nesta obra." });
+    }
+
+    return Results.Created($"/contratos/{created.Contrato!.Id}", created.Contrato);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("CreateContrato")
+.WithDescription("Cria contrato para uma obra (somente Admin/Master). Número único por obra (409); valor > 0 com 2 casas");
+
+app.MapGet("/obras/{obraId:guid}/contratos", async (Guid obraId, ContratoService contratoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var result = await contratoService.GetByObraIdAsync(obraId);
+
+    // Array puro. Cliente recebe a visão reduzida (sem datas internas); Admin/Master, a completa.
+    if (accessService.IsAdminOrMaster(principal))
+    {
+        return Results.Ok(result);
+    }
+
+    return Results.Ok(result.Select(c => ContratoService.ToClienteView(c)).ToList());
+})
+.RequireAuthorization()
+.WithName("GetContratosByObra")
+.WithDescription("Lista os contratos de uma obra com total pago e saldo a pagar calculados no servidor (cliente: visão reduzida)");
+
+app.MapGet("/contratos/{id:guid}", async (Guid id, ContratoService contratoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await contratoService.ResolveContratoAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var result = await contratoService.GetDetalheByIdAndObraAsync(id, obraId.Value);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    return accessService.IsAdminOrMaster(principal)
+        ? Results.Ok(result)
+        : Results.Ok(ContratoService.ToClienteView(result));
+})
+.RequireAuthorization()
+.WithName("GetContratoById")
+.WithDescription("Retorna o contrato com seus pagamentos (data mais recente primeiro; cliente: visão reduzida)");
+
+app.MapPost("/contratos/{id:guid}/pagamentos", async (Guid id, CreatePagamentoRequest request, IValidator<CreatePagamentoRequest> validator, ContratoService contratoService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await contratoService.ResolveContratoAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var created = await contratoService.CreatePagamentoAsync(id, obraId.Value, request, userId);
+
+    if (created.Status == PagamentoCreateStatus.ContratoNaoEncontrado)
+    {
+        return Results.NotFound();
+    }
+
+    if (created.Status == PagamentoCreateStatus.MedicaoInvalida)
+    {
+        // Mesma mensagem para medição inexistente, de outra obra ou sem NF emitida (não revela outra obra).
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["ReferenteMedicaoId"] = ["A medicao informada deve ser desta obra e ter nota fiscal emitida."]
+        });
+    }
+
+    return Results.Created($"/contratos/{id}", created.Pagamento);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("CreatePagamento")
+.WithDescription("Registra pagamento recebido no contrato (Admin/Master). Medição vinculada, se enviada, precisa ser da mesma obra e estar com NF emitida (400). Não limita a soma ao valor contratado");
 
 app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest request, IValidator<CreateFinanceiroLancamentoRequest> validator, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
