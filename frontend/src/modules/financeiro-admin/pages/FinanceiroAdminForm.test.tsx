@@ -11,7 +11,6 @@ import { saveSession } from '@/services/session';
 import { fakeSession, renderApp } from '@/test/helpers';
 import {
   ADMIN,
-  anexo,
   CLIENTE,
   lancamento,
   lancamentos,
