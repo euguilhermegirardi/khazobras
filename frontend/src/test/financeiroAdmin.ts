@@ -110,7 +110,14 @@ export interface ServidorFinanceiro {
  * API em memória do módulo Financeiro: lista paginada (20) com filtros, resumo recalculado, categorias e todas as
  * escritas (POST/PUT/DELETE, PATCH unitário e em lote, anexos). A lista só devolve o que o estado tem.
  */
-export function servidorFinanceiro(inicial: LancamentoJson[] = []): ServidorFinanceiro {
+export function servidorFinanceiro(
+  inicial: LancamentoJson[] = [],
+  /**
+   * No jsdom o `File` do app chega ao MSW com o nome "blob" (o `fetch` do Node não conhece o `File` do jsdom). Quem
+   * testa upload lê o nome real do `FormData` antes do envio e o informa aqui; no navegador (e2e) o nome vem inteiro.
+   */
+  opcoes: { nomeDoArquivo?: () => string | undefined } = {},
+): ServidorFinanceiro {
   const estado = { lancamentos: inicial.map((l) => ({ ...l, anexos: [...l.anexos] })) };
   const chamadas: ServidorFinanceiro['chamadas'] = {
     listas: [],
@@ -224,10 +231,11 @@ export function servidorFinanceiro(inicial: LancamentoJson[] = []): ServidorFina
       const form = await request.formData();
       const [campo, valor] = [...form.entries()][0] ?? ['', null];
       const arquivo = valor as File;
+      const nomeArquivo = opcoes.nomeDoArquivo?.() ?? arquivo.name;
       chamadas.uploads.push({
         id,
         auth: request.headers.get('Authorization') ?? '',
-        nome: arquivo.name,
+        nome: nomeArquivo,
         tipo: arquivo.type,
         tamanho: arquivo.size,
         campo,
@@ -235,7 +243,7 @@ export function servidorFinanceiro(inicial: LancamentoJson[] = []): ServidorFina
       if (!atual) return naoEncontrado();
       seq += 1;
       const novo = anexo(`anx-novo-${seq}`, {
-        nomeArquivo: arquivo.name,
+        nomeArquivo,
         contentType: arquivo.type,
         tamanhoBytes: arquivo.size,
       });
