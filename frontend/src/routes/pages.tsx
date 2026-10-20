@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 
 // O "← Minhas obras" de volta ao hub fica no AppShell (aparece em toda tela da obra).
-export const ClientObraPage = () => <h1 className="text-xl font-semibold">Dashboard (em construção)</h1>;
 export const AdminObraDashboardPage = () => <h1 className="text-xl font-semibold">Dashboard (em construção)</h1>;
 
 export const ForbiddenPage = () => (
