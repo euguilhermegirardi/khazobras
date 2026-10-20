@@ -12,7 +12,7 @@ Responda em português. Código, nomes de componentes e variáveis: inglês para
 - React Hook Form + Zod (formulários)
 - Tailwind CSS 4 + **shadcn/ui** (componentes acessíveis, código no repositório em `src/components/ui/`)
 - Vitest + Testing Library + MSW (unit/integração); Playwright (e2e dos fluxos críticos)
-- Gráficos (Dashboard/Curva S): Recharts, ainda não instalado — adicionar ao construir o Dashboard
+- Gráficos (Dashboard/Curva S): Recharts 3.10.1 (versão fixa), instalado com o Dashboard do cliente; cores só `var(--chart-N)`
 
 ## Estrutura
 
