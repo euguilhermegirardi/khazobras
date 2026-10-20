@@ -37,7 +37,9 @@ export const MedicaoLinha = ({ medicao, to }: MedicaoLinhaProps) => (
     <TableCell>
       <MedicaoStatusBadge status={medicao.status} />
     </TableCell>
-    <TableCell className="whitespace-nowrap text-muted-foreground">{medicao.nfNumber ?? SEM_VALOR}</TableCell>
+    <TableCell className="truncate text-muted-foreground" title={medicao.nfNumber ?? undefined}>
+      {medicao.nfNumber ?? SEM_VALOR}
+    </TableCell>
     <TableCell className="whitespace-nowrap text-muted-foreground">{formatTimestamp(medicao.createdAt)}</TableCell>
     <TableCell className="whitespace-nowrap text-muted-foreground">{dataOuTraco(medicao.approvedAt)}</TableCell>
     <TableCell className="whitespace-nowrap text-muted-foreground">{dataOuTraco(medicao.nfIssuedAt)}</TableCell>
