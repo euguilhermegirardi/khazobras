@@ -61,6 +61,7 @@ export const ADMIN_NAV: NavConfig = {
     { label: 'Contratos', to: '/admin/obras/:obraId/contratos', icon: FileSignature },
     { label: 'Relatório fotográfico', to: '/admin/obras/:obraId/relatorio-fotografico', icon: Camera },
     { label: 'Projetos', to: '/admin/obras/:obraId/projetos', icon: FolderOpen },
+    { label: 'Relatório ao cliente', to: '/admin/obras/:obraId/relatorio-ao-cliente', icon: FileText },
   ],
   // Itens da empresa (Pipeline, Rentabilidade, Histórico, Administração) entram com as suas telas.
   empresa: [],

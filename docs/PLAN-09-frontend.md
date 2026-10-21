@@ -53,6 +53,7 @@ sempre "Não iniciada").
 | A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ✅ | Front feito: `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro` (item "Financeiro" entre Medições e Contratos). KPIs internos, tabela com seleção e lote, flag por linha, novo/editar com comprovantes, exclusão com confirmação. Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Financeiro admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 | A6 | Relatório fotográfico (SPEC §6 item 11: criar/editar relatório, upload e gestão das fotos) | ✅ backend (`feat/fotos-admin`, empilhada sobre `feat/financeiro-admin`, PR #20; o PR terá base `main` e dirá "mesclar depois do #20"; sem script SQL): `GET /obras/{id}/relatorios-fotograficos` (com `quantidadeFotos`), `POST/PUT/DELETE /relatorios-fotograficos[/{id}]`, `POST /relatorios-fotograficos/{id}/fotos`, `PATCH /fotos/{id}`, `DELETE /fotos/{id}`, `PATCH /relatorios-fotograficos/{id}/fotos/ordem` | 🟨 | Front feito: `modules/relatorio-fotografico-admin`, rotas `/admin/obras/:obraId/relatorio-fotografico` (lista) e `.../:relatorioId` (gerenciador de fotos). Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Relatório fotográfico admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 | A7 | Projetos (SPEC §6 item 12: upload e gestão dos documentos técnicos) | ✅ backend (`feat/projetos-admin`, empilhada sobre `feat/fotos-admin`; sem script SQL): `GET /obras/{id}/projetos`, `POST /obras/{id}/projetos?etapaId&tipoDocumento` (multipart), `PUT /projetos/{id}` (nome, tipoDocumento, etapaId), `DELETE /projetos/{id}`, `GET /projetos/{id}/download` | ✅ | `feat/projetos-admin`: `modules/projetos-admin`, rota `/admin/obras/:obraId/projetos`, item "Projetos" depois de Relatório fotográfico no `ADMIN_NAV.obra`. Tester, design e segurança verdes (2 rodadas de correção). Relatório: `docs/relatorios/2026-10-21-projetos-admin.md`. Contrato em "Decisões" (Projetos admin, backend) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
+| A8 | Relatório ao cliente (SPEC §6 item 13: edição + histórico) | ✅ backend (`feat/relatorio-admin`, empilhada sobre `feat/projetos-admin`, PR #22; sem script SQL): `GET /obras/{id}/relatorios-mensais` (admin: todos), `POST /relatorios-mensais`, `PUT /relatorios-mensais/{id}` (competência + conteúdo, só rascunho), `DELETE /relatorios-mensais/{id}` (só rascunho), `POST /relatorios-mensais/{id}/publish`, `GET /relatorios-mensais/{id}/historico` | ✅ | `modules/relatorio-mensal-admin`, rotas `/admin/obras/:obraId/relatorio-ao-cliente` (lista), `.../novo` e `.../:relatorioId` (detalhe/edição), item "Relatório ao cliente" depois de Projetos no `ADMIN_NAV.obra`. Lista por competência com filtro de status, criar/editar rascunho com pré-visualização "Como o cliente vê", publicar e excluir com confirmação inline, painel de histórico. Tester, design e segurança verdes (1 rodada de correção). Relatório: `docs/relatorios/2026-10-21-relatorio-admin.md`. Contrato em "Decisões" (Relatório ao cliente, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -70,7 +71,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
 - Auditoria: medições, contratos/pagamentos, financeiro (editar, excluir, visibilidade, remover anexo) e relatório fotográfico (editar,
-  excluir, editar/remover/reordenar foto) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
+  excluir, editar/remover/reordenar foto), projetos e relatório mensal (criar, editar, excluir, publicar) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
   Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
@@ -118,10 +119,18 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   não é gravado (só a extensão entra na chave), então o front não consegue mostrar o nome original; auditoria de criar relatório e de
   enviar foto não existe (só editar/excluir/reordenar/remover; avaliar gravar `relatorio_fotografico_criado` e `foto_enviada`);
   `descricao` e `dataFoto` do upload vão na query string (`POST /relatorios-fotograficos/{id}/fotos?descricao=...`): texto livre
-  pode parar em logs de acesso/proxy; avaliar mover para campos do multipart (muda backend e front juntos); `POST /relatorios-mensais` ainda valida o corpo **antes** do acesso
-  à obra (mesma violação que foi corrigida em fotos e financeiro; varrer quando mexer em Relatórios mensais); os testes HTTP usam
+  pode parar em logs de acesso/proxy; avaliar mover para campos do multipart (muda backend e front juntos); os testes HTTP usam
   repositório falso, então o SQL novo (`FOR UPDATE`, `unnest`, `UPDATE ... CASE`) só roda com Postgres de verdade.
-- Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
+- Relatório ao cliente (backlog, o backend do admin está pronto: ver Decisões): sem despublicar (o SPEC não pede; decisão de produto: o cliente já pode
+  ter lido), sem versões do texto (o histórico é a auditoria: quem/quando/quais campos, nunca o texto anterior; guardar versões exigiria tabela
+  nova `relatorios_mensais_versoes`, script 009), sem "publicado por" como coluna (sai do histórico), sem lixeira na exclusão do rascunho,
+  sem notificar o cliente ao publicar (a tela "Notificar cliente" é separada), texto puro sem formatação (negrito, listas) nem anexos/fotos
+  no relatório, sem modelo de relatório; `GET /obras/{id}/relatorios-mensais` devolve array puro (no máximo um por mês, limitado pelo `UNIQUE`),
+  com o texto inteiro de cada um (até 20000 caracteres); a auditoria é gravada depois da escrita, fora da transação (falha = 500 com a
+  alteração feita; mesma lacuna de Medições, Contratos, Financeiro, Fotos e Projetos); os testes HTTP usam repositório falso, então o SQL novo
+  (`INSERT ... SELECT ... ON CONFLICT DO NOTHING`, `UPDATE/DELETE ... WHERE status = 'draft' RETURNING`) só roda com Postgres de verdade;
+  relatórios antigos com `competencia` fora do dia 1 continuam como estão (só os novos e os editados são normalizados);
+  `GET /relatorios-mensais/{id}/historico` não tem paginação (até 100 registros).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE nos módulos que ainda não têm (Financeiro já tem); `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
@@ -654,6 +663,41 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     `ProjetoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`; `ProjetoDocumentoAcessoTests` ajustado ao novo construtor;
     `FakeProjetoDocumentoRepository` espelha o SQL (preso à obra, obra inexistente, limite). **Validar no Mac com Postgres**: dois uploads simultâneos
     perto de 200; `PUT` e `DELETE` de documento de outra obra; `DELETE` com o R2 desligado.
+- **Relatório ao cliente, backend** (`feat/relatorio-admin`, 21/10; sem script SQL, sem schema novo; contrato completo em
+  `backend/docs/API.md` → Módulo Relatórios Mensais). Pronto para a tela admin (SPEC §6 item 13). Escrito na nuvem sem .NET: `dotnet build` +
+  `dotnet test` no Mac antes do merge.
+  - **Modelo** (`relatorios_mensais`, script 005): `competencia` DATE, `conteudo` TEXT, `status` (`draft`/`published`), `published_at`,
+    `created_by_user_id`, `UNIQUE (obra_id, competencia)`. **Não inventamos coluna**: não existe "publicado por" nem versões.
+  - **Histórico = auditoria** (decisão mínima que cumpre "edição + histórico"): lista de relatórios por competência (com status e `publishedAt`) +
+    `GET /relatorios-mensais/{id}/historico` com criado/editado/publicado (ação, usuário e nome, data e **nomes** dos campos alterados, nunca o texto).
+    Versões do texto ficam no backlog (exigiriam tabela e script 009).
+  - **Endpoints**: `POST /relatorios-mensais` (corrigido), `PUT /relatorios-mensais/{id}`, `DELETE /relatorios-mensais/{id}` (204),
+    `GET /relatorios-mensais/{id}/historico` (novos), `publish` (corrigido); lista e detalhe inalterados no contrato (o DTO admin ganhou
+    `updatedAt`). Escritas e histórico só `AdminOrMaster` (policy antes de ler o corpo: cliente = 403 mesmo com corpo inválido).
+    Padrão: `ResolveAsync` (404) → `EnsureAccessAsync` (403) → corpo (400) → 409 → SQL preso a `obra_id`.
+  - **Regras**: `PUT` substitui `competencia` e `conteudo`; só rascunho (publicado = 409). `publish` de publicado = 409. Excluir publicado = 409
+    (não existe despublicar). `competencia` sempre vira o **dia 1** do mês (a unicidade do schema é por data exata); mês repetido na criação ou na
+    edição = **409** `{ message }`. Obra inexistente no `POST` = **404** (antes: FK → 500). Conteúdo: texto puro, 1..20000 caracteres, recusa
+    controle (menos `\n \r \t`; o NUL derrubaria o INSERT) e caracteres de direção do texto (U+202A–202E, U+2066–2069); o servidor não interpreta
+    HTML e o front deve exibir como texto. Competência entre os anos 2000 e 2100.
+  - **Concorrência**: editar, publicar e excluir são **um comando** `UPDATE/DELETE ... WHERE id AND obra_id AND status = 'draft' RETURNING`
+    (atômico, sem transação nem `FOR UPDATE`: a linha é o próprio alvo). Quando não volta linha, uma consulta `WHERE id AND obra_id` separa 404
+    (não existe) de 409 (existe e não é rascunho). Criar é `INSERT ... SELECT FROM obras ... ON CONFLICT (obra_id, competencia) DO NOTHING
+    RETURNING id`: obra inexistente e mês repetido não viram exceção; a corrida entre dois `POST` do mesmo mês termina em 409 para o segundo.
+    No `PUT` a violação do `UNIQUE` (23505) vira 409.
+  - **Auditoria** (entidade `relatorio_mensal`, id do relatório): `relatorio_mensal_criado`/`_publicado`/`_excluido` (`obraId`) e
+    `relatorio_mensal_editado` (`obraId`, `campos`). Nunca o texto. Gravada depois da escrita, fora da transação (como os outros módulos).
+  - **Varredura do módulo (achados corrigidos)**: `POST` validava o corpo **antes** do acesso e dava 500 em obra inexistente (FK) e em mês repetido
+    (`UNIQUE`); `GET /relatorios-mensais/{id}` e `publish` liam o relatório **sem filtro de obra** (`GetByIdAsync(id)`) e o detalhe do cliente fazia
+    duas leituras; `publish` era `RequireAuthorization()` com checagem de papel no corpo (o cliente via 404 em vez de 403) e a transição era
+    leitura + `UPDATE` sem condição de status (corrida: duas publicações, `publishedAt` sobrescrito); a lista do admin buscava tudo e filtrava
+    `onlyPublished` em memória (agora SQL); sem limite de tamanho do conteúdo, sem auditoria, `ORDER BY` sem desempate (agora `, id`). Removidos
+    `GetByIdAsync(id)` e `GetPublishedByIdAsync(id)` do repositório (sem filtro por obra). Já corretos: filtro `published` no SQL e DTO do cliente sem
+    `createdByUserId`.
+  - **Testes**: `Http/RelatorioMensalAdminTests` (403 do cliente inclusive com corpo inválido, 401, criar/404/409/400, editar/excluir/publicar com 409,
+    preso à obra no service, cliente não vê rascunho nem campos internos, histórico sem texto, auditoria sem texto livre),
+    `RelatorioMensalValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`; `FakeRelatorioMensalRepository` espelha o SQL
+    (preso à obra, só rascunho, `UNIQUE`); `StateMachineTests` migrou para os métodos novos do repositório.
 - **Financeiro admin, front** (`feat/financeiro-admin`, 20/10). `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro`, item
   "Financeiro" (ícone `Wallet`) em `ADMIN_NAV.obra` **entre Medições e Contratos** (ordem do SPEC §6: 7 Medições, 8 Financeiro, 9 Contratos;
   antes o Contratos vinha logo depois de Medições). Sem Importar/Exportar, sem pagador, sem abas Resumo/Por categoria.
@@ -768,8 +812,40 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   - **Testes antigos afetados:** nenhum (1008 verdes). O de ordem do menu do admin só vale se Projetos for aceito depois de Relatório fotográfico.
   - **Falta (tester):** ver relatório: tela, e2e, mocks de captura; segurança (escrita) e design.
 
+- **Relatório ao cliente, front** (`feat/relatorio-admin`, 21/10). `modules/relatorio-mensal-admin`, item "Relatório ao cliente" (`FileText`) em `ADMIN_NAV.obra`
+  **depois de Projetos** (SPEC §6 item 13; Notificar cliente, item 14, ainda não existe).
+  - **Rotas (páginas, não Dialog):** `/admin/obras/:obraId/relatorio-ao-cliente` (lista), `.../novo` e `.../:relatorioId` (detalhe/edição). Página e não Dialog porque o texto
+    chega a 20000 caracteres e a pré-visualização fica ao lado do formulário; `novo` é rota estática (ganha de `:relatorioId`). Criar leva ao detalhe com a mensagem em
+    `location.state`. Relatório de outra obra na URL = "Relatório não encontrado nesta obra." (o backend deixa o admin ler, a tela confere `obraId`).
+  - **Base subida (módulo não importa módulo):** `components/RelatorioMensalCard` (era do módulo do cliente; agora aceita `contentClassName` e usa
+    `whitespace-pre-wrap` + `overflow-wrap:anywhere`, antes `pre-line`), `hooks/useRelatoriosMensais` (`relatoriosMensaisKey`, `useRelatoriosMensais`; o `api.ts` do cliente
+    saiu), `interfaces/relatorioMensal` (`RelatorioMensalAdmin` = cliente + `updatedAt`; **sem `createdByUserId` no tipo**, de propósito), `utils/dates.formatDateTime`.
+    `components/ui/textarea.tsx`: **escrito à mão** com o código do registro do shadcn porque `npx shadcn add textarea` falhou sem acesso à rede (mesmo estilo do `Input`);
+    reinstalar pelo CLI quando houver acesso.
+  - **Cache:** leituras do admin ficam **abaixo** da chave do cliente (`['obra', id, 'relatorios-mensais', 'admin', lista|detalhe|historico]`). Toda escrita invalida o prefixo, então
+    publicar atualiza a tela do cliente e as do admin. Editar também grava o relatório salvo no detalhe. Excluir pelo detalhe, no sucesso, **não relê** o detalhe nem o histórico do relatório apagado (a invalidação pula as chaves terminadas no id; em erro/409 relê tudo
+    de propósito); a página navega e só ao desmontar remove essas chaves do cache (`removerRelatorioDoCache`). Remover com a página montada fazia o observer buscar de novo (404 piscando). Skeleton de página só com a query principal (`isPending`); o histórico tem o próprio `isLoading`/erro e não derruba a tela.
+  - **Lista:** `Card` + tabela de 6 colunas `table-fixed` + `colgroup`: Competência 144, Resumo (flexível, 1ª linha do texto, `truncate` + `title`), Status 96, Publicado em 96,
+    Atualizado em 96, Ações 80 (botões de 28px; rascunho = editar + excluir, publicado = só ver; linha de 49px nos dois casos). Mês mais novo primeiro; filtro "Status" (select
+    nativo: Todos/Rascunho/Publicado). Status por `Badge` (Rascunho = neutral, Publicado = success). Vazio, filtro sem resultado, erro, 403/404 (`ErrorState`).
+  - **Formulário** (RHF + zod, `relatorioForm`): competência `input month` (ano 2000..2100) e conteúdo em textarea com contador `x/20000`; recusa vazio/só espaços, > 20000,
+    controle (menos `\n \r \t`) e U+202A–202E/U+2066–2069 (mesma regra do backend); o texto vai **sem aparar**; competência vai como dia 1. 400 por campo (`Competencia`, `Conteudo`);
+    409 de mês repetido no campo Competência ("Já existe um relatório desta obra para este mês…"); 409 "publicado" no `ErroAlert`. Pré-visualização ao vivo "Como o cliente vê"
+    (mesmo `RelatorioMensalCard` da tela do cliente; texto puro, rolagem em 28rem).
+  - **Publicar:** faixa azul inline "Publicar para o cliente? Depois de publicado não pode ser editado nem excluído." (foco em "Cancelar"; publica a versão **salva**). Publicado =
+    aviso "somente leitura", pré-visualização, sem editar/excluir. **Excluir** (só rascunho, lista e detalhe): faixa âmbar "Excluir definitivamente este rascunho?". 409 nas duas
+    ações vira texto da tela e a leitura é refeita.
+  - **Histórico** (card no detalhe, rolagem em 28rem): data e hora, ação em português (Relatório criado/editado/publicado; desconhecida = "Alteração no relatório"), "por <nome>"
+    ("Usuário removido" se `userName` null) e, na edição, "alterou: Competência e Conteúdo". Nunca mostra o texto anterior nem ids.
+  - **Medidas** (Chromium, mock normal e de estresse: 60 relatórios com resumo de 300 "W" seguidos, texto de 20000 caracteres com linhas sem espaço, histórico com 100 entradas e
+    nome de ~170 caracteres; `e2e/mocks/relatorio-admin*.json`): tabela 996px em 1280 (Resumo 484px, sobra bem acima dos 110px) e 1156px em 1440 (Resumo 644px); linhas de 49px nas 60;
+    nenhuma célula transborda, sem rolagem horizontal da página nem filho fora de card, em lista, novo, rascunho, publicado e rascunho de estresse (1280, 1440 e escuro).
+  - **Testes antigos afetados:** nenhum (1089 verdes, incluindo os 8+ novos dos utilitários puros). O de ordem do menu do admin só vale se Relatório ao cliente for aceito depois de Projetos.
+  - **Falta (tester):** tela, e2e, mocks de captura; segurança (escrita) e design.
+
 ## Registro
 
+- 2026-10-21 — `feat/relatorio-admin`: feat(relatorio-mensal): backend admin com editar, excluir, publicar atomico, historico e auditoria, tudo preso a obra e a draft no SQL; docs(relatorio-mensal): contrato do modulo em API.md e exemplos de curl; docs: registro; refactor(relatorio-mensal): card, chave de cache e tipos admin sobem para a base; Textarea e formatDateTime; feat(relatorio-mensal-admin): tela Relatório ao cliente com lista, criar/editar rascunho, publicar, excluir e histórico; test: relatorio ao cliente (admin) lista, novo, detalhe, historico, papeis, cache e e2e; fix(relatorio-mensal-admin): excluir pelo detalhe não relê o detalhe nem o histórico apagados; docs: capturas da revisao de design do Relatorio ao cliente admin; docs: relatorio da manha do Relatorio ao cliente admin, status e backlog. Arquivos: outros (2), backend (9), testes backend (5), docs (19), front (13), front/rotas-layouts (2), modules/relatorio-mensal-admin (22), modules/relatorio-mensal (4).
 - 2026-10-21 — `feat/projetos-admin`: feat(projetos): backend admin com PUT/DELETE, limite por obra travado, tipos restritos e auditoria; test(projetos): upload, PUT, DELETE, limite, etapa, R2 limpo, auditoria e DTO sem chave; docs(projetos): contrato da API de projetos (lista, upload, PUT, DELETE, download); docs: registro; refactor(upload): fila de envio e componentes de upload sobem para a base; fotos usa a base sem mudar comportamento; refactor(upload): 400 de campo vira texto na linha da fila e o resumo concorda com o substantivo; feat(projetos-admin): tela Projetos admin (lista por etapa, upload em fila, editar, excluir) e mocks de captura; test: projetos-admin (lista, editar, excluir, upload em fila, papel, e2e) e regressao do 400 de campo no upload de fotos; fix(etapas): useEtapas nao refaz a query em erro ao montar (evita loop de skeleton no dialogo de edicao); fix(upload): area de soltar desabilitada mantem o texto legivel (opacidade so no icone); docs: capturas da revisao de design de Projetos admin; fix(projetos): nome recusa caracteres Unicode de formatacao e rollback protegido; docs: relatorio da manha de Projetos admin. Arquivos: outros (1), backend (7), testes backend (5), docs (13), front (17), front/rotas-layouts (2), modules/projetos-admin (21), modules/projetos (5), modules/relatorio-fotografico-admin (5).
 - 2026-10-20 — `feat/fotos-admin`: feat(financeiro): backend admin com edicao, exclusao, lote de visibilidade, resumo, filtros e anexos limitados, tudo preso a obra e auditado; docs: registro do financeiro admin (backend); feat(financeiro-admin): base compartilhada (switch, upload multipart, validacao de anexo, tipos, utilitarios movidos); feat(financeiro-admin): tela Financeiro admin com KPIs, tabela, flag por linha, lote, novo/editar com comprovantes e exclusao; test: financeiro-admin lista, KPIs, filtros, paginacao, papel e datas; ordem do menu em contratos-admin; test: financeiro-admin selecao, lote, interruptor por linha, novo e editar lancamento; test: financeiro-admin comprovantes (baixar, remover, enviar, limite) e exclusao de lancamento; test: financeiro-admin bordas dos utilitarios (anexo, categoria, formulario, datas no fuso de Sao Paulo); test: financeiro-admin mocks de captura (normal e estresse com 20 itens, descricoes longas e 10 anexos); test: financeiro-admin e2e (liberar, lote, criar/editar com anexo, excluir, larguras 1280/1440, acesso negado); test: financeiro-admin remove import sem uso; docs: capturas do financeiro-admin (claro, escuro, 1280, estresse); fix(financeiro): remove busca de lancamento sem filtro de obra e valida nome do anexo antes do R2; docs: relatorio da manha do Financeiro admin, status e registro; feat(fotos-admin): backend do relatorio fotografico admin (PUT/DELETE, fotos PATCH/DELETE, lote de ordem, limite, auditoria); docs: registro do backend fotos-admin; feat(fotos-admin): base compartilhada (FotoMiniatura, ErroAlert, validacao de foto, titulo e ordem do relatorio, lista na base); feat(fotos-admin): tela Relatorio fotografico admin (lista, formulario, gerenciador de fotos, upload em fila, reordenar); test: fotos-admin lista, detalhe, fotos, reordenar, upload em fila, papel, e2e e mocks de captura (normal e estresse); fix(fotos-admin): object URL derivado (100 miniaturas), sem piscar 404 ao excluir, mensagem do 400 ao reordenar, h1 limitado a 2 linhas; docs: capturas da revisao de design do relatorio fotografico admin; fix(backend): trava o pai antes de ler chaves no delete de relatorio e lancamento (evita arquivo orfao no R2). Arquivos: outros (1), backend (29), testes backend (11), docs (18), front (33), front/rotas-layouts (2), modules/contratos-admin (3), modules/financeiro-admin (23), modules/financeiro (1), modules/relatorio-fotografico-admin (29), modules/relatorio-fotografico (4).
 - 2026-10-20 — `feat/financeiro-admin`: feat(financeiro): backend admin com edicao, exclusao, lote de visibilidade, resumo, filtros e anexos limitados, tudo preso a obra e auditado; docs: registro do financeiro admin (backend); feat(financeiro-admin): base compartilhada (switch, upload multipart, validacao de anexo, tipos, utilitarios movidos); feat(financeiro-admin): tela Financeiro admin com KPIs, tabela, flag por linha, lote, novo/editar com comprovantes e exclusao; test: financeiro-admin lista, KPIs, filtros, paginacao, papel e datas; ordem do menu em contratos-admin; test: financeiro-admin selecao, lote, interruptor por linha, novo e editar lancamento; test: financeiro-admin comprovantes (baixar, remover, enviar, limite) e exclusao de lancamento; test: financeiro-admin bordas dos utilitarios (anexo, categoria, formulario, datas no fuso de Sao Paulo); test: financeiro-admin mocks de captura (normal e estresse com 20 itens, descricoes longas e 10 anexos); test: financeiro-admin e2e (liberar, lote, criar/editar com anexo, excluir, larguras 1280/1440, acesso negado); test: financeiro-admin remove import sem uso; docs: capturas do financeiro-admin (claro, escuro, 1280, estresse); fix(financeiro): remove busca de lancamento sem filtro de obra e valida nome do anexo antes do R2. Arquivos: outros (1), backend (16), testes backend (7), docs (5), front (17), front/rotas-layouts (2), modules/contratos-admin (3), modules/financeiro-admin (23), modules/financeiro (1).
@@ -810,3 +886,12 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Nome do documento rejeita também caracteres Unicode de formatação (U+202E etc.); o front ainda não recusa C1 (0x80–0x9F), só o servidor.
 - `FOR NO KEY UPDATE` do limite de 200 sem teste em Postgres real (dois uploads concorrentes na 200ª vaga).
 - Sem substituir arquivo, sem lixeira, sem versionamento, sem paginação (máx. 200).
+
+### Backlog — Relatório ao cliente admin (21/10, security-reviewer e design-reviewer, todos baixos)
+- 404 antes de 403 nas rotas por id revela a existência de um relatório de outra obra (GUIDs aleatórios; padrão dos outros módulos).
+- `UpdateAsync` calcula `campos` da auditoria com leitura anterior ao UPDATE: duas edições concorrentes podem registrar campos errados.
+- `ConteudoSemCaracteresInvalidos` não recusa U+200E/U+200F/U+061C nem largura zero (U+200B–U+200D, U+FEFF); espelhar no front (`relatorioForm.ts`) e nos testes.
+- `RelatorioMensalHistoricoResponse` devolve `userId` que a tela não usa; remover do DTO e do tipo.
+- Sem versões do texto, sem despublicar, sem notificar cliente; conteúdo é texto puro.
+- Design: badge "Rascunho" quase sem contorno sobre o fundo cinza no topo do detalhe; botões outline vermelhos perdem a cor no hover (`hover:text-danger`), padrão comum a outras telas.
+- `components/ui/textarea.tsx` escrito à mão (shadcn sem rede): reinstalar pelo CLI.

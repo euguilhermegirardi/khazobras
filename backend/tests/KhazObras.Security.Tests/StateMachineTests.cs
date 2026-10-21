@@ -201,8 +201,8 @@ public sealed class StateMachineTests : IntegrationTestBase
 
         // Act
         var publishTime = DateTime.UtcNow;
-        await RelatorioMensalRepository.PublishAsync(created.Id, publishTime);
-        var result = await RelatorioMensalRepository.GetByIdAsync(created.Id);
+        await RelatorioMensalRepository.PublishAsync(created.Id, ObraId, publishTime);
+        var result = await RelatorioMensalRepository.GetByIdAndObraAsync(created.Id, ObraId);
 
         // Assert
         Assert.NotNull(result);
@@ -234,8 +234,8 @@ public sealed class StateMachineTests : IntegrationTestBase
         var beforePublish = DateTime.UtcNow;
 
         // Act
-        await RelatorioMensalRepository.PublishAsync(created.Id, beforePublish);
-        var result = await RelatorioMensalRepository.GetByIdAsync(created.Id);
+        await RelatorioMensalRepository.PublishAsync(created.Id, ObraId, beforePublish);
+        var result = await RelatorioMensalRepository.GetByIdAndObraAsync(created.Id, ObraId);
 
         // Assert
         Assert.NotNull(result);

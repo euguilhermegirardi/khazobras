@@ -928,84 +928,82 @@ O front busca com o token (fetch → blob → object URL), pois `<img src>` não
 
 ## Módulo Relatórios Mensais
 
-Gerencia relatórios consolidados mensais de obra com máquina de estados.
+"Relatório ao cliente" no admin (SPEC §6 item 13: edição + histórico) e "Relatório mensal" somente leitura no cliente (SPEC §5 item 8).
+Máquina de estados: `draft` → `published` (sem despublicar). Um relatório por obra e mês (`UNIQUE (obra_id, competencia)`); a
+`competencia` é sempre gravada no **dia 1** do mês informado. Todo endpoint com id de relatório resolve só o `obra_id`, chama
+`EnsureAccessAsync` (403) e só então lê/grava com `WHERE id = @Id AND obra_id = @ObraId`. Ordem de erros: 401 → 403 (cliente / sem acesso à
+obra, **antes** de ler o corpo) → 404 → 400 (corpo) → 409 (estado). Cliente é somente leitura. Editar, publicar e excluir são um único
+comando SQL condicionado a `status = 'draft'`, então não há corrida entre editar e publicar (quem perde recebe 409).
 
-### Estados
-- `draft`: Rascunho (editável)
-- `published`: Publicado (fechado)
+**Formatos:** datas ISO 8601 UTC (`competencia` = `yyyy-MM-dd`); IDs GUID; JSON em camelCase. 400 de corpo:
+`{ "title", "status", "errors": { "Campo": ["msg"] } }` (campos `ObraId`, `Competencia`, `Conteudo`). 409: `{ "message": "..." }`.
+`conteudo` é **texto puro** (até **20000** caracteres, não vazio, quebras de linha e tabulação permitidas; recusa caracteres de controle e de
+direção do texto U+202A–202E / U+2066–2069): o servidor não interpreta HTML e o front deve exibir como texto.
 
-### 1. Criar Relatório Mensal
-**POST** `/relatorios-mensais`
-
-Cria relatório mensal para uma obra. Estados: `draft` → `published`.
-
-**Autorização:** Admin, Master
-
-**Request:**
-```bash
-curl -X POST http://localhost:5285/relatorios-mensais \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "obraId": "770e8400-e29b-41d4-a716-446655440000",
-    "mesReferencia": "2026-10",
-    "resumo": "Progresso de 50% na fundação"
-  }'
-```
-
-**Response (201 Created):**
+**DTO Admin/Master (`RelatorioMensalResponse`):**
 ```json
 {
   "id": "ee0e8400-e29b-41d4-a716-446655440000",
   "obraId": "770e8400-e29b-41d4-a716-446655440000",
-  "mesReferencia": "2026-10",
-  "resumo": "Progresso de 50% na fundação",
-  "status": "Draft",
-  "createdAt": "2026-10-12T10:00:00Z"
+  "competencia": "2026-10-01",
+  "conteudo": "Obra segue no prazo.",
+  "status": "draft",
+  "publishedAt": null,
+  "createdByUserId": "550e8400-e29b-41d4-a716-446655440000",
+  "createdAt": "2026-10-21T10:00:00Z",
+  "updatedAt": "2026-10-21T10:00:00Z"
 }
 ```
+**DTO do cliente (`RelatorioMensalClienteResponse`):** `id, obraId, competencia, conteudo, status, publishedAt, createdAt` (sem
+`createdByUserId` nem `updatedAt`; só publicados; rascunho = 404 por id e ausente da lista, independentemente de `onlyPublished`).
 
-### 2. Listar Relatórios Mensais
-**GET** `/relatorios-mensais?obraId={id}&published=true`
-
-Lista relatórios mensais de uma obra (filtrável por status published).
-
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
-
-**Query Params:**
-- `published` (opcional): `true` para apenas publicados, `false` para rascunhos
-
-### 3. Obter Relatório Mensal por ID
-**GET** `/relatorios-mensais/{id}`
-
-Retorna detalhes de um relatório mensal.
-
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
-
-### 4. Publicar Relatório Mensal
-**POST** `/relatorios-mensais/{id}/publish`
-
-Publica relatório mensal (transição: `draft` → `published`). Somente Admin/Master.
-
-**Autorização:** Admin, Master
-
-**Request:**
-```bash
-curl -X POST http://localhost:5285/relatorios-mensais/ee0e8400-e29b-41d4-a716-446655440000/publish \
-  -H "Authorization: Bearer <token>"
-```
-
-**Response (200 OK):**
+### 1. Criar relatório (rascunho)
+**POST** `/relatorios-mensais` — Admin, Master
 ```json
-{
-  "id": "ee0e8400-e29b-41d4-a716-446655440000",
-  "obraId": "770e8400-e29b-41d4-a716-446655440000",
-  "mesReferencia": "2026-10",
-  "resumo": "Progresso de 50% na fundação",
-  "status": "Published",
-  "publishedAt": "2026-10-12T16:00:00Z"
-}
+{ "obraId": "770e8400-...", "competencia": "2026-10-17", "conteudo": "Obra segue no prazo." }
 ```
+Ordem: acesso à obra (403 para cliente) → corpo (400) → obra existe → mês livre. **201** (`Location: /relatorios-mensais/{id}`, DTO admin,
+`competencia` = `2026-10-01`), 400, 403, **404** (obra inexistente), **409** (já existe relatório da obra nesse mês).
+Auditoria `relatorio_mensal_criado` (entidade `relatorio_mensal`): `{ "obraId": "..." }`.
+
+### 2. Listar relatórios da obra
+**GET** `/obras/{obraId}/relatorios-mensais?onlyPublished=false` — qualquer usuário com acesso à obra. **200** array (competência mais nova
+primeiro). Admin/Master: todos (DTO admin; `onlyPublished=true` filtra no SQL). Cliente: **sempre** só publicados (DTO cliente). Sem paginação:
+há no máximo um por mês (limitado pelo `UNIQUE`). 403 sem acesso à obra.
+
+### 3. Detalhe
+**GET** `/relatorios-mensais/{id}` — qualquer usuário com acesso à obra. **200** (admin: DTO admin; cliente: DTO cliente), 403, 404 (inexistente;
+para o cliente, também rascunho).
+
+### 4. Editar rascunho
+**PUT** `/relatorios-mensais/{id}` — Admin, Master
+```json
+{ "competencia": "2026-10-01", "conteudo": "Texto novo." }
+```
+Substitui os dois campos (a obra, o status e o autor não mudam). Ordem: 404 → 403 → 400 (corpo) → 409. **200** (DTO admin), 400, 403, 404,
+**409** `{ "message": "Relatorio publicado nao pode ser editado." }` (publicado) ou `{ "message": "Ja existe um relatorio desta obra para a
+competencia informada." }` (mês já usado por outro relatório). Auditoria `relatorio_mensal_editado`: `{ "obraId", "campos": ["competencia","conteudo"] }`
+(só os nomes dos campos que mudaram; nada alterado = sem registro).
+
+### 5. Excluir rascunho
+**DELETE** `/relatorios-mensais/{id}` — Admin, Master. Definitivo (sem lixeira). **204**, 403, 404, **409**
+`{ "message": "Relatorio publicado nao pode ser excluido." }`. Auditoria `relatorio_mensal_excluido`: `{ "obraId" }`.
+
+### 6. Publicar
+**POST** `/relatorios-mensais/{id}/publish` — Admin, Master (sem corpo). **200** (DTO admin com `status = "published"` e `publishedAt`), 403, 404,
+**409** `{ "message": "Relatorio ja esta publicado." }`. Auditoria `relatorio_mensal_publicado`: `{ "obraId" }`.
+
+### 7. Histórico
+**GET** `/relatorios-mensais/{id}/historico` — Admin, Master. **200** array do mais novo para o mais antigo (até 100):
+```json
+[
+  { "acao": "relatorio_mensal_publicado", "userId": "550e8400-...", "userName": "Ana Admin", "createdAt": "2026-10-21T12:00:00Z", "campos": [] },
+  { "acao": "relatorio_mensal_editado", "userId": "550e8400-...", "userName": "Ana Admin", "createdAt": "2026-10-21T11:00:00Z", "campos": ["conteudo"] },
+  { "acao": "relatorio_mensal_criado", "userId": "550e8400-...", "userName": "Ana Admin", "createdAt": "2026-10-21T10:00:00Z", "campos": [] }
+]
+```
+Vem da auditoria (`log_auditoria`), nunca traz o texto. `userName` é `null` se o usuário não existir mais. Relatórios publicados antes da
+auditoria (ou criados por outro caminho) devolvem lista vazia. 403 (cliente), 404 (inexistente). Excluído não tem histórico (o relatório some).
 
 ---
 

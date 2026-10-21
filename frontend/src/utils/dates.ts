@@ -82,3 +82,10 @@ export function dayFractionOfMonth(value: string): number {
 export function formatTimestamp(value: string): string {
   return new Intl.DateTimeFormat('pt-BR').format(new Date(value));
 }
+
+/** Data e hora (dd/MM/aaaa HH:mm) de um instante ISO 8601, no fuso do navegador (histórico de alterações). */
+export function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+    .format(new Date(value))
+    .replace(',', '');
+}

@@ -1,0 +1,93 @@
+{
+  "GET /obras/a1/relatorios-mensais": [
+    {
+      "id": "r1",
+      "obraId": "a1",
+      "competencia": "2026-10-01",
+      "conteudo": "Trabalhos executados no mês\n• Pisos e revestimentos vinílicos concluídos (100%)\n• Metais e louças: torneiras, chuveiros, ducha e vasos (em execução)\n• Gesso: início dos forros (em execução)\n• Montagem do telhado: madeiramento e telhas (em andamento)\n\nPendências e comunicados\n• Aguardando entrega das peças para chuveiros e vasos sanitários\n• Esquadrias e portas: aguardando pintura para instalação final\n• Instalações elétricas: aguardando gesso e pintura para luminárias\n\nPróxima semana: conclusão do telhado e início do gesso e dos forros.",
+      "status": "draft",
+      "publishedAt": null,
+      "createdByUserId": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-10-18T12:00:00Z",
+      "updatedAt": "2026-10-20T14:30:00Z"
+    },
+    {
+      "id": "r2",
+      "obraId": "a1",
+      "competencia": "2026-09-01",
+      "conteudo": "Fundação concluída e iniciada a alvenaria do pavimento térreo.\nChuvas atrasaram a concretagem em três dias.",
+      "status": "published",
+      "publishedAt": "2026-10-02T12:00:00Z",
+      "createdByUserId": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-09-28T12:00:00Z",
+      "updatedAt": "2026-10-02T12:00:00Z"
+    },
+    {
+      "id": "r3",
+      "obraId": "a1",
+      "competencia": "2026-08-01",
+      "conteudo": "Início da alvenaria. Equipe completa em obra.",
+      "status": "published",
+      "publishedAt": "2026-09-03T12:00:00Z",
+      "createdByUserId": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-08-30T12:00:00Z",
+      "updatedAt": "2026-09-03T12:00:00Z"
+    },
+    {
+      "id": "r4",
+      "obraId": "a1",
+      "competencia": "2026-07-01",
+      "conteudo": "Escavação e sapatas concluídas.",
+      "status": "published",
+      "publishedAt": "2026-08-04T12:00:00Z",
+      "createdByUserId": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-07-30T12:00:00Z",
+      "updatedAt": "2026-08-04T12:00:00Z"
+    },
+    {
+      "id": "r5",
+      "obraId": "a1",
+      "competencia": "2026-06-01",
+      "conteudo": "Rascunho sem publicar: levantamento topográfico.",
+      "status": "draft",
+      "publishedAt": null,
+      "createdByUserId": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-06-30T12:00:00Z",
+      "updatedAt": "2026-07-02T09:00:00Z"
+    }
+  ],
+  "GET /relatorios-mensais/r1": {
+    "id": "r1",
+    "obraId": "a1",
+    "competencia": "2026-10-01",
+    "conteudo": "Trabalhos executados no mês\n• Pisos e revestimentos vinílicos concluídos (100%)\n• Metais e louças: torneiras, chuveiros, ducha e vasos (em execução)\n• Gesso: início dos forros (em execução)\n• Montagem do telhado: madeiramento e telhas (em andamento)\n\nPendências e comunicados\n• Aguardando entrega das peças para chuveiros e vasos sanitários\n• Esquadrias e portas: aguardando pintura para instalação final\n• Instalações elétricas: aguardando gesso e pintura para luminárias\n\nPróxima semana: conclusão do telhado e início do gesso e dos forros.",
+    "status": "draft",
+    "publishedAt": null,
+    "createdByUserId": "00000000-0000-0000-0000-000000000001",
+    "createdAt": "2026-10-18T12:00:00Z",
+    "updatedAt": "2026-10-20T14:30:00Z"
+  },
+  "GET /relatorios-mensais/r1/historico": [
+    {
+      "acao": "relatorio_mensal_editado",
+      "userId": "u1",
+      "userName": "Ana Admin",
+      "createdAt": "2026-10-20T14:30:00Z",
+      "campos": ["competencia", "conteudo"]
+    },
+    {
+      "acao": "relatorio_mensal_editado",
+      "userId": "u1",
+      "userName": "Ana Admin",
+      "createdAt": "2026-10-19T10:00:00Z",
+      "campos": ["conteudo"]
+    },
+    {
+      "acao": "relatorio_mensal_criado",
+      "userId": "u2",
+      "userName": null,
+      "createdAt": "2026-10-18T12:00:00Z",
+      "campos": []
+    }
+  ]
+}
