@@ -1629,7 +1629,8 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
         return Results.Forbid();
     }
 
-    if (!KhazObras.Api.Validation.FileUploadValidator.IsValid(file, out var validationError))
+    // Unico ponto que aceita .dwg (AutoCAD): extensao + MIME de AutoCAD/octet-stream + cabecalho "AC10xx".
+    if (!KhazObras.Api.Validation.FileUploadValidator.IsValidProjeto(file, out var validationError))
     {
         return Results.BadRequest(new { message = validationError });
     }
@@ -1651,13 +1652,13 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
         }),
         ProjetoUploadStatus.NomeArquivoInvalido => Results.BadRequest(new { message = $"O nome do arquivo deve ter de 1 a {ProjetoRegras.MaxNomeArquivo} caracteres, sem barras nem caracteres de controle." }),
         ProjetoUploadStatus.TipoDocumentoInvalido => Results.BadRequest(new { message = $"O tipo do documento deve ter no maximo {ProjetoRegras.MaxTipoDocumento} caracteres, sem caracteres de controle." }),
-        _ => Results.BadRequest(new { message = "Documento de projeto deve ser PDF, imagem (jpg, jpeg, png, webp, gif), Word (doc, docx) ou Excel (xls, xlsx)." })
+        _ => Results.BadRequest(new { message = "Documento de projeto deve ser PDF, imagem (jpg, jpeg, png, webp, gif), Word (doc, docx), Excel (xls, xlsx) ou AutoCAD (dwg)." })
     };
 })
 .DisableAntiforgery()
 .RequireAuthorization("AdminOrMaster")
 .WithName("UploadProjetoDocumento")
-.WithDescription("Anexa documento de projeto a uma obra (pdf, imagem, doc/docx, xls/xlsx; máx 10MB, validado por magic bytes; máx 200 por obra). etapaId e tipoDocumento na query string. Somente Admin/Master; audita projeto_enviado");
+.WithDescription("Anexa documento de projeto a uma obra (pdf, imagem, doc/docx, xls/xlsx, dwg; máx 10MB, validado por magic bytes; máx 200 por obra). etapaId e tipoDocumento na query string. Somente Admin/Master; audita projeto_enviado");
 
 app.MapPut("/projetos/{id:guid}", async (Guid id, UpdateProjetoDocumentoRequest request, IValidator<UpdateProjetoDocumentoRequest> validator, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
