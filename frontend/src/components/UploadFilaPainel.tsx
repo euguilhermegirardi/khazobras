@@ -9,6 +9,8 @@ interface UploadFilaPainelProps {
   /** "foto" / "documento": usado no resumo ("2 de 3 fotos enviadas"). */
   singular: string;
   plural: string;
+  /** Concordância de "enviada(s)" com o substantivo; padrão: feminino ("3 de 3 fotos enviadas"). */
+  enviados?: { singular: string; plural: string };
   /** As linhas (`<li>`) da fila. */
   children: ReactNode;
 }
@@ -19,12 +21,13 @@ export const UploadFilaPainel = ({
   cancelando,
   singular,
   plural: pluralTxt,
+  enviados = { singular: 'enviada', plural: 'enviadas' },
   children,
 }: UploadFilaPainelProps) => {
   // Constants derivadas
   const tom = resumo.falhas > 0 ? 'warning' : resumo.enviadas === resumo.total ? 'success' : 'info';
   const resumoTexto = [
-    `${resumo.enviadas} de ${plural(resumo.total, singular, pluralTxt)} ${resumo.enviadas === 1 ? 'enviada' : 'enviadas'}`,
+    `${resumo.enviadas} de ${plural(resumo.total, singular, pluralTxt)} ${resumo.enviadas === 1 ? enviados.singular : enviados.plural}`,
     resumo.falhas > 0 ? plural(resumo.falhas, 'com erro', 'com erro') : null,
     resumo.canceladas > 0 ? plural(resumo.canceladas, 'cancelada', 'canceladas') : null,
     resumo.pendentes > 0 ? plural(resumo.pendentes, 'pendente', 'pendentes') : null,

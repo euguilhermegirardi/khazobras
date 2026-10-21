@@ -94,7 +94,15 @@ export const useUploadFila = <Metadados>({
             aplicar({ tipo: 'status', id: item.id, status: 'pendente' });
             break;
           }
-          const { message, requestId } = toMensagemErro(error, mensagemFalha);
+          const { message: base, requestId } = toMensagemErro(error, mensagemFalha);
+          // 400 de campo (`{ errors: { EtapaId: [...] } }`) não traz `message`: mostra o texto do campo.
+          const doCampo =
+            error instanceof ApiError
+              ? Object.values(error.fieldErrors ?? {})
+                  .flat()
+                  .join(' ')
+              : '';
+          const message = doCampo === '' ? base : doCampo;
           const texto = requestId ? `${message} (código: ${requestId})` : message;
           aplicar({ tipo: 'status', id: item.id, status: 'erro', erro: texto });
           if (error instanceof ApiError && PARA_A_FILA.has(error.kind)) {
