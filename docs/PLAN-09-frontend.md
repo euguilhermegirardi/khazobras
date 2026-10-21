@@ -730,6 +730,16 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     navegar (sem piscar 404); 400 `errors.Fotos` ao reordenar mostra a mensagem do servidor; `PageSection` limita o h1 a 2 linhas (`line-clamp-2`, `title`).
   - **Testes antigos afetados:** nenhum falhou (871 verdes). O de ordem do menu do admin só vale se não assumir que Contratos é o último item.
 
+- **Projetos admin, front** (`feat/projetos-admin`, 21/10). `modules/projetos-admin`, rota `/admin/obras/:obraId/projetos`, item "Projetos" (ícone `FolderOpen`)
+  em `ADMIN_NAV.obra` **depois de Relatório fotográfico** (SPEC §6 item 12).
+  - **Base subida (módulo não importa módulo; comportamento idêntico, testes do tester intactos):** fila de upload de arquivos genérica em `utils/uploadFila`
+    (tipos, `filaReducer`, `resumoFila`, `prepararItens` com `validar`/`limite`/`mensagemLimite`, `plural`) + `hooks/useUploadFila` (laço sequencial, cancelar,
+    repetir, interrupção por 403/404/401/rede; recebe `enviar` e `aoTerminar`); componentes `UploadDropzone`, `UploadRecusadosAlert`, `UploadFilaPainel`,
+    `UploadFilaAcoes`, `UploadItemLinha` (miniatura por slot). O módulo de fotos virou só a regra de foto (limite 100, `uploadFoto`, prévia local) sobre essa base;
+    `modules/relatorio-fotografico-admin/uploadFila.ts` reexporta a base e mantém `prepararItens(fila, arquivos, jaNoRelatorio, novoId)`.
+    Do cliente de Projetos: `utils/arquivoTipo` (`arquivoTipo`, `podeVisualizar`, ícones), `components/ArquivoIcone`, `utils/agruparProjetos` (títulos dos grupos de
+    exceção por parâmetro) e `hooks/useProjetos` (`projetosKey`, `useProjetos`, `useAcaoProjeto`; `modules/projetos/{hooks,constants,agrupar}.ts` reexportam; o `api.ts` dele saiu).
+
 ## Registro
 
 - 2026-10-21 — `feat/projetos-admin`: feat(projetos): backend admin com PUT/DELETE, limite por obra travado, tipos restritos e auditoria; test(projetos): upload, PUT, DELETE, limite, etapa, R2 limpo, auditoria e DTO sem chave; docs(projetos): contrato da API de projetos (lista, upload, PUT, DELETE, download). Arquivos: outros (1), backend (7), testes backend (5).
