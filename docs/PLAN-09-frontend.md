@@ -53,6 +53,7 @@ sempre "Não iniciada").
 | A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ✅ | Front feito: `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro` (item "Financeiro" entre Medições e Contratos). KPIs internos, tabela com seleção e lote, flag por linha, novo/editar com comprovantes, exclusão com confirmação. Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Financeiro admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 | A6 | Relatório fotográfico (SPEC §6 item 11: criar/editar relatório, upload e gestão das fotos) | ✅ backend (`feat/fotos-admin`, empilhada sobre `feat/financeiro-admin`, PR #20; o PR terá base `main` e dirá "mesclar depois do #20"; sem script SQL): `GET /obras/{id}/relatorios-fotograficos` (com `quantidadeFotos`), `POST/PUT/DELETE /relatorios-fotograficos[/{id}]`, `POST /relatorios-fotograficos/{id}/fotos`, `PATCH /fotos/{id}`, `DELETE /fotos/{id}`, `PATCH /relatorios-fotograficos/{id}/fotos/ordem` | 🟨 | Front feito: `modules/relatorio-fotografico-admin`, rotas `/admin/obras/:obraId/relatorio-fotografico` (lista) e `.../:relatorioId` (gerenciador de fotos). Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Relatório fotográfico admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 | A7 | Projetos (SPEC §6 item 12: upload e gestão dos documentos técnicos) | ✅ backend (`feat/projetos-admin`, empilhada sobre `feat/fotos-admin`; sem script SQL): `GET /obras/{id}/projetos`, `POST /obras/{id}/projetos?etapaId&tipoDocumento` (multipart), `PUT /projetos/{id}` (nome, tipoDocumento, etapaId), `DELETE /projetos/{id}`, `GET /projetos/{id}/download` | ✅ | `feat/projetos-admin`: `modules/projetos-admin`, rota `/admin/obras/:obraId/projetos`, item "Projetos" depois de Relatório fotográfico no `ADMIN_NAV.obra`. Tester, design e segurança verdes (2 rodadas de correção). Relatório: `docs/relatorios/2026-10-21-projetos-admin.md`. Contrato em "Decisões" (Projetos admin, backend) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
+| A8 | Relatório ao cliente (SPEC §6 item 13: edição + histórico) | ✅ backend (`feat/relatorio-admin`, empilhada sobre `feat/projetos-admin`, PR #22; sem script SQL): `GET /obras/{id}/relatorios-mensais` (admin: todos), `POST /relatorios-mensais`, `PUT /relatorios-mensais/{id}` (competência + conteúdo, só rascunho), `DELETE /relatorios-mensais/{id}` (só rascunho), `POST /relatorios-mensais/{id}/publish`, `GET /relatorios-mensais/{id}/historico` | ⬜ | Backend pronto, falta a tela (`modules/relatorio-mensal-admin`, rota `/admin/obras/:obraId/relatorio-ao-cliente`, item depois de Projetos no `ADMIN_NAV.obra`). Contrato em "Decisões" (Relatório ao cliente, backend) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -70,7 +71,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
 - Auditoria: medições, contratos/pagamentos, financeiro (editar, excluir, visibilidade, remover anexo) e relatório fotográfico (editar,
-  excluir, editar/remover/reordenar foto) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
+  excluir, editar/remover/reordenar foto), projetos e relatório mensal (criar, editar, excluir, publicar) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
   Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
@@ -118,10 +119,18 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   não é gravado (só a extensão entra na chave), então o front não consegue mostrar o nome original; auditoria de criar relatório e de
   enviar foto não existe (só editar/excluir/reordenar/remover; avaliar gravar `relatorio_fotografico_criado` e `foto_enviada`);
   `descricao` e `dataFoto` do upload vão na query string (`POST /relatorios-fotograficos/{id}/fotos?descricao=...`): texto livre
-  pode parar em logs de acesso/proxy; avaliar mover para campos do multipart (muda backend e front juntos); `POST /relatorios-mensais` ainda valida o corpo **antes** do acesso
-  à obra (mesma violação que foi corrigida em fotos e financeiro; varrer quando mexer em Relatórios mensais); os testes HTTP usam
+  pode parar em logs de acesso/proxy; avaliar mover para campos do multipart (muda backend e front juntos); os testes HTTP usam
   repositório falso, então o SQL novo (`FOR UPDATE`, `unnest`, `UPDATE ... CASE`) só roda com Postgres de verdade.
-- Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
+- Relatório ao cliente (backlog, o backend do admin está pronto: ver Decisões): sem despublicar (o SPEC não pede; decisão de produto: o cliente já pode
+  ter lido), sem versões do texto (o histórico é a auditoria: quem/quando/quais campos, nunca o texto anterior; guardar versões exigiria tabela
+  nova `relatorios_mensais_versoes`, script 009), sem "publicado por" como coluna (sai do histórico), sem lixeira na exclusão do rascunho,
+  sem notificar o cliente ao publicar (a tela "Notificar cliente" é separada), texto puro sem formatação (negrito, listas) nem anexos/fotos
+  no relatório, sem modelo de relatório; `GET /obras/{id}/relatorios-mensais` devolve array puro (no máximo um por mês, limitado pelo `UNIQUE`),
+  com o texto inteiro de cada um (até 20000 caracteres); a auditoria é gravada depois da escrita, fora da transação (falha = 500 com a
+  alteração feita; mesma lacuna de Medições, Contratos, Financeiro, Fotos e Projetos); os testes HTTP usam repositório falso, então o SQL novo
+  (`INSERT ... SELECT ... ON CONFLICT DO NOTHING`, `UPDATE/DELETE ... WHERE status = 'draft' RETURNING`) só roda com Postgres de verdade;
+  relatórios antigos com `competencia` fora do dia 1 continuam como estão (só os novos e os editados são normalizados);
+  `GET /relatorios-mensais/{id}/historico` não tem paginação (até 100 registros).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE nos módulos que ainda não têm (Financeiro já tem); `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
@@ -654,6 +663,41 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     `ProjetoValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`; `ProjetoDocumentoAcessoTests` ajustado ao novo construtor;
     `FakeProjetoDocumentoRepository` espelha o SQL (preso à obra, obra inexistente, limite). **Validar no Mac com Postgres**: dois uploads simultâneos
     perto de 200; `PUT` e `DELETE` de documento de outra obra; `DELETE` com o R2 desligado.
+- **Relatório ao cliente, backend** (`feat/relatorio-admin`, 21/10; sem script SQL, sem schema novo; contrato completo em
+  `backend/docs/API.md` → Módulo Relatórios Mensais). Pronto para a tela admin (SPEC §6 item 13). Escrito na nuvem sem .NET: `dotnet build` +
+  `dotnet test` no Mac antes do merge.
+  - **Modelo** (`relatorios_mensais`, script 005): `competencia` DATE, `conteudo` TEXT, `status` (`draft`/`published`), `published_at`,
+    `created_by_user_id`, `UNIQUE (obra_id, competencia)`. **Não inventamos coluna**: não existe "publicado por" nem versões.
+  - **Histórico = auditoria** (decisão mínima que cumpre "edição + histórico"): lista de relatórios por competência (com status e `publishedAt`) +
+    `GET /relatorios-mensais/{id}/historico` com criado/editado/publicado (ação, usuário e nome, data e **nomes** dos campos alterados, nunca o texto).
+    Versões do texto ficam no backlog (exigiriam tabela e script 009).
+  - **Endpoints**: `POST /relatorios-mensais` (corrigido), `PUT /relatorios-mensais/{id}`, `DELETE /relatorios-mensais/{id}` (204),
+    `GET /relatorios-mensais/{id}/historico` (novos), `publish` (corrigido); lista e detalhe inalterados no contrato (o DTO admin ganhou
+    `updatedAt`). Escritas e histórico só `AdminOrMaster` (policy antes de ler o corpo: cliente = 403 mesmo com corpo inválido).
+    Padrão: `ResolveAsync` (404) → `EnsureAccessAsync` (403) → corpo (400) → 409 → SQL preso a `obra_id`.
+  - **Regras**: `PUT` substitui `competencia` e `conteudo`; só rascunho (publicado = 409). `publish` de publicado = 409. Excluir publicado = 409
+    (não existe despublicar). `competencia` sempre vira o **dia 1** do mês (a unicidade do schema é por data exata); mês repetido na criação ou na
+    edição = **409** `{ message }`. Obra inexistente no `POST` = **404** (antes: FK → 500). Conteúdo: texto puro, 1..20000 caracteres, recusa
+    controle (menos `\n \r \t`; o NUL derrubaria o INSERT) e caracteres de direção do texto (U+202A–202E, U+2066–2069); o servidor não interpreta
+    HTML e o front deve exibir como texto. Competência entre os anos 2000 e 2100.
+  - **Concorrência**: editar, publicar e excluir são **um comando** `UPDATE/DELETE ... WHERE id AND obra_id AND status = 'draft' RETURNING`
+    (atômico, sem transação nem `FOR UPDATE`: a linha é o próprio alvo). Quando não volta linha, uma consulta `WHERE id AND obra_id` separa 404
+    (não existe) de 409 (existe e não é rascunho). Criar é `INSERT ... SELECT FROM obras ... ON CONFLICT (obra_id, competencia) DO NOTHING
+    RETURNING id`: obra inexistente e mês repetido não viram exceção; a corrida entre dois `POST` do mesmo mês termina em 409 para o segundo.
+    No `PUT` a violação do `UNIQUE` (23505) vira 409.
+  - **Auditoria** (entidade `relatorio_mensal`, id do relatório): `relatorio_mensal_criado`/`_publicado`/`_excluido` (`obraId`) e
+    `relatorio_mensal_editado` (`obraId`, `campos`). Nunca o texto. Gravada depois da escrita, fora da transação (como os outros módulos).
+  - **Varredura do módulo (achados corrigidos)**: `POST` validava o corpo **antes** do acesso e dava 500 em obra inexistente (FK) e em mês repetido
+    (`UNIQUE`); `GET /relatorios-mensais/{id}` e `publish` liam o relatório **sem filtro de obra** (`GetByIdAsync(id)`) e o detalhe do cliente fazia
+    duas leituras; `publish` era `RequireAuthorization()` com checagem de papel no corpo (o cliente via 404 em vez de 403) e a transição era
+    leitura + `UPDATE` sem condição de status (corrida: duas publicações, `publishedAt` sobrescrito); a lista do admin buscava tudo e filtrava
+    `onlyPublished` em memória (agora SQL); sem limite de tamanho do conteúdo, sem auditoria, `ORDER BY` sem desempate (agora `, id`). Removidos
+    `GetByIdAsync(id)` e `GetPublishedByIdAsync(id)` do repositório (sem filtro por obra). Já corretos: filtro `published` no SQL e DTO do cliente sem
+    `createdByUserId`.
+  - **Testes**: `Http/RelatorioMensalAdminTests` (403 do cliente inclusive com corpo inválido, 401, criar/404/409/400, editar/excluir/publicar com 409,
+    preso à obra no service, cliente não vê rascunho nem campos internos, histórico sem texto, auditoria sem texto livre),
+    `RelatorioMensalValidatorTests`, rotas novas em `WriteEndpointsAuthorizationTests`; `FakeRelatorioMensalRepository` espelha o SQL
+    (preso à obra, só rascunho, `UNIQUE`); `StateMachineTests` migrou para os métodos novos do repositório.
 - **Financeiro admin, front** (`feat/financeiro-admin`, 20/10). `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro`, item
   "Financeiro" (ícone `Wallet`) em `ADMIN_NAV.obra` **entre Medições e Contratos** (ordem do SPEC §6: 7 Medições, 8 Financeiro, 9 Contratos;
   antes o Contratos vinha logo depois de Medições). Sem Importar/Exportar, sem pagador, sem abas Resumo/Por categoria.

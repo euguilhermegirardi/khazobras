@@ -1411,12 +1411,7 @@ app.MapGet("/fotos/{fotoId:guid}/arquivo", async (Guid fotoId, RelatorioFotograf
 
 app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, IValidator<CreateRelatorioMensalRequest> validator, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var validation = await validator.ValidateAsync(request);
-    if (!validation.IsValid)
-    {
-        return Results.ValidationProblem(validation.ToDictionary());
-    }
-
+    // Padrao: acesso a obra ANTES de validar o corpo (403 nao depende do conteudo enviado).
     try
     {
         await accessService.EnsureAccessAsync(principal, request.ObraId);
@@ -1426,25 +1421,37 @@ app.MapPost("/relatorios-mensais", async (CreateRelatorioMensalRequest request, 
         return Results.Forbid();
     }
 
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
     var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     var result = await service.CreateAsync(request, userId);
-    return Results.Created($"/relatorios-mensais/{result.Id}", result);
+    return result.Status switch
+    {
+        RelatorioMensalWriteStatus.Ok => Results.Created($"/relatorios-mensais/{result.Relatorio!.Id}", result.Relatorio),
+        RelatorioMensalWriteStatus.ObraNaoEncontrada => Results.NotFound(),
+        _ => Results.Conflict(new { message = "Ja existe um relatorio desta obra para a competencia informada." })
+    };
 })
 .RequireAuthorization("AdminOrMaster")
 .WithName("CreateRelatorioMensal")
-.WithDescription("Cria relatório mensal para uma obra. Estados: draft → published");
+.WithDescription("Cria relatório mensal em rascunho (competência vira o dia 1 do mês; conteúdo até 20000 caracteres, texto puro). Obra inexistente = 404; mês repetido = 409. Somente Admin/Master; audita relatorio_mensal_criado");
 
 app.MapGet("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var result = await service.GetByIdAsync(id);
-    if (result is null)
+    // Padrao: resolve so o obra_id -> acesso -> leitura presa a obra (e, para o cliente, so published) no SQL.
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, result.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
@@ -1454,15 +1461,16 @@ app.MapGet("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalServi
     if (!accessService.IsAdminOrMaster(principal))
     {
         // Cliente: só publicados e sem ids internos (rascunho = 404).
-        var visaoCliente = await service.GetPublishedByIdForClientAsync(id);
+        var visaoCliente = await service.GetPublishedByIdForClientAsync(id, obraId.Value);
         return visaoCliente is null ? Results.NotFound() : Results.Ok(visaoCliente);
     }
 
-    return Results.Ok(result);
+    var result = await service.GetByIdAndObraAsync(id, obraId.Value);
+    return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization()
 .WithName("GetRelatorioMensalById")
-.WithDescription("Retorna detalhes de um relatório mensal");
+.WithDescription("Retorna detalhes de um relatório mensal (cliente: só publicado, sem ids internos)");
 
 app.MapGet("/obras/{obraId:guid}/relatorios-mensais", async (Guid obraId, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal, bool onlyPublished = false) =>
 {
@@ -1486,43 +1494,129 @@ app.MapGet("/obras/{obraId:guid}/relatorios-mensais", async (Guid obraId, Relato
 })
 .RequireAuthorization()
 .WithName("GetRelatoriosMensaisByObra")
-.WithDescription("Lista relatórios mensais de uma obra (filtrável por status published)");
+.WithDescription("Lista relatórios mensais de uma obra, competência mais nova primeiro (Admin/Master: todos, filtrável por onlyPublished; cliente: só publicados)");
 
-app.MapPost("/relatorios-mensais/{id:guid}/publish", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+app.MapPut("/relatorios-mensais/{id:guid}", async (Guid id, UpdateRelatorioMensalRequest request, IValidator<UpdateRelatorioMensalRequest> validator, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var existing = await service.GetByIdAsync(id);
-    if (existing is null)
+    // Padrao: resolve so o obra_id -> acesso -> corpo (400) -> 409 (publicado / mês repetido) -> UPDATE preso a obra e a draft.
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
-    if (!accessService.IsAdminOrMaster(principal))
-    {
-        return Results.Forbid();
-    }
-
     try
     {
-        await accessService.EnsureAccessAsync(principal, existing.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
         return Results.Forbid();
     }
 
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.UpdateAsync(id, obraId.Value, request, userId);
+    return result.Status switch
+    {
+        RelatorioMensalWriteStatus.Ok => Results.Ok(result.Relatorio),
+        RelatorioMensalWriteStatus.NaoEncontrado => Results.NotFound(),
+        RelatorioMensalWriteStatus.CompetenciaDuplicada => Results.Conflict(new { message = "Ja existe um relatorio desta obra para a competencia informada." }),
+        _ => Results.Conflict(new { message = "Relatorio publicado nao pode ser editado." })
+    };
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateRelatorioMensal")
+.WithDescription("Edita competência e conteúdo de um relatório em rascunho (publicado = 409; mês já usado = 409). Somente Admin/Master; audita relatorio_mensal_editado");
+
+app.MapDelete("/relatorios-mensais/{id:guid}", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
     try
     {
-        var result = await service.PublishAsync(id);
-        return Results.Ok(result);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
-    catch (InvalidOperationException ex)
+    catch (UnauthorizedAccessException)
     {
-        return Results.Conflict(new { message = ex.Message });
+        return Results.Forbid();
     }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var status = await service.DeleteAsync(id, obraId.Value, userId);
+    return status switch
+    {
+        RelatorioMensalWriteStatus.Ok => Results.NoContent(),
+        RelatorioMensalWriteStatus.NaoEncontrado => Results.NotFound(),
+        _ => Results.Conflict(new { message = "Relatorio publicado nao pode ser excluido." })
+    };
 })
-.RequireAuthorization()
+.RequireAuthorization("AdminOrMaster")
+.WithName("DeleteRelatorioMensal")
+.WithDescription("Exclui um relatório em rascunho (definitivo, sem lixeira; publicado = 409). Somente Admin/Master; audita relatorio_mensal_excluido");
+
+app.MapPost("/relatorios-mensais/{id:guid}/publish", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.PublishAsync(id, obraId.Value, userId);
+    return result.Status switch
+    {
+        RelatorioMensalWriteStatus.Ok => Results.Ok(result.Relatorio),
+        RelatorioMensalWriteStatus.NaoEncontrado => Results.NotFound(),
+        _ => Results.Conflict(new { message = "Relatorio ja esta publicado." })
+    };
+})
+.RequireAuthorization("AdminOrMaster")
 .WithName("PublishRelatorioMensal")
-.WithDescription("Publica relatório mensal (transição: draft → published). Somente Admin/Master");
+.WithDescription("Publica relatório mensal (transição: draft → published; já publicado = 409). Somente Admin/Master; audita relatorio_mensal_publicado");
+
+app.MapGet("/relatorios-mensais/{id:guid}/historico", async (Guid id, RelatorioMensalService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var historico = await service.GetHistoricoAsync(id, obraId.Value);
+    return historico is null ? Results.NotFound() : Results.Ok(historico);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("GetRelatorioMensalHistorico")
+.WithDescription("Histórico de um relatório (criado, editado, publicado: quem e quando, sem o texto), do mais novo para o mais antigo. Somente Admin/Master");
 
 app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal, Guid? etapaId, string? tipoDocumento) =>
 {

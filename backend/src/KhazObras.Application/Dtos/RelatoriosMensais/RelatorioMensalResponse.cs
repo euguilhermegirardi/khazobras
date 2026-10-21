@@ -1,5 +1,6 @@
 namespace KhazObras.Application.Dtos.RelatoriosMensais;
 
+/// <summary>Visao Admin/Master. O cliente recebe <see cref="RelatorioMensalClienteResponse"/> (sem ids de usuario).</summary>
 public sealed record RelatorioMensalResponse(
     Guid Id,
     Guid ObraId,
@@ -8,4 +9,5 @@ public sealed record RelatorioMensalResponse(
     string Status,
     DateTime? PublishedAt,
     Guid CreatedByUserId,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    DateTime UpdatedAt);
