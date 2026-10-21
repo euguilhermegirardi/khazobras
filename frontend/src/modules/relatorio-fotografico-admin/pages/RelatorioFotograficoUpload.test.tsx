@@ -292,6 +292,27 @@ describe('Relatório fotográfico (admin) - envio: fila', () => {
     expect(api.chamadas.uploads).toHaveLength(3);
   });
 
+  it('um 400 com errors de campo (sem message) mostra o texto do campo na linha da fila, não "Dados inválidos."', async () => {
+    await montar(
+      [],
+      [
+        http.post(POST_FOTOS, () =>
+          HttpResponse.json({ errors: { DataFoto: ['Data fora do intervalo aceito.'] } }, { status: 400 }),
+        ),
+      ],
+    );
+    escolher(imagem('a.jpg'));
+
+    await user().click(await screen.findByRole('button', { name: 'Enviar 1 foto' }));
+
+    expect(await screen.findByText('0 de 1 foto enviadas · 1 com erro')).toBeInTheDocument();
+    expect(within(linha('a.jpg')).getByText('Data fora do intervalo aceito.')).toBeInTheDocument();
+    expect(screen.queryByText('Dados inválidos.')).not.toBeInTheDocument();
+    // 400 de campo não interrompe a fila: dá para tentar de novo.
+    expect(screen.queryByText(/Envio interrompido/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tentar de novo (1)' })).toBeInTheDocument();
+  });
+
   it('um 500 mostra o código de suporte na linha e a fila continua', async () => {
     await montar(
       [],
