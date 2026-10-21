@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { ErrorState } from '@/components/ErrorState';
 import { PageSection } from '@/components/PageSection';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RelatorioMensalCard } from '../components/RelatorioMensalCard';
+import { RelatorioMensalCard } from '@/components/RelatorioMensalCard';
 import { useRelatoriosMensais } from '../hooks';
 
 const TITULO = 'Relatório mensal';

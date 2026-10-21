@@ -1,8 +1,2 @@
-import { useQuery } from '@tanstack/react-query';
-import { listRelatoriosMensais } from './api';
-
-export const useRelatoriosMensais = (obraId: string) =>
-  useQuery({
-    queryKey: ['obra', obraId, 'relatorios-mensais'] as const,
-    queryFn: ({ signal }) => listRelatoriosMensais(obraId, signal),
-  });
+// Lista e chave de cache são da base (`hooks/useRelatoriosMensais`): o Relatório ao cliente (admin) invalida a mesma chave.
+export { relatoriosMensaisKey, useRelatoriosMensais } from '@/hooks/useRelatoriosMensais';
