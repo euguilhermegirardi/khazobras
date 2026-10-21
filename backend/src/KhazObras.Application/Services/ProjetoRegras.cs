@@ -29,9 +29,10 @@ public static class ProjetoRegras
         return extension.Length is > 1 and <= 8 && extension.Skip(1).All(char.IsAsciiLetterOrDigit) ? extension : string.Empty;
     }
 
-    /// <summary>Nome sem separadores de caminho nem caracteres de controle (vira nome de download).</summary>
+    /// <summary>Nome sem separadores de caminho, caracteres de controle nem de formatacao Unicode (ex.: U+202E); vira nome de download.</summary>
     public static bool NomeSemCaracteresInvalidos(string nome) =>
-        nome.IndexOfAny(['/', '\\']) < 0 && !nome.Any(char.IsControl);
+        nome.IndexOfAny(['/', '\\']) < 0
+        && !nome.Any(c => char.IsControl(c) || char.GetUnicodeCategory(c) == System.Globalization.UnicodeCategory.Format);
 
     /// <summary>Texto vazio ou so espacos vira null; o resto sai sem espacos nas pontas.</summary>
     public static string? NormalizarTipoDocumento(string? tipo)

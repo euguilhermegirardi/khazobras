@@ -62,7 +62,15 @@ public sealed class ProjetoDocumentoRepository : IProjetoDocumentoRepository
         }
         catch
         {
-            transaction.Rollback();
+            try
+            {
+                transaction.Rollback();
+            }
+            catch
+            {
+                // Conexao ja caiu: o erro original e o que importa.
+            }
+
             throw;
         }
     }
