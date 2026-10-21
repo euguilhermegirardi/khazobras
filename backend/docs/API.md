@@ -1011,61 +1011,75 @@ curl -X POST http://localhost:5285/relatorios-mensais/ee0e8400-e29b-41d4-a716-44
 
 ## Módulo Projetos/Documentos
 
-Gerencia anexação de documentos e projetos a obras.
+Documentos técnicos (plantas, memoriais) de uma obra, opcionalmente ligados a uma etapa (SPEC §5 item 9 e §6 item 12). Todo
+endpoint com id de documento resolve o `obra_id`, chama `EnsureAccessAsync` (403) e só então lê/grava com `WHERE id AND obra_id`.
+Ordem de erros: 401 sem token → 403 (cliente / sem acesso à obra, **antes** de ler o corpo ou o arquivo) → 404 → 400. O cliente é
+somente leitura (lista e download da própria obra); toda escrita é `AdminOrMaster`.
 
-### 1. Anexar Documento
-**POST** `/projetos/documentos`
+**Formatos:** `uploadedAt` ISO 8601 UTC; IDs GUID; JSON em camelCase. Validação de corpo JSON (400):
+`{ "title", "status", "errors": { "Campo": ["msg"] } }`; outros 400 do upload: `{ "message": "..." }`. A chave do bucket
+(`storage_key`) **nunca** aparece em resposta; o arquivo sai só por `GET /projetos/{id}/download`.
 
-Anexa documento/projeto a uma obra (máx 10MB, validado por magic bytes).
-
-**Autorização:** Admin, Master
-
-**Request:**
-```bash
-curl -X POST http://localhost:5285/projetos/documentos \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@planta_arquitera.pdf" \
-  -F "obraId=770e8400-e29b-41d4-a716-446655440000" \
-  -F "tipo=planta_arquitetura"
-```
-
-**Tipos Aceitos:** PDF, XLSX, DOCX (máx 10MB)
-
-**Response (201 Created):**
+**DTO do documento (`ProjetoDocumentoResponse`, admin e cliente; não há campo interno):**
 ```json
 {
   "id": "ff0e8400-e29b-41d4-a716-446655440000",
   "obraId": "770e8400-e29b-41d4-a716-446655440000",
-  "fileName": "planta_arquitera.pdf",
-  "fileSize": 3072000,
-  "tipo": "PlantaArquitetura",
-  "s3Key": "projetos/770e8400/planta_arquitera.pdf",
+  "etapaId": "aa0e8400-e29b-41d4-a716-446655440000",
+  "nome": "planta-baixa.pdf",
+  "tipoDocumento": "Planta baixa",
   "uploadedAt": "2026-10-12T10:15:00Z"
 }
 ```
+`etapaId` e `tipoDocumento` podem ser `null`. Lista ordenada por ordem da etapa (sem etapa por último), `uploadedAt` mais novo primeiro,
+`nome`, `id`.
 
-### 2. Listar Documentos
-**GET** `/projetos/documentos?obraId={id}`
+### 1. Listar documentos da obra
+**GET** `/obras/{obraId}/projetos` — qualquer usuário com acesso à obra. **200** array de `ProjetoDocumentoResponse` (sem paginação; no
+máximo 200 por obra), 403. Obra inexistente devolve `[]` para Admin/Master.
 
-Lista documentos/projetos de uma obra.
+### 2. Enviar documento
+**POST** `/obras/{obraId}/projetos?etapaId={guid}&tipoDocumento=Planta%20baixa` — Admin, Master. `multipart/form-data`, campo `file`;
+`etapaId` e `tipoDocumento` vão na **query string** (opcionais).
 
-**Autorização:** Qualquer usuário (acesso validado por ObraAccessService)
+- Arquivo: máx 10 MB, extensão + MIME + magic bytes (`FileUploadValidator`) e **só estes tipos**: `.pdf`, `.jpg`, `.jpeg`, `.png`,
+  `.webp`, `.gif` (o cliente visualiza) e `.doc`, `.docx`, `.xls`, `.xlsx` (o cliente baixa). `.txt` (aceito pelo validador genérico),
+  DWG e ZIP = 400 `{ message }`.
+- Nome do arquivo: 1 a **255** caracteres, sem `/`, `\` nem caracteres de controle (400 `{ message }`, antes do R2). O nome vira o
+  `nome` exibido/baixado; a chave no R2 é `obras/{obraId}/projetos/{guid}{ext}` (sem o nome original, nunca exposta).
+- `tipoDocumento`: texto livre aparado, até **50** caracteres, sem controle (vazio = `null`); acima disso 400 `{ message }`.
+- `etapaId`: precisa ser **da mesma obra**; inexistente e de outra obra dão o **mesmo** 400
+  `{ "errors": { "EtapaId": ["A etapa informada deve ser desta obra."] } }`.
+- Limite de **200 documentos por obra**: o 201º = **400** `{ "message": "Cada obra aceita no maximo 200 documentos de projeto." }`, nada
+  vai ao R2. A contagem é refeita numa transação que trava a linha da obra (`FOR NO KEY UPDATE`), então uploads simultâneos não passam do
+  limite. Se o `INSERT` falhar (500) ou o limite estourar na corrida (400), o objeto é removido do R2.
+- Ordem: acesso (403) → arquivo (400) → obra existe (**404**) → limite → etapa → nome → tipo → extensão → R2.
 
-### 3. Baixar Documento
-**GET** `/projetos/documentos/{id}`
+**201** (`Location: /projetos/{id}`, corpo = DTO), 400, 403, 404 (obra inexistente). Auditoria `projeto_enviado` (entidade
+`projeto_documento`, id do documento): `{ "obraId": "...", "etapaId": "..." | null }` (sem nome nem tipo).
 
-Baixa documento/projeto (somente Admin/Master).
+### 3. Editar metadados
+**PUT** `/projetos/{id}` — Admin, Master
 
-**Autorização:** Admin, Master
-
-**Request:**
-```bash
-curl -X GET http://localhost:5285/projetos/documentos/ff0e8400-e29b-41d4-a716-446655440000 \
-  -H "Authorization: Bearer <token>" \
-  -o planta_arquitera.pdf
+```json
+{ "nome": "Planta baixa rev. 2.pdf", "tipoDocumento": "Planta baixa", "etapaId": null }
 ```
+**Substitui** os três campos: mande sempre todos (`tipoDocumento` e `etapaId` ausentes ou `null` **limpam**). O arquivo, a obra e a data
+de envio nunca mudam (um `obraId` no JSON é ignorado). Regras: `nome` 1 a 255, sem barras/controle e **com a mesma extensão do arquivo**
+(sem diferenciar maiúsculas; `planta` ou `planta.docx` num PDF = 400 `errors.Nome`); `tipoDocumento` até 50; `etapaId` da mesma obra
+(senão o 400 `errors.EtapaId` acima). **200** (DTO atualizado), 400, 403, 404. Auditoria `projeto_editado`:
+`{ "obraId", "campos": ["nome","tipoDocumento","etapaId"] }` (só nomes dos campos que mudaram; nada alterado = sem registro).
 
-**Response:** Arquivo PDF/XLSX/DOCX
+### 4. Excluir documento
+**DELETE** `/projetos/{id}` — Admin, Master. **204**, 403, 404. Exclusão **definitiva** (sem lixeira): `DELETE ... WHERE id AND obra_id
+RETURNING` e, com o banco confirmado, o arquivo sai do R2 (falha no R2 não desfaz: 204 + aviso no log, objeto órfão). Auditoria
+`projeto_excluido`: `{ "obraId", "etapaId" }`. Se a auditoria falhar, o arquivo ainda é removido do R2 e a requisição responde 500.
+
+### 5. Baixar documento
+**GET** `/projetos/{id}/download` — qualquer usuário com acesso à obra (cliente só da própria). Resposta: o arquivo, com `Content-Type`
+pela extensão da **chave** do R2 (não do nome editável), `X-Content-Type-Options: nosniff` e `Content-Disposition` com o `nome` do
+documento (se o nome estiver vazio, tiver barras/controle ou extensão diferente da do arquivo: `projeto-{id}{ext}`). O front busca com o
+token (fetch → blob); só PDF e imagem abrem no navegador, o resto baixa. **200**, 403, 404.
 
 ---
 
