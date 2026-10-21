@@ -1,0 +1,160 @@
+{
+  "GET /obras/a1/projetos": [
+    {
+      "id": "p1",
+      "obraId": "a1",
+      "etapaId": "e1",
+      "nome": "Planta de locação.pdf",
+      "tipoDocumento": "Planta baixa",
+      "uploadedAt": "2026-02-10T12:00:00Z"
+    },
+    {
+      "id": "p2",
+      "obraId": "a1",
+      "etapaId": "e1",
+      "nome": "Detalhe das sapatas.png",
+      "tipoDocumento": "Detalhamento",
+      "uploadedAt": "2026-02-05T12:00:00Z"
+    },
+    {
+      "id": "p3",
+      "obraId": "a1",
+      "etapaId": "e1",
+      "nome": "Sondagem do terreno.PDF",
+      "tipoDocumento": null,
+      "uploadedAt": "2026-01-28T12:00:00Z"
+    },
+    {
+      "id": "p4",
+      "obraId": "a1",
+      "etapaId": "e2",
+      "nome": "Planta de alvenaria.pdf",
+      "tipoDocumento": "Planta baixa",
+      "uploadedAt": "2026-03-12T12:00:00Z"
+    },
+    {
+      "id": "p5",
+      "obraId": "a1",
+      "etapaId": "e2",
+      "nome": "Quantitativo de blocos.xlsx",
+      "tipoDocumento": "Planilha",
+      "uploadedAt": "2026-03-08T12:00:00Z"
+    },
+    {
+      "id": "p6",
+      "obraId": "a1",
+      "etapaId": "e3",
+      "nome": "Projeto elétrico.dwg",
+      "tipoDocumento": "Elétrico",
+      "uploadedAt": "2026-04-02T12:00:00Z"
+    },
+    {
+      "id": "p7",
+      "obraId": "a1",
+      "etapaId": "e3",
+      "nome": "Diagrama unifilar.jpg",
+      "tipoDocumento": "Elétrico",
+      "uploadedAt": "2026-04-01T12:00:00Z"
+    },
+    {
+      "id": "p8",
+      "obraId": "a1",
+      "etapaId": "e4",
+      "nome": "Paginação do piso.pdf",
+      "tipoDocumento": "Acabamento",
+      "uploadedAt": "2026-04-20T12:00:00Z"
+    },
+    {
+      "id": "p9",
+      "obraId": "a1",
+      "etapaId": null,
+      "nome": "Memorial descritivo.pdf",
+      "tipoDocumento": "Memorial",
+      "uploadedAt": "2026-01-15T12:00:00Z"
+    },
+    {
+      "id": "p10",
+      "obraId": "a1",
+      "etapaId": null,
+      "nome": "Alvará de construção.png",
+      "tipoDocumento": null,
+      "uploadedAt": "2026-01-10T12:00:00Z"
+    },
+    {
+      "id": "p11",
+      "obraId": "a1",
+      "etapaId": null,
+      "nome": "Memorial descritivo.docx",
+      "tipoDocumento": "Memorial",
+      "uploadedAt": "2026-03-01T12:00:00Z"
+    },
+    {
+      "id": "p12",
+      "obraId": "a1",
+      "etapaId": null,
+      "nome": "Quantitativos.xlsx",
+      "tipoDocumento": null,
+      "uploadedAt": "2026-02-20T12:00:00Z"
+    }
+  ],
+  "GET /obras/a1/etapas": [
+    {
+      "id": "e1",
+      "obraId": "a1",
+      "nome": "Fundação",
+      "ordem": 1,
+      "percentualPeso": 20,
+      "dataInicioPrevista": "2026-01-15",
+      "dataInicioReal": "2026-01-16",
+      "dataFimPrevista": "2026-02-28",
+      "dataFimReal": "2026-02-26",
+      "status": "Concluida",
+      "createdAt": "2026-01-10T12:00:00Z"
+    },
+    {
+      "id": "e2",
+      "obraId": "a1",
+      "nome": "Alvenaria",
+      "ordem": 2,
+      "percentualPeso": 25,
+      "dataInicioPrevista": "2026-03-01",
+      "dataInicioReal": "2026-03-02",
+      "dataFimPrevista": "2026-04-15",
+      "dataFimReal": null,
+      "status": "EmAndamento",
+      "createdAt": "2026-01-10T12:00:00Z"
+    },
+    {
+      "id": "e3",
+      "obraId": "a1",
+      "nome": "Instalações elétricas",
+      "ordem": 3,
+      "percentualPeso": 20,
+      "dataInicioPrevista": "2026-04-01",
+      "dataInicioReal": null,
+      "dataFimPrevista": "2026-05-30",
+      "dataFimReal": null,
+      "status": "NaoIniciada",
+      "createdAt": "2026-01-10T12:00:00Z"
+    },
+    {
+      "id": "e4",
+      "obraId": "a1",
+      "nome": "Acabamento",
+      "ordem": 4,
+      "percentualPeso": 35,
+      "dataInicioPrevista": "2026-06-01",
+      "dataInicioReal": null,
+      "dataFimPrevista": "2026-08-30",
+      "dataFimReal": null,
+      "status": "NaoIniciada",
+      "createdAt": "2026-01-10T12:00:00Z"
+    }
+  ],
+  "GET /projetos/*/download": {
+    "status": 501,
+    "body": {
+      "message": "sem mock"
+    }
+  }
+}

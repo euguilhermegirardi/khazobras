@@ -16,6 +16,7 @@ import { MedicaoAdminDetalhePage } from '@/modules/medicoes-admin/pages/MedicaoA
 import { MedicoesAdminPage } from '@/modules/medicoes-admin/pages/MedicoesAdminPage';
 import { ObraHubPage } from '@/modules/obras/pages/ObraHubPage';
 import { ProjetosPage } from '@/modules/projetos/pages/ProjetosPage';
+import { ProjetosAdminPage } from '@/modules/projetos-admin/pages/ProjetosAdminPage';
 import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage';
 import { RelatorioFotograficoDetalheAdminPage } from '@/modules/relatorio-fotografico-admin/pages/RelatorioFotograficoDetalheAdminPage';
 import { RelatoriosFotograficosAdminPage } from '@/modules/relatorio-fotografico-admin/pages/RelatoriosFotograficosAdminPage';
@@ -92,6 +93,7 @@ export const AppRoutes = () => {
             path="/admin/obras/:obraId/relatorio-fotografico/:relatorioId"
             element={<RelatorioFotograficoDetalheAdminPage />}
           />
+          <Route path="/admin/obras/:obraId/projetos" element={<ProjetosAdminPage />} />
         </Route>
       </Route>
 
