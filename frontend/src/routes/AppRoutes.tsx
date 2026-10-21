@@ -20,6 +20,9 @@ import { ProjetosAdminPage } from '@/modules/projetos-admin/pages/ProjetosAdminP
 import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage';
 import { RelatorioFotograficoDetalheAdminPage } from '@/modules/relatorio-fotografico-admin/pages/RelatorioFotograficoDetalheAdminPage';
 import { RelatoriosFotograficosAdminPage } from '@/modules/relatorio-fotografico-admin/pages/RelatoriosFotograficosAdminPage';
+import { RelatorioAdminDetalhePage } from '@/modules/relatorio-mensal-admin/pages/RelatorioAdminDetalhePage';
+import { RelatorioAdminListaPage } from '@/modules/relatorio-mensal-admin/pages/RelatorioAdminListaPage';
+import { RelatorioAdminNovoPage } from '@/modules/relatorio-mensal-admin/pages/RelatorioAdminNovoPage';
 import { RelatorioMensalPage } from '@/modules/relatorio-mensal/pages/RelatorioMensalPage';
 import { AdminLayout, ClientLayout } from '@/layouts/RoleLayouts';
 import { AdminObraDashboardPage, ForbiddenPage, NotFoundPage } from './pages';
@@ -94,6 +97,12 @@ export const AppRoutes = () => {
             element={<RelatorioFotograficoDetalheAdminPage />}
           />
           <Route path="/admin/obras/:obraId/projetos" element={<ProjetosAdminPage />} />
+          <Route path="/admin/obras/:obraId/relatorio-ao-cliente" element={<RelatorioAdminListaPage />} />
+          <Route path="/admin/obras/:obraId/relatorio-ao-cliente/novo" element={<RelatorioAdminNovoPage />} />
+          <Route
+            path="/admin/obras/:obraId/relatorio-ao-cliente/:relatorioId"
+            element={<RelatorioAdminDetalhePage />}
+          />
         </Route>
       </Route>
 
