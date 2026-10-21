@@ -330,6 +330,11 @@ test('relatório com 100 fotos não gera erro de renderização no console (mini
   await page.goto(`/admin/obras/${OBRA}/relatorio-fotografico/rf1`);
   for (let i = 0; i < 4; i++) {
     await expect(page.getByRole('button', { name: /^Ampliar foto:/ })).toHaveCount(100, { timeout: 20_000 });
+    await expect
+      .poll(() => page.$$eval('img', (imgs) => imgs.length > 0 && imgs.every((img) => img.naturalWidth > 0)), {
+        timeout: 20_000,
+      })
+      .toBe(true);
     if (i < 3) await page.reload();
   }
   expect(erros).toEqual([]);
