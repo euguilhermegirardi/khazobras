@@ -1,5 +1,6 @@
 import { ArrowLeft, Lock, Send, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ErroAlert } from '@/components/ErroAlert';
 import { ErrorState } from '@/components/ErrorState';
@@ -15,7 +16,7 @@ import { PublicarConfirmacao } from '../components/PublicarConfirmacao';
 import { RelatorioEditor } from '../components/RelatorioEditor';
 import { RelatorioHistoricoCard } from '../components/RelatorioHistoricoCard';
 import { RelatorioStatusBadge } from '../components/RelatorioStatusBadge';
-import { useExcluirRelatorio, usePublicarRelatorio, useRelatorioAdmin } from '../hooks';
+import { removerRelatorioDoCache, useExcluirRelatorio, usePublicarRelatorio, useRelatorioAdmin } from '../hooks';
 import { mensagemDeAcao } from '../relatorioLista';
 import type { RelatorioNavState } from '../types';
 
@@ -34,7 +35,9 @@ export const RelatorioAdminDetalhePage = () => {
     () => (location.state as RelatorioNavState | null)?.feedback ?? null,
   );
   const [erroAcao, setErroAcao] = useState<MensagemErro | null>(null);
+  const excluidoRef = useRef(false);
   // Hooks
+  const queryClient = useQueryClient();
   const { obraId = '', relatorioId = '' } = useParams();
   const navigate = useNavigate();
   const { data, isPending, isError, error, refetch } = useRelatorioAdmin(obraId, relatorioId);
@@ -43,6 +46,14 @@ export const RelatorioAdminDetalhePage = () => {
 
   // Constants derivadas
   const listaPath = `/admin/obras/${obraId}/relatorio-ao-cliente`;
+
+  // Effects: depois de apagar e sair da tela, o detalhe e o histórico saem do cache (com a página montada o observer os buscaria de novo).
+  useEffect(
+    () => () => {
+      if (excluidoRef.current) removerRelatorioDoCache(queryClient, obraId, relatorioId);
+    },
+    [queryClient, obraId, relatorioId],
+  );
 
   // Functions
   const limparMensagens = () => {
@@ -88,6 +99,7 @@ export const RelatorioAdminDetalhePage = () => {
     limparMensagens();
     try {
       await excluir.mutateAsync(relatorioId);
+      excluidoRef.current = true;
       navigate(listaPath);
     } catch (e) {
       setExcluindo(false);

@@ -75,24 +75,27 @@ export const usePublicarRelatorio = (obraId: string) => {
   });
 };
 
+/** Tira do cache o detalhe e o histórico de um relatório apagado (chamar depois que a página saiu da tela). */
+export const removerRelatorioDoCache = (queryClient: QueryClient, obraId: string, relatorioId: string) => {
+  queryClient.removeQueries({ queryKey: detalheKey(obraId, relatorioId) });
+  queryClient.removeQueries({ queryKey: historicoKey(obraId, relatorioId) });
+};
+
 /**
- * `esperarLeitura = false` (página do próprio relatório): não segura a mutação até a releitura, senão o detalhe
- * apagado voltaria 404 e a tela piscaria o erro antes de navegar para a lista.
+ * `esperarLeitura = false` (página do próprio relatório): no sucesso NÃO relê o detalhe nem o histórico do relatório
+ * apagado (voltariam 404 e a tela piscaria o erro antes de navegar); só a lista e o resto são invalidados. A página
+ * navega e depois chama `removerRelatorioDoCache`. Em erro (ex.: 409, já publicado) tudo é relido de propósito.
  */
 export const useExcluirRelatorio = (obraId: string, esperarLeitura = true) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteRelatorio(id),
-    onSuccess: async (_dados, id) => {
-      if (esperarLeitura) return;
-      // Sem esperar a releitura, o detalhe e o histórico apagados saem do cache antes (evita o 404 piscar antes de navegar).
-      await queryClient.cancelQueries({ queryKey: detalheKey(obraId, id) });
-      queryClient.removeQueries({ queryKey: detalheKey(obraId, id) });
-      queryClient.removeQueries({ queryKey: historicoKey(obraId, id) });
-    },
-    // Mesmo se falhar (ex.: já publicado em outra aba) a lista precisa refletir o servidor.
-    onSettled: () => {
-      const leitura = invalidateRelatorios(queryClient, obraId);
+    onSettled: (_dados, erro, id) => {
+      const leitura = queryClient.invalidateQueries({
+        queryKey: relatoriosMensaisKey(obraId),
+        // Chaves do detalhe e do histórico terminam no id do relatório: ['obra', obra, 'relatorios-mensais', 'admin', tipo, id].
+        predicate: (query) => esperarLeitura || erro !== null || query.queryKey[5] !== id,
+      });
       return esperarLeitura ? leitura : undefined;
     },
   });
