@@ -584,6 +584,10 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     do mesmo relatório se enfileiram, então o limite de 100 não estoura. O lote é `UPDATE ... FROM unnest(@Ids, @Ordens)` preso ao
     relatório e conferido pela contagem de linhas (diferente = `ROLLBACK`, tudo-ou-nada). Limite: o `DELETE` de foto não trava o
     relatório (só diminui a contagem, é seguro para o limite); uma foto apagada durante o lote faz o lote falhar com 400.
+  - **Exclusão de relatório trava antes de ler as chaves** (achado do security-reviewer): `DeleteAsync` abre a transação com o mesmo
+    `FOR UPDATE` do upload e só então lê as chaves das fotos e apaga (CASCADE); sem isso um upload concorrente tinha a foto apagada
+    pelo CASCADE e o arquivo ficava órfão no R2. R2 continua sendo removido só após o commit. O mesmo padrão foi corrigido em
+    `FinanceiroLancamentoRepository.DeleteAsync` (trava o lançamento antes de ler as chaves dos anexos). Só roda com Postgres real.
   - **PATCH de foto parcial de verdade**: o corpo é lido como `JsonElement` (`UpdateFotoRequestParser`) para distinguir campo ausente
     (mantém) de `null` (limpa descrição/data); o SQL usa `CASE WHEN @SetX THEN @X ELSE coluna END`. `ordem` não aceita `null`.
   - **Lote de ordem**: máx. 200, ids únicos, `ordem` 0..100000; só fotos **do próprio relatório**; id inexistente, de outro relatório ou de

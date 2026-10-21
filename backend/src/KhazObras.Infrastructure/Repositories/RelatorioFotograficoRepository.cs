@@ -122,11 +122,17 @@ public sealed class RelatorioFotograficoRepository : IRelatorioFotograficoReposi
 
         try
         {
-            const string chavesSql = @"
-                SELECT f.storage_key
-                FROM fotos f
-                JOIN relatorios_fotograficos r ON r.id = f.relatorio_fotografico_id
-                WHERE r.id = @Id AND r.obra_id = @ObraId";
+            // Trava o relatorio ANTES de ler as chaves (mesma trava do upload e da reordenacao): um upload concorrente
+            // espera o commit ou ja commitou, entao a lista abaixo inclui todas as fotos que o CASCADE vai apagar.
+            const string lockSql = "SELECT id FROM relatorios_fotograficos WHERE id = @Id AND obra_id = @ObraId FOR UPDATE";
+            var travado = await connection.QuerySingleOrDefaultAsync<Guid?>(lockSql, new { Id = id, ObraId = obraId }, transaction);
+            if (travado is null)
+            {
+                transaction.Rollback();
+                return null;
+            }
+
+            const string chavesSql = "SELECT storage_key FROM fotos WHERE relatorio_fotografico_id = @Id";
             var chaves = (await connection.QueryAsync<string>(chavesSql, new { Id = id, ObraId = obraId }, transaction)).ToList();
 
             // Fotos saem junto por ON DELETE CASCADE (schema 005).
