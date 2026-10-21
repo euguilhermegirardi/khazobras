@@ -24,7 +24,33 @@ public static class FileUploadValidator
         ".txt"
     };
 
-    public static bool IsValid(IFormFile file, out string? error)
+    // DWG (AutoCAD): so o upload de documentos de projeto aceita (IsValidProjeto). Os demais modulos continuam recusando.
+    private const string DwgExtension = ".dwg";
+
+    // Navegadores/SOs nao concordam no MIME de .dwg (ou mandam vazio); valem SOMENTE para .dwg.
+    private static readonly HashSet<string> DwgContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "", "application/octet-stream", "application/acad", "application/x-acad", "application/autocad_dwg",
+        "application/dwg", "image/vnd.dwg", "drawing/dwg"
+    };
+
+    // Cabecalho ASCII "AC10xx" das versoes modernas: R13 (1012), R14 (1014), 2000 (1015), 2004 (1018), 2007 (1021),
+    // 2010 (1024), 2013 (1027) e 2018+ (1032). Formatos antigos (AC1.50, AC1002..AC1009, MC0.0) sao recusados.
+    private static readonly HashSet<string> DwgVersions = new(StringComparer.Ordinal)
+    {
+        "AC1012", "AC1014", "AC1015", "AC1018", "AC1021", "AC1024", "AC1027", "AC1032"
+    };
+
+    /// <summary>Validacao padrao (financeiro, fotos e demais modulos): nao aceita DWG.</summary>
+    public static bool IsValid(IFormFile file, out string? error) => Validate(file, allowDwg: false, out error);
+
+    /// <summary>
+    /// Validacao dos documentos de projeto: o mesmo que <see cref="IsValid"/> e, alem disso, aceita <c>.dwg</c> com MIME
+    /// de AutoCAD/<c>application/octet-stream</c>/vazio e cabecalho "AC10xx" de uma versao moderna.
+    /// </summary>
+    public static bool IsValidProjeto(IFormFile file, out string? error) => Validate(file, allowDwg: true, out error);
+
+    private static bool Validate(IFormFile file, bool allowDwg, out string? error)
     {
         if (file is null)
         {
@@ -51,6 +77,11 @@ public static class FileUploadValidator
         }
 
         var extension = Path.GetExtension(file.FileName);
+        if (allowDwg && extension.Equals(DwgExtension, StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidateDwg(file, out error);
+        }
+
         if (!AllowedExtensions.Contains(extension))
         {
             error = $"Extensao de arquivo nao permitida: {extension}.";
@@ -71,7 +102,7 @@ public static class FileUploadValidator
 
         using var stream = file.OpenReadStream();
         var buffer = new byte[16];
-        var bytesRead = stream.Read(buffer, 0, buffer.Length);
+        var bytesRead = stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false);
 
         if (bytesRead <= 0)
         {
@@ -80,6 +111,30 @@ public static class FileUploadValidator
         }
 
         if (!MatchesMagicBytes(buffer, bytesRead, file.ContentType, extension))
+        {
+            error = "Conteudo do arquivo nao corresponde ao tipo informado.";
+            return false;
+        }
+
+        error = null;
+        return true;
+    }
+
+    private static bool ValidateDwg(IFormFile file, out string? error)
+    {
+        var contentType = file.ContentType ?? string.Empty;
+        if (!DwgContentTypes.Contains(contentType))
+        {
+            error = $"Tipo de arquivo nao permitido: {contentType}.";
+            return false;
+        }
+
+        using var stream = file.OpenReadStream();
+        var buffer = new byte[16];
+        var bytesRead = stream.ReadAtLeast(buffer, buffer.Length, throwOnEndOfStream: false);
+
+        // Menos de 6 bytes nao tem cabecalho; qualquer outro cabecalho (texto, PDF, ZIP, EXE, DWG antigo) e recusado.
+        if (bytesRead < 6 || !DwgVersions.Contains(System.Text.Encoding.ASCII.GetString(buffer, 0, 6)))
         {
             error = "Conteudo do arquivo nao corresponde ao tipo informado.";
             return false;
