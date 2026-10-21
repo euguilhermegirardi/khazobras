@@ -78,7 +78,7 @@ export const UploadDropzone = ({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-          'flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed bg-card p-5 text-center text-[13px] text-muted-foreground outline-none hover:bg-accent peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50 peer-disabled:cursor-not-allowed peer-disabled:opacity-60',
+          'flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed bg-card p-5 text-center text-[13px] text-muted-foreground outline-none hover:bg-accent peer-focus-visible:ring-[3px] peer-focus-visible:ring-ring/50 peer-disabled:cursor-not-allowed peer-disabled:hover:bg-card peer-disabled:[&>svg]:opacity-50',
           arrastando && 'border-primary bg-info-soft text-info-soft-foreground',
         )}
       >
