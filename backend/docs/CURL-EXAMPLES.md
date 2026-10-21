@@ -300,20 +300,40 @@ curl -X POST http://localhost:5285/relatorios-mensais \
   -H "Content-Type: application/json" \
   -d '{
     "obraId": "<OBRA_ID>",
-    "mesReferencia": "2026-10",
-    "resumo": "Progresso de 50% na fundação"
+    "competencia": "2026-10-01",
+    "conteudo": "Progresso de 50% na fundação"
   }' | jq .
 ```
 
 ### Listar relatórios mensais de uma obra
 ```bash
-curl -X GET "http://localhost:5285/relatorios-mensais?obraId=<OBRA_ID>&published=false" \
+curl -X GET "http://localhost:5285/obras/<OBRA_ID>/relatorios-mensais?onlyPublished=false" \
   -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
 ### Obter relatório mensal por ID
 ```bash
 curl -X GET http://localhost:5285/relatorios-mensais/<RELATORIO_MENSAL_ID> \
+  -H "Authorization: Bearer $TOKEN" | jq .
+```
+
+### Editar rascunho
+```bash
+curl -X PUT http://localhost:5285/relatorios-mensais/<RELATORIO_MENSAL_ID> \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "competencia": "2026-10-01", "conteudo": "Texto novo" }' | jq .
+```
+
+### Excluir rascunho
+```bash
+curl -X DELETE http://localhost:5285/relatorios-mensais/<RELATORIO_MENSAL_ID> \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Histórico do relatório
+```bash
+curl -X GET http://localhost:5285/relatorios-mensais/<RELATORIO_MENSAL_ID>/historico \
   -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
