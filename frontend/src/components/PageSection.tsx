@@ -13,8 +13,10 @@ interface PageSectionProps {
 export const PageSection = ({ title, description, actions, children }: PageSectionProps) => (
   <section aria-label={title}>
     <div className="flex items-start justify-between gap-4">
-      <div>
-        <h1 className="text-lg font-medium">{title}</h1>
+      <div className="min-w-0">
+        <h1 className="line-clamp-2 text-lg font-medium break-words" title={title}>
+          {title}
+        </h1>
         {description && <p className="text-[13px] text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}

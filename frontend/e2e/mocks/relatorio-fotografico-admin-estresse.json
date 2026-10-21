@@ -1,0 +1,1893 @@
+{
+  "GET /obras/a1/relatorios-fotograficos": [
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": "2026-09-01",
+      "quantidadeFotos": 100,
+      "id": "x1",
+      "tipo": "mensal",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-10-20T12:00:00Z",
+      "fotos": [
+        {
+          "id": "x1_1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "x1_2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "x1_3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "x1_4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "x1_5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "x1_6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "x1_7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "x1_8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        },
+        {
+          "id": "x1_9",
+          "dataFoto": "2026-09-09",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 8,
+          "createdAt": "2026-09-11T12:00:08Z"
+        },
+        {
+          "id": "x1_10",
+          "dataFoto": "2026-09-10",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 9,
+          "createdAt": "2026-09-11T12:00:09Z"
+        },
+        {
+          "id": "x1_11",
+          "dataFoto": "2026-09-11",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 10,
+          "createdAt": "2026-09-11T12:00:10Z"
+        },
+        {
+          "id": "x1_12",
+          "dataFoto": "2026-09-12",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 11,
+          "createdAt": "2026-09-11T12:00:11Z"
+        },
+        {
+          "id": "x1_13",
+          "dataFoto": null,
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 12,
+          "createdAt": "2026-09-11T12:00:12Z"
+        },
+        {
+          "id": "x1_14",
+          "dataFoto": "2026-09-14",
+          "descricao": null,
+          "ordem": 13,
+          "createdAt": "2026-09-11T12:00:13Z"
+        },
+        {
+          "id": "x1_15",
+          "dataFoto": "2026-09-15",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 14,
+          "createdAt": "2026-09-11T12:00:14Z"
+        },
+        {
+          "id": "x1_16",
+          "dataFoto": "2026-09-16",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 15,
+          "createdAt": "2026-09-11T12:00:15Z"
+        },
+        {
+          "id": "x1_17",
+          "dataFoto": "2026-09-17",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 16,
+          "createdAt": "2026-09-11T12:00:16Z"
+        },
+        {
+          "id": "x1_18",
+          "dataFoto": "2026-09-18",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 17,
+          "createdAt": "2026-09-11T12:00:17Z"
+        },
+        {
+          "id": "x1_19",
+          "dataFoto": "2026-09-19",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 18,
+          "createdAt": "2026-09-11T12:00:18Z"
+        },
+        {
+          "id": "x1_20",
+          "dataFoto": null,
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 19,
+          "createdAt": "2026-09-11T12:00:19Z"
+        },
+        {
+          "id": "x1_21",
+          "dataFoto": "2026-09-21",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 20,
+          "createdAt": "2026-09-11T12:00:20Z"
+        },
+        {
+          "id": "x1_22",
+          "dataFoto": "2026-09-22",
+          "descricao": null,
+          "ordem": 21,
+          "createdAt": "2026-09-11T12:00:21Z"
+        },
+        {
+          "id": "x1_23",
+          "dataFoto": "2026-09-23",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 22,
+          "createdAt": "2026-09-11T12:00:22Z"
+        },
+        {
+          "id": "x1_24",
+          "dataFoto": "2026-09-24",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 23,
+          "createdAt": "2026-09-11T12:00:23Z"
+        },
+        {
+          "id": "x1_25",
+          "dataFoto": "2026-09-25",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 24,
+          "createdAt": "2026-09-11T12:00:24Z"
+        },
+        {
+          "id": "x1_26",
+          "dataFoto": "2026-09-26",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 25,
+          "createdAt": "2026-09-11T12:00:25Z"
+        },
+        {
+          "id": "x1_27",
+          "dataFoto": null,
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 26,
+          "createdAt": "2026-09-11T12:00:26Z"
+        },
+        {
+          "id": "x1_28",
+          "dataFoto": "2026-09-01",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 27,
+          "createdAt": "2026-09-11T12:00:27Z"
+        },
+        {
+          "id": "x1_29",
+          "dataFoto": "2026-09-02",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 28,
+          "createdAt": "2026-09-11T12:00:28Z"
+        },
+        {
+          "id": "x1_30",
+          "dataFoto": "2026-09-03",
+          "descricao": null,
+          "ordem": 29,
+          "createdAt": "2026-09-11T12:00:29Z"
+        },
+        {
+          "id": "x1_31",
+          "dataFoto": "2026-09-04",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 30,
+          "createdAt": "2026-09-11T12:00:30Z"
+        },
+        {
+          "id": "x1_32",
+          "dataFoto": "2026-09-05",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 31,
+          "createdAt": "2026-09-11T12:00:31Z"
+        },
+        {
+          "id": "x1_33",
+          "dataFoto": "2026-09-06",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 32,
+          "createdAt": "2026-09-11T12:00:32Z"
+        },
+        {
+          "id": "x1_34",
+          "dataFoto": null,
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 33,
+          "createdAt": "2026-09-11T12:00:33Z"
+        },
+        {
+          "id": "x1_35",
+          "dataFoto": "2026-09-08",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 34,
+          "createdAt": "2026-09-11T12:00:34Z"
+        },
+        {
+          "id": "x1_36",
+          "dataFoto": "2026-09-09",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 35,
+          "createdAt": "2026-09-11T12:00:35Z"
+        },
+        {
+          "id": "x1_37",
+          "dataFoto": "2026-09-10",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 36,
+          "createdAt": "2026-09-11T12:00:36Z"
+        },
+        {
+          "id": "x1_38",
+          "dataFoto": "2026-09-11",
+          "descricao": null,
+          "ordem": 37,
+          "createdAt": "2026-09-11T12:00:37Z"
+        },
+        {
+          "id": "x1_39",
+          "dataFoto": "2026-09-12",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 38,
+          "createdAt": "2026-09-11T12:00:38Z"
+        },
+        {
+          "id": "x1_40",
+          "dataFoto": "2026-09-13",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 39,
+          "createdAt": "2026-09-11T12:00:39Z"
+        },
+        {
+          "id": "x1_41",
+          "dataFoto": null,
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 40,
+          "createdAt": "2026-09-11T12:00:40Z"
+        },
+        {
+          "id": "x1_42",
+          "dataFoto": "2026-09-15",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 41,
+          "createdAt": "2026-09-11T12:00:41Z"
+        },
+        {
+          "id": "x1_43",
+          "dataFoto": "2026-09-16",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 42,
+          "createdAt": "2026-09-11T12:00:42Z"
+        },
+        {
+          "id": "x1_44",
+          "dataFoto": "2026-09-17",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 43,
+          "createdAt": "2026-09-11T12:00:43Z"
+        },
+        {
+          "id": "x1_45",
+          "dataFoto": "2026-09-18",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 44,
+          "createdAt": "2026-09-11T12:00:44Z"
+        },
+        {
+          "id": "x1_46",
+          "dataFoto": "2026-09-19",
+          "descricao": null,
+          "ordem": 45,
+          "createdAt": "2026-09-11T12:00:45Z"
+        },
+        {
+          "id": "x1_47",
+          "dataFoto": "2026-09-20",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 46,
+          "createdAt": "2026-09-11T12:00:46Z"
+        },
+        {
+          "id": "x1_48",
+          "dataFoto": null,
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 47,
+          "createdAt": "2026-09-11T12:00:47Z"
+        },
+        {
+          "id": "x1_49",
+          "dataFoto": "2026-09-22",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 48,
+          "createdAt": "2026-09-11T12:00:48Z"
+        },
+        {
+          "id": "x1_50",
+          "dataFoto": "2026-09-23",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 49,
+          "createdAt": "2026-09-11T12:00:49Z"
+        },
+        {
+          "id": "x1_51",
+          "dataFoto": "2026-09-24",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 50,
+          "createdAt": "2026-09-11T12:00:50Z"
+        },
+        {
+          "id": "x1_52",
+          "dataFoto": "2026-09-25",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 51,
+          "createdAt": "2026-09-11T12:00:51Z"
+        },
+        {
+          "id": "x1_53",
+          "dataFoto": "2026-09-26",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 52,
+          "createdAt": "2026-09-11T12:00:52Z"
+        },
+        {
+          "id": "x1_54",
+          "dataFoto": "2026-09-27",
+          "descricao": null,
+          "ordem": 53,
+          "createdAt": "2026-09-11T12:00:53Z"
+        },
+        {
+          "id": "x1_55",
+          "dataFoto": null,
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 54,
+          "createdAt": "2026-09-11T12:00:54Z"
+        },
+        {
+          "id": "x1_56",
+          "dataFoto": "2026-09-02",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 55,
+          "createdAt": "2026-09-11T12:00:55Z"
+        },
+        {
+          "id": "x1_57",
+          "dataFoto": "2026-09-03",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 56,
+          "createdAt": "2026-09-11T12:00:56Z"
+        },
+        {
+          "id": "x1_58",
+          "dataFoto": "2026-09-04",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 57,
+          "createdAt": "2026-09-11T12:00:57Z"
+        },
+        {
+          "id": "x1_59",
+          "dataFoto": "2026-09-05",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 58,
+          "createdAt": "2026-09-11T12:00:58Z"
+        },
+        {
+          "id": "x1_60",
+          "dataFoto": "2026-09-06",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 59,
+          "createdAt": "2026-09-11T12:00:59Z"
+        },
+        {
+          "id": "x1_61",
+          "dataFoto": "2026-09-07",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 60,
+          "createdAt": "2026-09-11T12:01:00Z"
+        },
+        {
+          "id": "x1_62",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 61,
+          "createdAt": "2026-09-11T12:01:01Z"
+        },
+        {
+          "id": "x1_63",
+          "dataFoto": "2026-09-09",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 62,
+          "createdAt": "2026-09-11T12:01:02Z"
+        },
+        {
+          "id": "x1_64",
+          "dataFoto": "2026-09-10",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 63,
+          "createdAt": "2026-09-11T12:01:03Z"
+        },
+        {
+          "id": "x1_65",
+          "dataFoto": "2026-09-11",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 64,
+          "createdAt": "2026-09-11T12:01:04Z"
+        },
+        {
+          "id": "x1_66",
+          "dataFoto": "2026-09-12",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 65,
+          "createdAt": "2026-09-11T12:01:05Z"
+        },
+        {
+          "id": "x1_67",
+          "dataFoto": "2026-09-13",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 66,
+          "createdAt": "2026-09-11T12:01:06Z"
+        },
+        {
+          "id": "x1_68",
+          "dataFoto": "2026-09-14",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 67,
+          "createdAt": "2026-09-11T12:01:07Z"
+        },
+        {
+          "id": "x1_69",
+          "dataFoto": null,
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 68,
+          "createdAt": "2026-09-11T12:01:08Z"
+        },
+        {
+          "id": "x1_70",
+          "dataFoto": "2026-09-16",
+          "descricao": null,
+          "ordem": 69,
+          "createdAt": "2026-09-11T12:01:09Z"
+        },
+        {
+          "id": "x1_71",
+          "dataFoto": "2026-09-17",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 70,
+          "createdAt": "2026-09-11T12:01:10Z"
+        },
+        {
+          "id": "x1_72",
+          "dataFoto": "2026-09-18",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 71,
+          "createdAt": "2026-09-11T12:01:11Z"
+        },
+        {
+          "id": "x1_73",
+          "dataFoto": "2026-09-19",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 72,
+          "createdAt": "2026-09-11T12:01:12Z"
+        },
+        {
+          "id": "x1_74",
+          "dataFoto": "2026-09-20",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 73,
+          "createdAt": "2026-09-11T12:01:13Z"
+        },
+        {
+          "id": "x1_75",
+          "dataFoto": "2026-09-21",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 74,
+          "createdAt": "2026-09-11T12:01:14Z"
+        },
+        {
+          "id": "x1_76",
+          "dataFoto": null,
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 75,
+          "createdAt": "2026-09-11T12:01:15Z"
+        },
+        {
+          "id": "x1_77",
+          "dataFoto": "2026-09-23",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 76,
+          "createdAt": "2026-09-11T12:01:16Z"
+        },
+        {
+          "id": "x1_78",
+          "dataFoto": "2026-09-24",
+          "descricao": null,
+          "ordem": 77,
+          "createdAt": "2026-09-11T12:01:17Z"
+        },
+        {
+          "id": "x1_79",
+          "dataFoto": "2026-09-25",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 78,
+          "createdAt": "2026-09-11T12:01:18Z"
+        },
+        {
+          "id": "x1_80",
+          "dataFoto": "2026-09-26",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 79,
+          "createdAt": "2026-09-11T12:01:19Z"
+        },
+        {
+          "id": "x1_81",
+          "dataFoto": "2026-09-27",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 80,
+          "createdAt": "2026-09-11T12:01:20Z"
+        },
+        {
+          "id": "x1_82",
+          "dataFoto": "2026-09-01",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 81,
+          "createdAt": "2026-09-11T12:01:21Z"
+        },
+        {
+          "id": "x1_83",
+          "dataFoto": null,
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 82,
+          "createdAt": "2026-09-11T12:01:22Z"
+        },
+        {
+          "id": "x1_84",
+          "dataFoto": "2026-09-03",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 83,
+          "createdAt": "2026-09-11T12:01:23Z"
+        },
+        {
+          "id": "x1_85",
+          "dataFoto": "2026-09-04",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 84,
+          "createdAt": "2026-09-11T12:01:24Z"
+        },
+        {
+          "id": "x1_86",
+          "dataFoto": "2026-09-05",
+          "descricao": null,
+          "ordem": 85,
+          "createdAt": "2026-09-11T12:01:25Z"
+        },
+        {
+          "id": "x1_87",
+          "dataFoto": "2026-09-06",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 86,
+          "createdAt": "2026-09-11T12:01:26Z"
+        },
+        {
+          "id": "x1_88",
+          "dataFoto": "2026-09-07",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 87,
+          "createdAt": "2026-09-11T12:01:27Z"
+        },
+        {
+          "id": "x1_89",
+          "dataFoto": "2026-09-08",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 88,
+          "createdAt": "2026-09-11T12:01:28Z"
+        },
+        {
+          "id": "x1_90",
+          "dataFoto": null,
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 89,
+          "createdAt": "2026-09-11T12:01:29Z"
+        },
+        {
+          "id": "x1_91",
+          "dataFoto": "2026-09-10",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 90,
+          "createdAt": "2026-09-11T12:01:30Z"
+        },
+        {
+          "id": "x1_92",
+          "dataFoto": "2026-09-11",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 91,
+          "createdAt": "2026-09-11T12:01:31Z"
+        },
+        {
+          "id": "x1_93",
+          "dataFoto": "2026-09-12",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 92,
+          "createdAt": "2026-09-11T12:01:32Z"
+        },
+        {
+          "id": "x1_94",
+          "dataFoto": "2026-09-13",
+          "descricao": null,
+          "ordem": 93,
+          "createdAt": "2026-09-11T12:01:33Z"
+        },
+        {
+          "id": "x1_95",
+          "dataFoto": "2026-09-14",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 94,
+          "createdAt": "2026-09-11T12:01:34Z"
+        },
+        {
+          "id": "x1_96",
+          "dataFoto": "2026-09-15",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 95,
+          "createdAt": "2026-09-11T12:01:35Z"
+        },
+        {
+          "id": "x1_97",
+          "dataFoto": null,
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 96,
+          "createdAt": "2026-09-11T12:01:36Z"
+        },
+        {
+          "id": "x1_98",
+          "dataFoto": "2026-09-17",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 97,
+          "createdAt": "2026-09-11T12:01:37Z"
+        },
+        {
+          "id": "x1_99",
+          "dataFoto": "2026-09-18",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 98,
+          "createdAt": "2026-09-11T12:01:38Z"
+        },
+        {
+          "id": "x1_100",
+          "dataFoto": "2026-09-19",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 99,
+          "createdAt": "2026-09-11T12:01:39Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": "2026-08-01",
+      "quantidadeFotos": 1,
+      "id": "m0",
+      "tipo": "mensal",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-09-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "m0_1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": "2026-07-01",
+      "quantidadeFotos": 12,
+      "id": "m1",
+      "tipo": "mensal",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "m1_1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "m1_2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "m1_3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "m1_4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "m1_5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "m1_6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "m1_7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "m1_8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        },
+        {
+          "id": "m1_9",
+          "dataFoto": "2026-09-09",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 8,
+          "createdAt": "2026-09-11T12:00:08Z"
+        },
+        {
+          "id": "m1_10",
+          "dataFoto": "2026-09-10",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 9,
+          "createdAt": "2026-09-11T12:00:09Z"
+        },
+        {
+          "id": "m1_11",
+          "dataFoto": "2026-09-11",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 10,
+          "createdAt": "2026-09-11T12:00:10Z"
+        },
+        {
+          "id": "m1_12",
+          "dataFoto": "2026-09-12",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 11,
+          "createdAt": "2026-09-11T12:00:11Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": null,
+      "quantidadeFotos": 12,
+      "id": "m2",
+      "tipo": "mensal",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-07-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "m2_1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "m2_2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "m2_3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "m2_4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "m2_5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "m2_6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "m2_7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "m2_8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        },
+        {
+          "id": "m2_9",
+          "dataFoto": "2026-09-09",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 8,
+          "createdAt": "2026-09-11T12:00:08Z"
+        },
+        {
+          "id": "m2_10",
+          "dataFoto": "2026-09-10",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 9,
+          "createdAt": "2026-09-11T12:00:09Z"
+        },
+        {
+          "id": "m2_11",
+          "dataFoto": "2026-09-11",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 10,
+          "createdAt": "2026-09-11T12:00:10Z"
+        },
+        {
+          "id": "m2_12",
+          "dataFoto": "2026-09-12",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 11,
+          "createdAt": "2026-09-11T12:00:11Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": null,
+      "quantidadeFotos": 12,
+      "id": "m3",
+      "tipo": "mensal",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-06-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "m3_1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "m3_2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "m3_3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "m3_4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "m3_5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "m3_6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "m3_7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "m3_8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        },
+        {
+          "id": "m3_9",
+          "dataFoto": "2026-09-09",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 8,
+          "createdAt": "2026-09-11T12:00:08Z"
+        },
+        {
+          "id": "m3_10",
+          "dataFoto": "2026-09-10",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 9,
+          "createdAt": "2026-09-11T12:00:09Z"
+        },
+        {
+          "id": "m3_11",
+          "dataFoto": "2026-09-11",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 10,
+          "createdAt": "2026-09-11T12:00:10Z"
+        },
+        {
+          "id": "m3_12",
+          "dataFoto": "2026-09-12",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 11,
+          "createdAt": "2026-09-11T12:00:11Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": null,
+      "quantidadeFotos": 12,
+      "id": "m4",
+      "tipo": "mensal",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-05-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "m4_1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "m4_2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "m4_3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "m4_4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "m4_5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "m4_6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "m4_7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "m4_8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        },
+        {
+          "id": "m4_9",
+          "dataFoto": "2026-09-09",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 8,
+          "createdAt": "2026-09-11T12:00:08Z"
+        },
+        {
+          "id": "m4_10",
+          "dataFoto": "2026-09-10",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 9,
+          "createdAt": "2026-09-11T12:00:09Z"
+        },
+        {
+          "id": "m4_11",
+          "dataFoto": "2026-09-11",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 10,
+          "createdAt": "2026-09-11T12:00:10Z"
+        },
+        {
+          "id": "m4_12",
+          "dataFoto": "2026-09-12",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 11,
+          "createdAt": "2026-09-11T12:00:11Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": "e9",
+      "competencia": null,
+      "quantidadeFotos": 99,
+      "id": "e9",
+      "tipo": "etapa",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-09-02T12:00:00Z",
+      "fotos": [
+        {
+          "id": "q1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "q2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "q3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "q4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "q5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "q6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "q7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "q8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        },
+        {
+          "id": "q9",
+          "dataFoto": "2026-09-09",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 8,
+          "createdAt": "2026-09-11T12:00:08Z"
+        },
+        {
+          "id": "q10",
+          "dataFoto": "2026-09-10",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 9,
+          "createdAt": "2026-09-11T12:00:09Z"
+        },
+        {
+          "id": "q11",
+          "dataFoto": "2026-09-11",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 10,
+          "createdAt": "2026-09-11T12:00:10Z"
+        },
+        {
+          "id": "q12",
+          "dataFoto": "2026-09-12",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 11,
+          "createdAt": "2026-09-11T12:00:11Z"
+        },
+        {
+          "id": "q13",
+          "dataFoto": null,
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 12,
+          "createdAt": "2026-09-11T12:00:12Z"
+        },
+        {
+          "id": "q14",
+          "dataFoto": "2026-09-14",
+          "descricao": null,
+          "ordem": 13,
+          "createdAt": "2026-09-11T12:00:13Z"
+        },
+        {
+          "id": "q15",
+          "dataFoto": "2026-09-15",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 14,
+          "createdAt": "2026-09-11T12:00:14Z"
+        },
+        {
+          "id": "q16",
+          "dataFoto": "2026-09-16",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 15,
+          "createdAt": "2026-09-11T12:00:15Z"
+        },
+        {
+          "id": "q17",
+          "dataFoto": "2026-09-17",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 16,
+          "createdAt": "2026-09-11T12:00:16Z"
+        },
+        {
+          "id": "q18",
+          "dataFoto": "2026-09-18",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 17,
+          "createdAt": "2026-09-11T12:00:17Z"
+        },
+        {
+          "id": "q19",
+          "dataFoto": "2026-09-19",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 18,
+          "createdAt": "2026-09-11T12:00:18Z"
+        },
+        {
+          "id": "q20",
+          "dataFoto": null,
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 19,
+          "createdAt": "2026-09-11T12:00:19Z"
+        },
+        {
+          "id": "q21",
+          "dataFoto": "2026-09-21",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 20,
+          "createdAt": "2026-09-11T12:00:20Z"
+        },
+        {
+          "id": "q22",
+          "dataFoto": "2026-09-22",
+          "descricao": null,
+          "ordem": 21,
+          "createdAt": "2026-09-11T12:00:21Z"
+        },
+        {
+          "id": "q23",
+          "dataFoto": "2026-09-23",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 22,
+          "createdAt": "2026-09-11T12:00:22Z"
+        },
+        {
+          "id": "q24",
+          "dataFoto": "2026-09-24",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 23,
+          "createdAt": "2026-09-11T12:00:23Z"
+        },
+        {
+          "id": "q25",
+          "dataFoto": "2026-09-25",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 24,
+          "createdAt": "2026-09-11T12:00:24Z"
+        },
+        {
+          "id": "q26",
+          "dataFoto": "2026-09-26",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 25,
+          "createdAt": "2026-09-11T12:00:25Z"
+        },
+        {
+          "id": "q27",
+          "dataFoto": null,
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 26,
+          "createdAt": "2026-09-11T12:00:26Z"
+        },
+        {
+          "id": "q28",
+          "dataFoto": "2026-09-01",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 27,
+          "createdAt": "2026-09-11T12:00:27Z"
+        },
+        {
+          "id": "q29",
+          "dataFoto": "2026-09-02",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 28,
+          "createdAt": "2026-09-11T12:00:28Z"
+        },
+        {
+          "id": "q30",
+          "dataFoto": "2026-09-03",
+          "descricao": null,
+          "ordem": 29,
+          "createdAt": "2026-09-11T12:00:29Z"
+        },
+        {
+          "id": "q31",
+          "dataFoto": "2026-09-04",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 30,
+          "createdAt": "2026-09-11T12:00:30Z"
+        },
+        {
+          "id": "q32",
+          "dataFoto": "2026-09-05",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 31,
+          "createdAt": "2026-09-11T12:00:31Z"
+        },
+        {
+          "id": "q33",
+          "dataFoto": "2026-09-06",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 32,
+          "createdAt": "2026-09-11T12:00:32Z"
+        },
+        {
+          "id": "q34",
+          "dataFoto": null,
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 33,
+          "createdAt": "2026-09-11T12:00:33Z"
+        },
+        {
+          "id": "q35",
+          "dataFoto": "2026-09-08",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 34,
+          "createdAt": "2026-09-11T12:00:34Z"
+        },
+        {
+          "id": "q36",
+          "dataFoto": "2026-09-09",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 35,
+          "createdAt": "2026-09-11T12:00:35Z"
+        },
+        {
+          "id": "q37",
+          "dataFoto": "2026-09-10",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 36,
+          "createdAt": "2026-09-11T12:00:36Z"
+        },
+        {
+          "id": "q38",
+          "dataFoto": "2026-09-11",
+          "descricao": null,
+          "ordem": 37,
+          "createdAt": "2026-09-11T12:00:37Z"
+        },
+        {
+          "id": "q39",
+          "dataFoto": "2026-09-12",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 38,
+          "createdAt": "2026-09-11T12:00:38Z"
+        },
+        {
+          "id": "q40",
+          "dataFoto": "2026-09-13",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 39,
+          "createdAt": "2026-09-11T12:00:39Z"
+        },
+        {
+          "id": "q41",
+          "dataFoto": null,
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 40,
+          "createdAt": "2026-09-11T12:00:40Z"
+        },
+        {
+          "id": "q42",
+          "dataFoto": "2026-09-15",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 41,
+          "createdAt": "2026-09-11T12:00:41Z"
+        },
+        {
+          "id": "q43",
+          "dataFoto": "2026-09-16",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 42,
+          "createdAt": "2026-09-11T12:00:42Z"
+        },
+        {
+          "id": "q44",
+          "dataFoto": "2026-09-17",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 43,
+          "createdAt": "2026-09-11T12:00:43Z"
+        },
+        {
+          "id": "q45",
+          "dataFoto": "2026-09-18",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 44,
+          "createdAt": "2026-09-11T12:00:44Z"
+        },
+        {
+          "id": "q46",
+          "dataFoto": "2026-09-19",
+          "descricao": null,
+          "ordem": 45,
+          "createdAt": "2026-09-11T12:00:45Z"
+        },
+        {
+          "id": "q47",
+          "dataFoto": "2026-09-20",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 46,
+          "createdAt": "2026-09-11T12:00:46Z"
+        },
+        {
+          "id": "q48",
+          "dataFoto": null,
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 47,
+          "createdAt": "2026-09-11T12:00:47Z"
+        },
+        {
+          "id": "q49",
+          "dataFoto": "2026-09-22",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 48,
+          "createdAt": "2026-09-11T12:00:48Z"
+        },
+        {
+          "id": "q50",
+          "dataFoto": "2026-09-23",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 49,
+          "createdAt": "2026-09-11T12:00:49Z"
+        },
+        {
+          "id": "q51",
+          "dataFoto": "2026-09-24",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 50,
+          "createdAt": "2026-09-11T12:00:50Z"
+        },
+        {
+          "id": "q52",
+          "dataFoto": "2026-09-25",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 51,
+          "createdAt": "2026-09-11T12:00:51Z"
+        },
+        {
+          "id": "q53",
+          "dataFoto": "2026-09-26",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 52,
+          "createdAt": "2026-09-11T12:00:52Z"
+        },
+        {
+          "id": "q54",
+          "dataFoto": "2026-09-27",
+          "descricao": null,
+          "ordem": 53,
+          "createdAt": "2026-09-11T12:00:53Z"
+        },
+        {
+          "id": "q55",
+          "dataFoto": null,
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 54,
+          "createdAt": "2026-09-11T12:00:54Z"
+        },
+        {
+          "id": "q56",
+          "dataFoto": "2026-09-02",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 55,
+          "createdAt": "2026-09-11T12:00:55Z"
+        },
+        {
+          "id": "q57",
+          "dataFoto": "2026-09-03",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 56,
+          "createdAt": "2026-09-11T12:00:56Z"
+        },
+        {
+          "id": "q58",
+          "dataFoto": "2026-09-04",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 57,
+          "createdAt": "2026-09-11T12:00:57Z"
+        },
+        {
+          "id": "q59",
+          "dataFoto": "2026-09-05",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 58,
+          "createdAt": "2026-09-11T12:00:58Z"
+        },
+        {
+          "id": "q60",
+          "dataFoto": "2026-09-06",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 59,
+          "createdAt": "2026-09-11T12:00:59Z"
+        },
+        {
+          "id": "q61",
+          "dataFoto": "2026-09-07",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 60,
+          "createdAt": "2026-09-11T12:01:00Z"
+        },
+        {
+          "id": "q62",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 61,
+          "createdAt": "2026-09-11T12:01:01Z"
+        },
+        {
+          "id": "q63",
+          "dataFoto": "2026-09-09",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 62,
+          "createdAt": "2026-09-11T12:01:02Z"
+        },
+        {
+          "id": "q64",
+          "dataFoto": "2026-09-10",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 63,
+          "createdAt": "2026-09-11T12:01:03Z"
+        },
+        {
+          "id": "q65",
+          "dataFoto": "2026-09-11",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 64,
+          "createdAt": "2026-09-11T12:01:04Z"
+        },
+        {
+          "id": "q66",
+          "dataFoto": "2026-09-12",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 65,
+          "createdAt": "2026-09-11T12:01:05Z"
+        },
+        {
+          "id": "q67",
+          "dataFoto": "2026-09-13",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 66,
+          "createdAt": "2026-09-11T12:01:06Z"
+        },
+        {
+          "id": "q68",
+          "dataFoto": "2026-09-14",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 67,
+          "createdAt": "2026-09-11T12:01:07Z"
+        },
+        {
+          "id": "q69",
+          "dataFoto": null,
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 68,
+          "createdAt": "2026-09-11T12:01:08Z"
+        },
+        {
+          "id": "q70",
+          "dataFoto": "2026-09-16",
+          "descricao": null,
+          "ordem": 69,
+          "createdAt": "2026-09-11T12:01:09Z"
+        },
+        {
+          "id": "q71",
+          "dataFoto": "2026-09-17",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 70,
+          "createdAt": "2026-09-11T12:01:10Z"
+        },
+        {
+          "id": "q72",
+          "dataFoto": "2026-09-18",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 71,
+          "createdAt": "2026-09-11T12:01:11Z"
+        },
+        {
+          "id": "q73",
+          "dataFoto": "2026-09-19",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 72,
+          "createdAt": "2026-09-11T12:01:12Z"
+        },
+        {
+          "id": "q74",
+          "dataFoto": "2026-09-20",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 73,
+          "createdAt": "2026-09-11T12:01:13Z"
+        },
+        {
+          "id": "q75",
+          "dataFoto": "2026-09-21",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 74,
+          "createdAt": "2026-09-11T12:01:14Z"
+        },
+        {
+          "id": "q76",
+          "dataFoto": null,
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 75,
+          "createdAt": "2026-09-11T12:01:15Z"
+        },
+        {
+          "id": "q77",
+          "dataFoto": "2026-09-23",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 76,
+          "createdAt": "2026-09-11T12:01:16Z"
+        },
+        {
+          "id": "q78",
+          "dataFoto": "2026-09-24",
+          "descricao": null,
+          "ordem": 77,
+          "createdAt": "2026-09-11T12:01:17Z"
+        },
+        {
+          "id": "q79",
+          "dataFoto": "2026-09-25",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 78,
+          "createdAt": "2026-09-11T12:01:18Z"
+        },
+        {
+          "id": "q80",
+          "dataFoto": "2026-09-26",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 79,
+          "createdAt": "2026-09-11T12:01:19Z"
+        },
+        {
+          "id": "q81",
+          "dataFoto": "2026-09-27",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 80,
+          "createdAt": "2026-09-11T12:01:20Z"
+        },
+        {
+          "id": "q82",
+          "dataFoto": "2026-09-01",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 81,
+          "createdAt": "2026-09-11T12:01:21Z"
+        },
+        {
+          "id": "q83",
+          "dataFoto": null,
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 82,
+          "createdAt": "2026-09-11T12:01:22Z"
+        },
+        {
+          "id": "q84",
+          "dataFoto": "2026-09-03",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 83,
+          "createdAt": "2026-09-11T12:01:23Z"
+        },
+        {
+          "id": "q85",
+          "dataFoto": "2026-09-04",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 84,
+          "createdAt": "2026-09-11T12:01:24Z"
+        },
+        {
+          "id": "q86",
+          "dataFoto": "2026-09-05",
+          "descricao": null,
+          "ordem": 85,
+          "createdAt": "2026-09-11T12:01:25Z"
+        },
+        {
+          "id": "q87",
+          "dataFoto": "2026-09-06",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 86,
+          "createdAt": "2026-09-11T12:01:26Z"
+        },
+        {
+          "id": "q88",
+          "dataFoto": "2026-09-07",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 87,
+          "createdAt": "2026-09-11T12:01:27Z"
+        },
+        {
+          "id": "q89",
+          "dataFoto": "2026-09-08",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 88,
+          "createdAt": "2026-09-11T12:01:28Z"
+        },
+        {
+          "id": "q90",
+          "dataFoto": null,
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 89,
+          "createdAt": "2026-09-11T12:01:29Z"
+        },
+        {
+          "id": "q91",
+          "dataFoto": "2026-09-10",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 90,
+          "createdAt": "2026-09-11T12:01:30Z"
+        },
+        {
+          "id": "q92",
+          "dataFoto": "2026-09-11",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 91,
+          "createdAt": "2026-09-11T12:01:31Z"
+        },
+        {
+          "id": "q93",
+          "dataFoto": "2026-09-12",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 92,
+          "createdAt": "2026-09-11T12:01:32Z"
+        },
+        {
+          "id": "q94",
+          "dataFoto": "2026-09-13",
+          "descricao": null,
+          "ordem": 93,
+          "createdAt": "2026-09-11T12:01:33Z"
+        },
+        {
+          "id": "q95",
+          "dataFoto": "2026-09-14",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 94,
+          "createdAt": "2026-09-11T12:01:34Z"
+        },
+        {
+          "id": "q96",
+          "dataFoto": "2026-09-15",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 95,
+          "createdAt": "2026-09-11T12:01:35Z"
+        },
+        {
+          "id": "q97",
+          "dataFoto": null,
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 96,
+          "createdAt": "2026-09-11T12:01:36Z"
+        },
+        {
+          "id": "q98",
+          "dataFoto": "2026-09-17",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 97,
+          "createdAt": "2026-09-11T12:01:37Z"
+        },
+        {
+          "id": "q99",
+          "dataFoto": "2026-09-18",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 98,
+          "createdAt": "2026-09-11T12:01:38Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": null,
+      "quantidadeFotos": 0,
+      "id": "e1x",
+      "tipo": "etapa",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-09-03T12:00:00Z",
+      "fotos": []
+    },
+    {
+      "obraId": "a1",
+      "etapaId": "e2",
+      "competencia": null,
+      "quantidadeFotos": 2,
+      "id": "e2x",
+      "tipo": "etapa",
+      "titulo": "Vistoria técnica detalhada do pavimento, com conferência de armaduras e prumos. Vistoria técnica detalhada do pavimento, com conferência de armaduras ",
+      "createdAt": "2026-09-04T12:00:00Z",
+      "fotos": [
+        {
+          "id": "r1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "r2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        }
+      ]
+    }
+  ],
+  "GET /obras/a1/etapas": [
+    {
+      "id": "e1",
+      "obraId": "a1",
+      "nome": "Fundação",
+      "ordem": 1
+    },
+    {
+      "id": "e2",
+      "obraId": "a1",
+      "nome": "Alvenaria",
+      "ordem": 2
+    },
+    {
+      "id": "e3",
+      "obraId": "a1",
+      "nome": "Instalações elétricas e hidráulicas",
+      "ordem": 3
+    },
+    {
+      "id": "e4",
+      "obraId": "a1",
+      "nome": "Cobertura",
+      "ordem": 4
+    },
+    {
+      "id": "e9",
+      "obraId": "a1",
+      "nome": "Instalações prediais completas de combate a incêndio, gás e climatização central",
+      "ordem": 5
+    }
+  ]
+}

@@ -217,11 +217,17 @@ public sealed class FinanceiroLancamentoRepository : IFinanceiroLancamentoReposi
 
         try
         {
-            const string chavesSql = @"
-                SELECT a.storage_key
-                FROM financeiro_lancamento_anexos a
-                JOIN financeiro_lancamentos l ON l.id = a.lancamento_id
-                WHERE l.id = @Id AND l.obra_id = @ObraId";
+            // Trava o lancamento ANTES de ler as chaves: o INSERT de anexo concorrente (FK) espera este commit, e se ja
+            // commitou a lista abaixo o inclui; sem a trava o CASCADE apagaria o anexo e o arquivo ficaria orfao no R2.
+            const string lockSql = "SELECT id FROM financeiro_lancamentos WHERE id = @Id AND obra_id = @ObraId FOR UPDATE";
+            var travado = await connection.QuerySingleOrDefaultAsync<Guid?>(lockSql, new { Id = id, ObraId = obraId }, transaction);
+            if (travado is null)
+            {
+                transaction.Rollback();
+                return null;
+            }
+
+            const string chavesSql = "SELECT storage_key FROM financeiro_lancamento_anexos WHERE lancamento_id = @Id";
             var chaves = (await connection.QueryAsync<string>(chavesSql, new { Id = id, ObraId = obraId }, transaction)).ToList();
 
             // Anexos saem junto por ON DELETE CASCADE (schema 003).

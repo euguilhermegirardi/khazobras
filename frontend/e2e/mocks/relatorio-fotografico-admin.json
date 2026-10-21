@@ -1,0 +1,251 @@
+{
+  "GET /obras/a1/relatorios-fotograficos": [
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": "2026-09-01",
+      "quantidadeFotos": 8,
+      "id": "rf1",
+      "tipo": "mensal",
+      "titulo": "Relatório de setembro",
+      "createdAt": "2026-10-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "s1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "s2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "s3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "s4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "s5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "s6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        },
+        {
+          "id": "s7",
+          "dataFoto": "2026-09-07",
+          "descricao": "Impermeabilização da caixa d’água",
+          "ordem": 6,
+          "createdAt": "2026-09-11T12:00:06Z"
+        },
+        {
+          "id": "s8",
+          "dataFoto": "2026-09-08",
+          "descricao": "Conferência do prumo dos pilares",
+          "ordem": 7,
+          "createdAt": "2026-09-11T12:00:07Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": "2026-08-01",
+      "quantidadeFotos": 5,
+      "id": "rf2",
+      "tipo": "mensal",
+      "titulo": "Relatório de agosto",
+      "createdAt": "2026-09-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "a1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "a2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "a3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "a4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "a5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": null,
+      "competencia": "2026-07-01",
+      "quantidadeFotos": 1,
+      "id": "rf3",
+      "tipo": "mensal",
+      "titulo": "Relatório de julho",
+      "createdAt": "2026-08-01T12:00:00Z",
+      "fotos": [
+        {
+          "id": "j1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": "e1",
+      "competencia": null,
+      "quantidadeFotos": 6,
+      "id": "rf4",
+      "tipo": "etapa",
+      "titulo": "Fundação concluída",
+      "createdAt": "2026-08-20T12:00:00Z",
+      "fotos": [
+        {
+          "id": "f1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "f2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "f3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        },
+        {
+          "id": "f4",
+          "dataFoto": "2026-09-04",
+          "descricao": "Instalação dos eletrodutos embutidos",
+          "ordem": 3,
+          "createdAt": "2026-09-11T12:00:03Z"
+        },
+        {
+          "id": "f5",
+          "dataFoto": "2026-09-05",
+          "descricao": "Vista geral da obra, lado leste",
+          "ordem": 4,
+          "createdAt": "2026-09-11T12:00:04Z"
+        },
+        {
+          "id": "f6",
+          "dataFoto": null,
+          "descricao": null,
+          "ordem": 5,
+          "createdAt": "2026-09-11T12:00:05Z"
+        }
+      ]
+    },
+    {
+      "obraId": "a1",
+      "etapaId": "e2",
+      "competencia": null,
+      "quantidadeFotos": 3,
+      "id": "rf5",
+      "tipo": "etapa",
+      "titulo": "Alvenaria em andamento",
+      "createdAt": "2026-09-18T12:00:00Z",
+      "fotos": [
+        {
+          "id": "v1",
+          "dataFoto": "2026-09-01",
+          "descricao": "Armação dos pilares do pavimento térreo",
+          "ordem": 0,
+          "createdAt": "2026-09-11T12:00:00Z"
+        },
+        {
+          "id": "v2",
+          "dataFoto": "2026-09-02",
+          "descricao": "Concretagem da laje do 1º pavimento",
+          "ordem": 1,
+          "createdAt": "2026-09-11T12:00:01Z"
+        },
+        {
+          "id": "v3",
+          "dataFoto": "2026-09-03",
+          "descricao": "Alvenaria de vedação, fachada norte",
+          "ordem": 2,
+          "createdAt": "2026-09-11T12:00:02Z"
+        }
+      ]
+    }
+  ],
+  "GET /obras/a1/etapas": [
+    {
+      "id": "e1",
+      "obraId": "a1",
+      "nome": "Fundação",
+      "ordem": 1
+    },
+    {
+      "id": "e2",
+      "obraId": "a1",
+      "nome": "Alvenaria",
+      "ordem": 2
+    },
+    {
+      "id": "e3",
+      "obraId": "a1",
+      "nome": "Instalações elétricas e hidráulicas",
+      "ordem": 3
+    },
+    {
+      "id": "e4",
+      "obraId": "a1",
+      "nome": "Cobertura",
+      "ordem": 4
+    }
+  ]
+}

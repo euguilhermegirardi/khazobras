@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { RelatorioFotografico } from '@/interfaces/relatorioFotografico';
-import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates';
+import { formatTimestamp } from '@/utils/dates';
+import { ordenarFotos, tituloDoRelatorio } from '@/utils/relatorioFotografico';
 import { FotoThumb } from './FotoThumb';
 
 interface RelatorioFotograficoCardProps {
@@ -11,11 +12,8 @@ interface RelatorioFotograficoCardProps {
 
 export const RelatorioFotograficoCard = ({ relatorio, etapaNome }: RelatorioFotograficoCardProps) => {
   // Constants derivadas
-  const titulo =
-    relatorio.tipo === 'mensal' && relatorio.competencia
-      ? formatMonthYearTitle(relatorio.competencia)
-      : (etapaNome ?? relatorio.titulo);
-  const fotos = [...relatorio.fotos].sort((a, b) => a.ordem - b.ordem);
+  const titulo = tituloDoRelatorio(relatorio, etapaNome);
+  const fotos = ordenarFotos(relatorio.fotos);
 
   // Return
   return (

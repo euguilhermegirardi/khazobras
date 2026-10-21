@@ -69,6 +69,11 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         { "DELETE", $"/financeiro/anexos/{Id}" },
         { "POST", "/relatorios-fotograficos" },
         { "POST", $"/relatorios-fotograficos/{Id}/fotos" },
+        { "PUT", $"/relatorios-fotograficos/{Id}" },
+        { "DELETE", $"/relatorios-fotograficos/{Id}" },
+        { "PATCH", $"/relatorios-fotograficos/{Id}/fotos/ordem" },
+        { "PATCH", $"/fotos/{Id}" },
+        { "DELETE", $"/fotos/{Id}" },
         { "POST", "/relatorios-mensais" },
         { "POST", $"/obras/{Id}/projetos" },
         { "POST", "/notificacoes" },
@@ -102,6 +107,7 @@ public sealed class WriteEndpointsAuthorizationTests : IClassFixture<ApiFactory>
         { "POST", "/medicoes" },
         { "POST", "/contratos" },
         { "POST", "/financeiro/lancamentos" },
+        { "POST", "/relatorios-fotograficos" },
         { "POST", "/relatorios-mensais" },
     };
 

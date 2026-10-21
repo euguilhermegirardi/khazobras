@@ -51,6 +51,7 @@ sempre "Não iniciada").
 | A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 | A4 | Contratos (SPEC §6 item 9: criar contrato, registrar pagamento) | ✅ `POST /contratos`, `GET /obras/{id}/contratos`, `GET /contratos/{id}`, `POST /contratos/{id}/pagamentos` + `GET /obras/{id}/medicoes/resumo?status=invoice_issued` (seletor) | ✅ | `feat/contratos`, `modules/contratos-admin`, rota `/admin/obras/:obraId/contratos`. Lista de cards + "+ Novo contrato" + "Registrar pagamento" (RHF + zod). Sem editar/excluir (backend não tem). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, front) |
 | A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ✅ | Front feito: `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro` (item "Financeiro" entre Medições e Contratos). KPIs internos, tabela com seleção e lote, flag por linha, novo/editar com comprovantes, exclusão com confirmação. Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Financeiro admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
+| A6 | Relatório fotográfico (SPEC §6 item 11: criar/editar relatório, upload e gestão das fotos) | ✅ backend (`feat/fotos-admin`, empilhada sobre `feat/financeiro-admin`, PR #20; o PR terá base `main` e dirá "mesclar depois do #20"; sem script SQL): `GET /obras/{id}/relatorios-fotograficos` (com `quantidadeFotos`), `POST/PUT/DELETE /relatorios-fotograficos[/{id}]`, `POST /relatorios-fotograficos/{id}/fotos`, `PATCH /fotos/{id}`, `DELETE /fotos/{id}`, `PATCH /relatorios-fotograficos/{id}/fotos/ordem` | 🟨 | Front feito: `modules/relatorio-fotografico-admin`, rotas `/admin/obras/:obraId/relatorio-fotografico` (lista) e `.../:relatorioId` (gerenciador de fotos). Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Relatório fotográfico admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -67,7 +68,8 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   confirmar com o engenheiro se o esperado é esse ou somar só os saldos positivos.
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
-- Auditoria: medições, contratos/pagamentos e financeiro (editar, excluir, visibilidade, remover anexo) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
+- Auditoria: medições, contratos/pagamentos, financeiro (editar, excluir, visibilidade, remover anexo) e relatório fotográfico (editar,
+  excluir, editar/remover/reordenar foto) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
   Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
@@ -96,7 +98,19 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     lançamento já foi apagado sem trilha. Correção: auditoria dentro da transação ou limpeza do R2 antes da auditoria.
   - B6 404 x 403 revela a existência de um id (aceito, como nos outros módulos).
   - Harness (verificar): o padrão `COUNT` dentro do `INSERT` e CTE sem `FOR UPDATE` também pode existir em outros módulos
-    (Projetos/Fotos/Documentos, Medições, Contratos); varrer quando mexer neles.
+    (Projetos/Documentos, Medições, Contratos); varrer quando mexer neles. **Fotos já foi varrido** (limite e lote com
+    transação + `FOR UPDATE` na linha do relatório). O B1 do Financeiro (10 anexos) segue aberto: aplicar o mesmo padrão lá.
+- Relatório fotográfico (backlog, o backend do admin está pronto: ver Decisões): sem unicidade por mês/etapa (o schema 005 não tem
+  `UNIQUE`; exigiria índice novo e decisão de produto) e sem rascunho/publicação (cliente vê tudo, como o schema permite); `tipo =
+  etapa` não exige `etapaId` e `tipo = mensal` não exige `competencia` (decidir com o engenheiro antes de endurecer); sem lixeira na
+  exclusão; `GET /obras/{id}/relatorios-fotograficos` sem paginação (traz todas as fotos de todos os relatórios); sem miniaturas (a
+  imagem inteira é baixada em cada card); upload de uma foto por requisição (o front sobe várias em sequência); o nome do arquivo
+  não é gravado (só a extensão entra na chave), então o front não consegue mostrar o nome original; auditoria de criar relatório e de
+  enviar foto não existe (só editar/excluir/reordenar/remover; avaliar gravar `relatorio_fotografico_criado` e `foto_enviada`);
+  `descricao` e `dataFoto` do upload vão na query string (`POST /relatorios-fotograficos/{id}/fotos?descricao=...`): texto livre
+  pode parar em logs de acesso/proxy; avaliar mover para campos do multipart (muda backend e front juntos); `POST /relatorios-mensais` ainda valida o corpo **antes** do acesso
+  à obra (mesma violação que foi corrigida em fotos e financeiro; varrer quando mexer em Relatórios mensais); os testes HTTP usam
+  repositório falso, então o SQL novo (`FOR UPDATE`, `unnest`, `UPDATE ... CASE`) só roda com Postgres de verdade.
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
 - PUT/PATCH/DELETE nos módulos que ainda não têm (Financeiro já tem); `GET /users/{id}`, desativar usuário — telas admin
@@ -541,6 +555,55 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     responde **400 `{ message }`** antes de enviar ao R2 (recusa em vez de truncar, para nunca gravar um nome diferente do enviado);
     se o `INSERT` do anexo lançar exceção depois do upload, o objeto é removido do R2 e a exceção é relançada. Testes em
     `Http/FinanceiroAdminTests`. Front: tratar o 400 do upload também para nome longo (mesma forma `{ message }` do limite de anexos).
+- **Relatório fotográfico admin, backend** (`feat/fotos-admin`, 20/10; sem script SQL, sem schema novo; contrato completo em
+  `backend/docs/API.md` → Módulo Relatórios Fotográficos). Pronto para a tela admin (SPEC §6 item 11). Escrito na nuvem sem .NET:
+  `dotnet build` + `dotnet test` no Mac antes do merge.
+  - **Modelo**: `relatorios_fotograficos` (tipo `mensal|etapa`, `etapa_id`, `titulo` ≤150, `competencia`) e `fotos` (`descricao` ≤255,
+    `data_foto`, `ordem`). Não há rascunho/publicação nem `UNIQUE`, então **não inventamos**: cliente e admin veem o mesmo DTO e pode
+    haver vários relatórios por mês/etapa (sem 409 de duplicado). Backlog nas lacunas.
+  - **Lista/detalhe** (mesmo DTO para cliente e admin): `quantidadeFotos` (computada) + `fotos[{ id, dataFoto, descricao, ordem,
+    createdAt }]` **sem `storage_key`** (teste varre o JSON). Ordem estável: fotos por `ordem, created_at, id`; relatórios
+    `created_at DESC, id`. Fotos de todos os relatórios numa consulta só (`= ANY(@Ids)`), no lugar do N+1 de antes.
+  - **Varredura do módulo (violações corrigidas)**: `GET /relatorios-fotograficos/{id}` e o upload carregavam o relatório inteiro (com
+    todas as fotos) **antes** do acesso, sem filtro de obra, e o upload tinha um `IsAdminOrMaster` redundante → agora `GetObraIdByIdAsync`
+    → `EnsureAccessAsync` → `WHERE id AND obra_id`; o `GetByIdAsync(id)` sem obra foi removido da interface, do repositório e do serviço
+    (o fake guarda `Inspecionar`/`InspecionarFoto` só para os testes). `POST /relatorios-fotograficos` validava o corpo **antes** do
+    acesso e com obra inexistente dava 500 (FK) → acesso → validação → 404 se a obra não existe; `etapaId` não era conferido (podia ser de
+    outra obra) → 400 genérico `errors.EtapaId` (inexistente = outra obra); `competencia` aceitava ano absurdo → 2000–2100.
+  - **Escritas novas** (todas `AdminOrMaster`, padrão 404 → 403 → 400): `PUT /relatorios-fotograficos/{id}` (tipo, etapaId, titulo,
+    competencia; a obra não troca; `relatorio_fotografico_editado` com nomes de campos), `DELETE /relatorios-fotograficos/{id}`
+    (hard delete: chaves lidas e relatório apagado na mesma transação, fotos por `CASCADE`, R2 depois, falha vira aviso;
+    `relatorio_fotografico_excluido`), `PATCH /fotos/{id}`, `DELETE /fotos/{id}` (`foto_removida`) e
+    `PATCH /relatorios-fotograficos/{id}/fotos/ordem` (`fotos_reordenadas`). Auditoria na entidade `relatorio_fotografico` com o id do
+    relatório, payload só com ids/quantidade/nomes de campos (nunca título nem descrição).
+  - **Upload**: limite de **100 fotos por relatório** (400 `{ message }`), nome do arquivo > 255 → 400 **antes** do R2 (o nome nem é
+    gravado, mas segue o padrão dos anexos), `descricao` ≤255, `dataFoto` 2000-01-01..amanhã, `ordem` 0..100000, tudo antes do R2.
+    **`ordem` omitida = fim da lista** (antes era sempre 0, o que embaralhava a ordem em uploads em sequência). `dataFoto`,
+    `descricao` e `ordem` continuam na **query string** (o endpoint já era assim). Se o `INSERT` lançar depois do upload, ou o limite
+    estourar na corrida, o objeto sai do R2.
+  - **Concorrência (lição do B1 do Financeiro)**: `TryAddFotoAsync` e `ReordenarFotosAsync` rodam numa transação que primeiro faz
+    `SELECT ... FROM relatorios_fotograficos WHERE id AND obra_id FOR UPDATE`; só então contam/inserem/atualizam. Uploads e reordenações
+    do mesmo relatório se enfileiram, então o limite de 100 não estoura. O lote é `UPDATE ... FROM unnest(@Ids, @Ordens)` preso ao
+    relatório e conferido pela contagem de linhas (diferente = `ROLLBACK`, tudo-ou-nada). Limite: o `DELETE` de foto não trava o
+    relatório (só diminui a contagem, é seguro para o limite); uma foto apagada durante o lote faz o lote falhar com 400.
+  - **Exclusão de relatório trava antes de ler as chaves** (achado do security-reviewer): `DeleteAsync` abre a transação com o mesmo
+    `FOR UPDATE` do upload e só então lê as chaves das fotos e apaga (CASCADE); sem isso um upload concorrente tinha a foto apagada
+    pelo CASCADE e o arquivo ficava órfão no R2. R2 continua sendo removido só após o commit. O mesmo padrão foi corrigido em
+    `FinanceiroLancamentoRepository.DeleteAsync` (trava o lançamento antes de ler as chaves dos anexos). Só roda com Postgres real.
+  - **PATCH de foto parcial de verdade**: o corpo é lido como `JsonElement` (`UpdateFotoRequestParser`) para distinguir campo ausente
+    (mantém) de `null` (limpa descrição/data); o SQL usa `CASE WHEN @SetX THEN @X ELSE coluna END`. `ordem` não aceita `null`.
+  - **Lote de ordem**: máx. 200, ids únicos, `ordem` 0..100000; só fotos **do próprio relatório**; id inexistente, de outro relatório ou de
+    outra obra dão o mesmo 400 (`errors.Fotos`). A resposta traz **todas** as fotos do relatório na nova ordem. Fotos não citadas
+    não mudam (pode haver `ordem` repetida; o desempate é `created_at, id`).
+  - **Download** `GET /fotos/{id}/arquivo`: agora com `X-Content-Type-Options: nosniff`. Resto igual (cliente só da própria obra).
+  - Testes: `Http/RelatorioFotograficoAdminTests` (lista/detalhe, criar/PUT/DELETE, upload com limite/nome/metadados/limpeza do R2,
+    PATCH/DELETE de foto, lote, 403 antes do corpo, outra obra, 404, auditoria, `storage_key` fora do JSON), `RelatorioFotograficoValidatorTests`
+    (validators, `FotoRegras`, parser do PATCH), rotas novas em `WriteEndpointsAuthorizationTests`; `FotoDownloadTests` ajustado ao novo
+    construtor do serviço; `FakeRelatorioFotograficoRepository` espelha o SQL (preso à obra, limite, tudo-ou-nada).
+  - **Validar no Mac**: aplicar nada (sem script); rodar build + testes; conferir à mão com Postgres: upload simultâneo (2 janelas) perto
+    de 100 fotos, `PATCH /fotos/{id}` com `null`, lote com foto de outro relatório, `DELETE` de relatório com fotos (R2 limpo), e a lista
+    com vários relatórios (uma consulta de fotos). Front: o admin deve mandar `ordem` só ao reordenar; uploads em sequência (não em paralelo
+    com a mesma `ordem`).
 - **Financeiro admin, front** (`feat/financeiro-admin`, 20/10). `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro`, item
   "Financeiro" (ícone `Wallet`) em `ADMIN_NAV.obra` **entre Medições e Contratos** (ordem do SPEC §6: 7 Medições, 8 Financeiro, 9 Contratos;
   antes o Contratos vinha logo depois de Medições). Sem Importar/Exportar, sem pagador, sem abas Resumo/Por categoria.
@@ -585,8 +648,41 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   - **Testes antigos afetados:** `ContratosAdmin.test` ("Contratos fica depois de Medições na sidebar do admin") assume que Contratos vem logo
     depois de Medições; com o Financeiro no meio (ordem do SPEC) o assert fica obsoleto. Não editado (é do tester): trocar por "depois de Financeiro".
 
+- **Relatório fotográfico admin, front** (`feat/fotos-admin`, 20/10). `modules/relatorio-fotografico-admin`; item "Relatório fotográfico" (ícone `Camera`)
+  em `ADMIN_NAV.obra` **depois de Contratos** (SPEC §6 item 11; Rentabilidade, item 10, ainda não existe; Projetos admin virá depois).
+  - **Rotas:** lista `/admin/obras/:obraId/relatorio-fotografico` e gerenciador `.../relatorio-fotografico/:relatorioId` (página, não Dialog: o
+    `ImageDialog` e o Dialog do Radix disputam o foco). Detalhe lê `GET /relatorios-fotograficos/{id}`; relatório de outra obra na URL =
+    "não encontrado nesta obra".
+  - **Lista:** tabs Mensal/Etapa (como no cliente), cards em 3 colunas de altura uniforme (título = `tituloDoRelatorio`, badge do tipo, título digitado,
+    data de registro, N fotos, "Gerenciar fotos", Editar, Excluir). Sem capa (o backend não tem miniatura: seria baixar a imagem inteira por card).
+    Excluir = confirmação inline "Excluir definitivamente este relatório e suas N fotos?" (lista e detalhe). Criar/editar abre a aba do tipo salvo.
+  - **Formulário (Dialog, RHF + zod):** tipo, etapa (select de `useEtapas`), título (obrigatório, ≤150), competência (`<input type="month">`, opcional,
+    2000–2100). O backend **não** exige etapa no tipo `etapa` nem competência no tipo `mensal`: a UI só sugere ("Recomendado no tipo Etapa...") sem travar.
+    PUT manda os 4 campos (`null` limpa). 400 por campo (`EtapaId`, `Titulo`...), 403/404/500 em `Alert` (500 com requestId). O diálogo só monta o form com as
+    etapas resolvidas (select nativo não reaplica o valor se as opções chegam depois).
+  - **Fotos:** grade de 4 colunas (240px no 1280, 280px no 1440; cartão 265/295px de altura, igual para todos, com/sem descrição, data ou confirmação).
+    Por foto: miniatura (blob autenticado, `components/FotoMiniatura`, ampliar), descrição e data truncadas, "N de M", setas, Editar (Dialog; PATCH só com os
+    campos alterados, vazio = `null`), Remover (confirmação inline na própria linha). **Reordenar** por setas (acessível por teclado; arrastar não foi feito):
+    troca com a vizinha, renumera 0..n-1 e manda só as fotos cuja ordem mudou; atualização otimista no detalhe com rollback (`onError`), uma troca por vez
+    (sem `disabled`, para não perder o foco), foco devolvido ao botão depois de mover, `aria-live` com a nova posição.
+  - **Upload:** `<input multiple>` dentro de uma label tracejada (soltar arquivos é só atalho), validação em `utils/foto` (jpg/jpeg/png/webp/gif, ≤10 MB,
+    nome ≤255, vazio; limite de 100 contando as do servidor + fila; repetido = recusado), prévia local (object URL revogado), descrição e data do **lote**, fila
+    **sequencial** (um POST por arquivo; `dataFoto`/`descricao` na query, `file` no multipart; sem `ordem` = fim), progresso (`ProgressBar`), status por
+    arquivo, mensagem do 400 `{ message }` na linha, "Tentar de novo (N)", "Cancelar fila" (o envio em andamento **termina**, não é abortado, porque poderia
+    gravar no servidor mesmo assim; pendentes viram "cancelada"), erro 403/404/401/rede interrompe a fila e deixa o resto pendente. Ao fim da rodada invalida a lista.
+  - **Cache:** lista `['obra', id, 'relatorios-fotograficos']` (a mesma do cliente) e detalhe sob o mesmo prefixo; toda escrita invalida o prefixo.
+    `useRelatoriosFotograficos` subiu para `hooks/` (o `modules/relatorio-fotografico/hooks.ts` reexporta; o `api.ts` dele saiu).
+  - **Base nova/movida:** `components/FotoMiniatura` (FotoThumb do cliente usa), `components/ErroAlert` + `utils/erros` (financeiro-admin reexporta),
+    `utils/foto`, `utils/relatorioFotografico` (`tituloDoRelatorio`, `ordenarFotos`, rótulos), `interfaces/relatorioFotografico` (requests e `quantidadeFotos`).
+    Testes unitários dos puros: `utils/foto`, `reordenar`, `uploadFila`, `fotoForm`, `relatorioForm`.
+  - **Rodada 1 (tester):** `useAuthenticatedObjectUrl` deriva o object URL com `useMemo` (revoga no cleanup) em vez de `setUrl` em efeito: com 100 miniaturas
+    resolvendo juntas o ciclo estourava "Maximum update depth". Sem lazy-load (o e2e espera as 100 imagens). Excluir pelo detalhe remove a query do detalhe antes de
+    navegar (sem piscar 404); 400 `errors.Fotos` ao reordenar mostra a mensagem do servidor; `PageSection` limita o h1 a 2 linhas (`line-clamp-2`, `title`).
+  - **Testes antigos afetados:** nenhum falhou (871 verdes). O de ordem do menu do admin só vale se não assumir que Contratos é o último item.
+
 ## Registro
 
+- 2026-10-20 — `feat/fotos-admin`: feat(financeiro): backend admin com edicao, exclusao, lote de visibilidade, resumo, filtros e anexos limitados, tudo preso a obra e auditado; docs: registro do financeiro admin (backend); feat(financeiro-admin): base compartilhada (switch, upload multipart, validacao de anexo, tipos, utilitarios movidos); feat(financeiro-admin): tela Financeiro admin com KPIs, tabela, flag por linha, lote, novo/editar com comprovantes e exclusao; test: financeiro-admin lista, KPIs, filtros, paginacao, papel e datas; ordem do menu em contratos-admin; test: financeiro-admin selecao, lote, interruptor por linha, novo e editar lancamento; test: financeiro-admin comprovantes (baixar, remover, enviar, limite) e exclusao de lancamento; test: financeiro-admin bordas dos utilitarios (anexo, categoria, formulario, datas no fuso de Sao Paulo); test: financeiro-admin mocks de captura (normal e estresse com 20 itens, descricoes longas e 10 anexos); test: financeiro-admin e2e (liberar, lote, criar/editar com anexo, excluir, larguras 1280/1440, acesso negado); test: financeiro-admin remove import sem uso; docs: capturas do financeiro-admin (claro, escuro, 1280, estresse); fix(financeiro): remove busca de lancamento sem filtro de obra e valida nome do anexo antes do R2; docs: relatorio da manha do Financeiro admin, status e registro; feat(fotos-admin): backend do relatorio fotografico admin (PUT/DELETE, fotos PATCH/DELETE, lote de ordem, limite, auditoria); docs: registro do backend fotos-admin; feat(fotos-admin): base compartilhada (FotoMiniatura, ErroAlert, validacao de foto, titulo e ordem do relatorio, lista na base); feat(fotos-admin): tela Relatorio fotografico admin (lista, formulario, gerenciador de fotos, upload em fila, reordenar); test: fotos-admin lista, detalhe, fotos, reordenar, upload em fila, papel, e2e e mocks de captura (normal e estresse); fix(fotos-admin): object URL derivado (100 miniaturas), sem piscar 404 ao excluir, mensagem do 400 ao reordenar, h1 limitado a 2 linhas; docs: capturas da revisao de design do relatorio fotografico admin; fix(backend): trava o pai antes de ler chaves no delete de relatorio e lancamento (evita arquivo orfao no R2). Arquivos: outros (1), backend (29), testes backend (11), docs (18), front (33), front/rotas-layouts (2), modules/contratos-admin (3), modules/financeiro-admin (23), modules/financeiro (1), modules/relatorio-fotografico-admin (29), modules/relatorio-fotografico (4).
 - 2026-10-20 — `feat/financeiro-admin`: feat(financeiro): backend admin com edicao, exclusao, lote de visibilidade, resumo, filtros e anexos limitados, tudo preso a obra e auditado; docs: registro do financeiro admin (backend); feat(financeiro-admin): base compartilhada (switch, upload multipart, validacao de anexo, tipos, utilitarios movidos); feat(financeiro-admin): tela Financeiro admin com KPIs, tabela, flag por linha, lote, novo/editar com comprovantes e exclusao; test: financeiro-admin lista, KPIs, filtros, paginacao, papel e datas; ordem do menu em contratos-admin; test: financeiro-admin selecao, lote, interruptor por linha, novo e editar lancamento; test: financeiro-admin comprovantes (baixar, remover, enviar, limite) e exclusao de lancamento; test: financeiro-admin bordas dos utilitarios (anexo, categoria, formulario, datas no fuso de Sao Paulo); test: financeiro-admin mocks de captura (normal e estresse com 20 itens, descricoes longas e 10 anexos); test: financeiro-admin e2e (liberar, lote, criar/editar com anexo, excluir, larguras 1280/1440, acesso negado); test: financeiro-admin remove import sem uso; docs: capturas do financeiro-admin (claro, escuro, 1280, estresse); fix(financeiro): remove busca de lancamento sem filtro de obra e valida nome do anexo antes do R2. Arquivos: outros (1), backend (16), testes backend (7), docs (5), front (17), front/rotas-layouts (2), modules/contratos-admin (3), modules/financeiro-admin (23), modules/financeiro (1).
 - 2026-10-20 — `feat/dashboard-cliente`: feat(dashboard): GET /obras/{id}/dashboard com DTO unico seguro para o cliente, 4 consultas agregadas presas a obra e relogio injetavel; docs: registro; feat(dashboard): base do grafico (recharts 3.10.1 fixa, tipos, moeda compacta, stub de ResizeObserver) e rotulo truncado na ProgressBar; feat(dashboard): tela Dashboard do cliente com 4 KPIs, avanco por etapa e grafico de custo acumulado; test: dashboard do cliente (estados, KPIs, etapas, gráfico, papéis, regra 7); test: dashboard ProgressBar (rótulo truncado) e formatCurrencyCompact; test: dashboard e2e (Chromium) e mock de estresse para captura; fix(dashboard): eixo X com passo fixo e cards da linha com a mesma altura; docs: capturas do dashboard do cliente (claro, escuro, 1280, estresse). Arquivos: outros (1), backend (6), testes backend (2), docs (6), front (12), modules/dashboard (16), front/rotas-layouts (2).
 - 2026-10-20 — `feat/contratos`: feat(contratos): contratos e pagamentos com DTO reduzido ao cliente, totais no SQL, acesso preso a obra e auditoria; docs: registro; feat(contratos): telas Contratos do cliente (somente leitura) e do admin (novo contrato, registrar pagamento); docs: registro; test: contratos (cliente e admin) com Vitest + MSW; test: contratos e2e (cliente e admin) e mocks de captura; docs: capturas de contratos e contratos-admin (claro, escuro, 1280). Arquivos: outros (1), backend (17), testes backend (4), docs (6), front (13), front/rotas-layouts (2), modules/contratos-admin (14), modules/contratos (5), modules/medicoes-admin (1).

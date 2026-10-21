@@ -17,6 +17,8 @@ import { MedicoesAdminPage } from '@/modules/medicoes-admin/pages/MedicoesAdminP
 import { ObraHubPage } from '@/modules/obras/pages/ObraHubPage';
 import { ProjetosPage } from '@/modules/projetos/pages/ProjetosPage';
 import { RelatorioFotograficoPage } from '@/modules/relatorio-fotografico/pages/RelatorioFotograficoPage';
+import { RelatorioFotograficoDetalheAdminPage } from '@/modules/relatorio-fotografico-admin/pages/RelatorioFotograficoDetalheAdminPage';
+import { RelatoriosFotograficosAdminPage } from '@/modules/relatorio-fotografico-admin/pages/RelatoriosFotograficosAdminPage';
 import { RelatorioMensalPage } from '@/modules/relatorio-mensal/pages/RelatorioMensalPage';
 import { AdminLayout, ClientLayout } from '@/layouts/RoleLayouts';
 import { AdminObraDashboardPage, ForbiddenPage, NotFoundPage } from './pages';
@@ -85,6 +87,11 @@ export const AppRoutes = () => {
           <Route path="/admin/obras/:obraId/medicoes/:medicaoId" element={<MedicaoAdminDetalhePage />} />
           <Route path="/admin/obras/:obraId/financeiro" element={<FinanceiroAdminPage />} />
           <Route path="/admin/obras/:obraId/contratos" element={<ContratosAdminPage />} />
+          <Route path="/admin/obras/:obraId/relatorio-fotografico" element={<RelatoriosFotograficosAdminPage />} />
+          <Route
+            path="/admin/obras/:obraId/relatorio-fotografico/:relatorioId"
+            element={<RelatorioFotograficoDetalheAdminPage />}
+          />
         </Route>
       </Route>
 
