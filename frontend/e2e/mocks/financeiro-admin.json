@@ -1,0 +1,264 @@
+{
+  "GET /obras/a1/financeiro/lancamentos": {
+    "totalItems": 12,
+    "pageIndex": 0,
+    "pageSize": 20,
+    "items": [
+      {
+        "id": "f12",
+        "obraId": "a1",
+        "categoria": "Material",
+        "descricao": "Cimento CP-II 50 kg - 120 sacos (NF 4821)",
+        "valor": 5400,
+        "dataLancamento": "2026-10-16",
+        "mesCompetencia": "2026-10-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-10-16T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a12",
+            "nomeArquivo": "nf-4821-cimento.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 184320,
+            "uploadedAt": "2026-10-16T14:10:00Z"
+          }
+        ]
+      },
+      {
+        "id": "f11",
+        "obraId": "a1",
+        "categoria": "MaoDeObra",
+        "descricao": "Pedreiros e serventes - semana 41",
+        "valor": 12850.5,
+        "dataLancamento": "2026-10-12",
+        "mesCompetencia": "2026-10-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": false,
+        "createdAt": "2026-10-12T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a11",
+            "nomeArquivo": "folha-semana-41.xlsx",
+            "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "tamanhoBytes": 28672,
+            "uploadedAt": "2026-10-12T20:00:00Z"
+          },
+          {
+            "id": "a11b",
+            "nomeArquivo": "recibo-empreiteiro.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 90112,
+            "uploadedAt": "2026-10-12T20:05:00Z"
+          }
+        ]
+      },
+      {
+        "id": "f10",
+        "obraId": "a1",
+        "categoria": "Equipamento",
+        "descricao": "Locação de betoneira 400 L - 15 dias",
+        "valor": 1980,
+        "dataLancamento": "2026-10-05",
+        "mesCompetencia": "2026-10-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-10-05T13:00:00Z",
+        "anexos": []
+      },
+      {
+        "id": "f09",
+        "obraId": "a1",
+        "categoria": "Material",
+        "descricao": "Fornecimento e assentamento de revestimento cerâmico retificado 60x60 nas áreas molhadas, incluindo argamassa colante AC-III, rejunte epóxi, mão de obra especializada e transporte vertical (conforme medição 4)",
+        "valor": 184500.9,
+        "dataLancamento": "2026-09-29",
+        "mesCompetencia": "2026-09-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-09-29T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a09",
+            "nomeArquivo": "nf-ceramica-lote-2.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 412672,
+            "uploadedAt": "2026-09-29T15:30:00Z"
+          }
+        ]
+      },
+      {
+        "id": "f08",
+        "obraId": "a1",
+        "categoria": "MaoDeObra",
+        "descricao": "Eletricista - instalação de quadros",
+        "valor": 7200,
+        "dataLancamento": "2026-09-24",
+        "mesCompetencia": "2026-09-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": false,
+        "createdAt": "2026-09-24T13:00:00Z",
+        "anexos": []
+      },
+      {
+        "id": "f07",
+        "obraId": "a1",
+        "categoria": "Material",
+        "descricao": "Vergalhão CA-50 10 mm - 2,4 t",
+        "valor": 21340.75,
+        "dataLancamento": "2026-09-18",
+        "mesCompetencia": "2026-09-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-09-18T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a07",
+            "nomeArquivo": "nf-vergalhao.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 150528,
+            "uploadedAt": "2026-09-18T12:00:00Z"
+          },
+          {
+            "id": "a07b",
+            "nomeArquivo": "romaneio-entrega.jpg",
+            "contentType": "image/jpeg",
+            "tamanhoBytes": 2411724,
+            "uploadedAt": "2026-09-18T12:02:00Z"
+          },
+          {
+            "id": "a07c",
+            "nomeArquivo": "ordem-de-compra.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 61440,
+            "uploadedAt": "2026-09-18T12:03:00Z"
+          }
+        ]
+      },
+      {
+        "id": "f06",
+        "obraId": "a1",
+        "categoria": "Equipamento",
+        "descricao": "Andaime fachadeiro - 30 dias",
+        "valor": 8650,
+        "dataLancamento": "2026-09-10",
+        "mesCompetencia": "2026-09-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": false,
+        "createdAt": "2026-09-10T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a06",
+            "nomeArquivo": "contrato-locacao-andaime.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 235520,
+            "uploadedAt": "2026-09-10T13:05:00Z"
+          }
+        ]
+      },
+      {
+        "id": "f05",
+        "obraId": "a1",
+        "categoria": "MaoDeObra",
+        "descricao": "Pedreiros e serventes - semana 37",
+        "valor": 11920.25,
+        "dataLancamento": "2026-09-08",
+        "mesCompetencia": "2026-09-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-09-08T13:00:00Z",
+        "anexos": []
+      },
+      {
+        "id": "f04",
+        "obraId": "a1",
+        "categoria": "Material",
+        "descricao": "Areia média e brita 1 - 18 m³",
+        "valor": 3890,
+        "dataLancamento": "2026-08-27",
+        "mesCompetencia": "2026-08-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-08-27T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a04",
+            "nomeArquivo": "nf-areia-brita.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 98304,
+            "uploadedAt": "2026-08-27T16:20:00Z"
+          }
+        ]
+      },
+      {
+        "id": "f03",
+        "obraId": "a1",
+        "categoria": "Equipamento",
+        "descricao": "Frete de maquinário - retroescavadeira",
+        "valor": 2750,
+        "dataLancamento": "2026-08-19",
+        "mesCompetencia": "2026-08-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": false,
+        "createdAt": "2026-08-19T13:00:00Z",
+        "anexos": []
+      },
+      {
+        "id": "f02",
+        "obraId": "a1",
+        "categoria": "Material",
+        "descricao": "Tubulação hidráulica PVC e conexões",
+        "valor": 6475.4,
+        "dataLancamento": "2026-08-11",
+        "mesCompetencia": "2026-08-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": true,
+        "createdAt": "2026-08-11T13:00:00Z",
+        "anexos": []
+      },
+      {
+        "id": "f01",
+        "obraId": "a1",
+        "categoria": "MaoDeObra",
+        "descricao": "Mestre de obras - mensal",
+        "valor": 9800,
+        "dataLancamento": "2026-08-05",
+        "mesCompetencia": "2026-08-01",
+        "createdByUserId": "00000000-0000-0000-0000-000000000001",
+        "visivelCliente": false,
+        "createdAt": "2026-08-05T13:00:00Z",
+        "anexos": [
+          {
+            "id": "a01",
+            "nomeArquivo": "recibo-mestre-ago.pdf",
+            "contentType": "application/pdf",
+            "tamanhoBytes": 51200,
+            "uploadedAt": "2026-08-05T18:00:00Z"
+          }
+        ]
+      }
+    ]
+  },
+  "GET /obras/a1/financeiro/resumo": {
+    "totalLancado": 276757.8,
+    "totalLiberadoCliente": 235507.3,
+    "totalNaoLiberado": 41250.5,
+    "quantidadeLancamentos": 12,
+    "quantidadeLiberada": 7,
+    "quantidadeNaoLiberada": 5
+  },
+  "GET /financeiro/categorias": [
+    {
+      "valor": "mao_de_obra",
+      "rotulo": "Mão de obra"
+    },
+    {
+      "valor": "material",
+      "rotulo": "Material"
+    },
+    {
+      "valor": "equipamento",
+      "rotulo": "Equipamento"
+    }
+  ]
+}

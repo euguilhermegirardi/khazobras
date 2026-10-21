@@ -50,6 +50,7 @@ sempre "Não iniciada").
 | A2 | Gantt editável (SPEC §6 item 5) | ✅ `GET /obras/{id}/etapas`, `POST /etapas`, `PUT /etapas/{id}` (script 008) | ✅ | `feat/etapas-admin`, `modules/etapas-admin`, rota `/admin/obras/:obraId/gantt`. Tabela + Dialog de edição/criação (RHF + zod). Sem excluir etapa, sem "Orçado R$"/"Observação" (não existem no modelo), sem "Imprimir Gantt". 112 testes + 8 e2e; design e segurança sem bloqueio. **Aplicar o script 008 no Mac; backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-19-etapas-admin.md` |
 | A3 | Medições (SPEC §6 item 7: criar, acompanhar status, emitir NF) | ✅ `POST /medicoes`, `GET /obras/{id}/medicoes/resumo` (paginado), `GET /medicoes/{id}`, `POST /medicoes/{id}/issue-invoice` (branch `feat/medicoes-admin`; sem script SQL) | ✅ | `feat/medicoes-admin`, `modules/medicoes-admin`, rotas `/admin/obras/:obraId/medicoes` (lista) e `.../medicoes/:medicaoId` (detalhe + emitir NF). Falta: testes da tela (tester), design e segurança. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac.** Contrato em "Decisões" (Medições, backend e front) |
 | A4 | Contratos (SPEC §6 item 9: criar contrato, registrar pagamento) | ✅ `POST /contratos`, `GET /obras/{id}/contratos`, `GET /contratos/{id}`, `POST /contratos/{id}/pagamentos` + `GET /obras/{id}/medicoes/resumo?status=invoice_issued` (seletor) | ✅ | `feat/contratos`, `modules/contratos-admin`, rota `/admin/obras/:obraId/contratos`. Lista de cards + "+ Novo contrato" + "Registrar pagamento" (RHF + zod). Sem editar/excluir (backend não tem). Falta: testes (tester), design e segurança. Contrato em "Decisões" (Contratos, front) |
+| A5 | Financeiro — edição completa (SPEC §6 item 8: lançamentos, flag `visivel_cliente`, anexos) | ✅ backend (`feat/financeiro-admin`, sem script SQL): `GET /obras/{id}/financeiro/lancamentos` (admin: todos + filtros), `GET .../financeiro/resumo`, `GET /financeiro/categorias`, `POST/PUT/DELETE /financeiro/lancamentos[/{id}]`, `PATCH` de visibilidade (unitário e em lote), `POST/DELETE` de anexo | ✅ | Front feito: `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro` (item "Financeiro" entre Medições e Contratos). KPIs internos, tabela com seleção e lote, flag por linha, novo/editar com comprovantes, exclusão com confirmação. Falta: testes da tela (tester), design e segurança. Contrato em "Decisões" (Financeiro admin, backend e front) e em `backend/docs/API.md`. **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac** |
 
 ## Lacunas de backend que bloqueiam telas
 
@@ -66,7 +67,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   confirmar com o engenheiro se o esperado é esse ou somar só os saldos positivos.
 - Obras (security-reviewer 19/10, baixas): `GET /obras` sem limite de `pageIndex`/`pageSize` (negativo → 500); lista do cliente
   com N+1 e sem paginação (trocar por um JOIN com `user_obra`); front sem validar `obraId` como GUID antes de montar a URL da API.
-- Auditoria: só medições e contratos/pagamentos gravam `log_auditoria` (criar, aprovar, emitir NF, criar contrato, registrar pagamento). Os demais endpoints de escrita (inclusive
+- Auditoria: medições, contratos/pagamentos e financeiro (editar, excluir, visibilidade, remover anexo) gravam `log_auditoria`. Os demais endpoints de escrita (inclusive
   `PUT /etapas`) ainda não gravam; plugar com o mesmo `LogAuditoriaService.RegistrarAsync`.
 - Dashboard do ADMIN: KPIs internos (custo real, margem), Curva S, Rentabilidade, comparativo entre obras — bloqueia o
   Dashboard admin (`AdminObraDashboardPage` segue placeholder). O dashboard do CLIENTE está pronto (ver Decisões).
@@ -81,9 +82,24 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   (sem paginação) e não traz unidade, qtd. contratada, medido anterior nem saldo (colunas do protótipo; não existem no
   schema); sem editar/excluir medição nem itens; sem unicidade de número de NF; a auditoria é gravada depois do UPDATE, fora
   da transação (falha ao gravar = 500 com a medição já alterada).
+- Financeiro (backlog, o backend do admin está pronto: ver Decisões): sem lixeira/soft delete (exclusão é definitiva); sem
+  auditoria de `POST /financeiro/lancamentos` nem de upload de anexo; sem CRUD de categorias (tabela `categorias` sem uso,
+  `categoria_id` nulo; exigiria script novo); lote só por ids (sem "liberar tudo do filtro"); o limite de 10 anexos pode estourar
+  em 1 sob corrida de uploads simultâneos fora do `INSERT` condicional (aceito); os testes HTTP usam repositório falso, então o SQL
+  novo (filtros, resumo, lote, exclusão) não é coberto por teste automático (integração com Postgres).
+  Achados baixos do security-reviewer (20/10, sem ação agora):
+  - B1 corrida no limite de 10 anexos: o `COUNT` dentro do `INSERT ... SELECT` não trava nada, então dois uploads simultâneos podem
+    passar de 10. Correção: `SELECT ... FOR UPDATE` do lançamento numa transação, ou `pg_advisory_xact_lock(hashtext(lancamento_id))`.
+  - B2 lote de visibilidade não é totalmente tudo-ou-nada se um dos lançamentos for excluído ao mesmo tempo, e o `statusAnterior`
+    da auditoria do PATCH unitário pode sair errado (leitura antes do UPDATE, sem trava). Correção: `FOR UPDATE` + transação.
+  - B4 exclusão definitiva: se a auditoria falhar (gravada fora da transação, padrão do projeto), os arquivos ficam no R2 e o
+    lançamento já foi apagado sem trilha. Correção: auditoria dentro da transação ou limpeza do R2 antes da auditoria.
+  - B6 404 x 403 revela a existência de um id (aceito, como nos outros módulos).
+  - Harness (verificar): o padrão `COUNT` dentro do `INSERT` e CTE sem `FOR UPDATE` também pode existir em outros módulos
+    (Projetos/Fotos/Documentos, Medições, Contratos); varrer quando mexer neles.
 - Relatórios mensais: `GET /obras/{id}/relatorios-mensais` não é paginado (array puro).
 - Categorias (CRUD); Empresa / equipe (Administração) — telas admin
-- PUT/PATCH/DELETE na maioria dos módulos; `GET /users/{id}`, desativar usuário — telas admin
+- PUT/PATCH/DELETE nos módulos que ainda não têm (Financeiro já tem); `GET /users/{id}`, desativar usuário — telas admin
 - Envio real de e-mail / WhatsApp nas notificações
 - Integração do `LogAuditoria` nas ações dos demais módulos (estrutura pronta; plugada só em Medições)
 - PDF consolidado (Fase 10)
@@ -480,9 +496,98 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   Testes antigos ajustados por causa do campo novo/da decisão mudada: fixtures de `Cronograma.test`, `timeline.test` e
   `e2e/cronograma` (+ mock), nomes acessíveis das barras (", N% concluído"), remoção do assert "cliente não vê %" e o
   `ProtectedRoute.test` (admin em `/admin` agora vê "Meus projetos").
+- **Financeiro admin, backend** (`feat/financeiro-admin`, 20/10; sem script SQL; contrato completo em `backend/docs/API.md` →
+  Módulo Financeiro). Pronto para a tela admin "Financeiro — edição completa" (SPEC §6 item 8):
+  - **Lista admin** `GET /obras/{id}/financeiro/lancamentos`: Admin/Master recebem **todos** (liberados ou não) no DTO completo
+    (`visivelCliente`, `createdByUserId`, `anexos`); cliente, só os liberados no DTO reduzido. Filtros opcionais só do admin
+    (`visivelCliente=true|false`, `categoria`, `competencia=yyyy-MM`; inválido = 400 `{ message }`), todos parametrizados no SQL
+    (contagem e itens); o cliente os ignora. Ordem estável: `data_lancamento DESC, created_at DESC, id`.
+  - **Resumo** `GET /obras/{id}/financeiro/resumo` (`AdminOrMaster`): `totalLancado`, `totalLiberadoCliente`, `totalNaoLiberado`,
+    `quantidadeLancamentos/Liberada/NaoLiberada` num SQL agregado (`WHERE obra_id`, `FILTER`). Tem custo real: cliente = 403 (teste).
+  - **Edição** `PUT /financeiro/lancamentos/{id}`: resolve `obra_id` → `EnsureAccessAsync` → valida → `UPDATE ... WHERE id AND
+    obra_id`. Mesmos campos do POST **sem `obraId`** (ignorado se vier); `visivelCliente` omitido mantém o atual. 200 com DTO admin.
+    Auditoria `lancamento_editado` com ids e **nomes** dos campos alterados (sem valores nem texto livre; nada alterado = sem registro).
+  - **Exclusão** `DELETE /financeiro/lancamentos/{id}` (204): **hard delete**, aceito porque a única FK para o lançamento é a dos
+    anexos (`ON DELETE CASCADE`, schema 003). As chaves do R2 são lidas e o lançamento apagado na mesma transação; depois os
+    arquivos saem do R2 (falha no R2 não vira 500: 204 + `LogWarning`, objeto órfão). Auditoria `lancamento_excluido`
+    (`quantidadeAnexos`). Decisão de produto em aberto no backlog: lixeira/soft delete, que exigiria coluna nova.
+  - **Visibilidade**: o PATCH unitário audita `lancamento_visibilidade_alterada` (`statusAnterior`/`statusNovo`: `oculto`|`liberado`;
+    sem registro se não mudou). **Lote** `PATCH /obras/{id}/financeiro/lancamentos/visibilidade` `{ ids, visivelCliente }`: máx. 200,
+    um único `UPDATE ... WHERE id = ANY(@Ids) AND obra_id = @ObraId` que só grava se a contagem bater (tudo-ou-nada, sem transação
+    explícita); id inexistente ou de outra obra = o mesmo 400 `errors.Ids` genérico, sem alterar nenhum. Um registro de auditoria por
+    lançamento que mudou (`lote: true`). 200 `{ atualizados, visivelCliente }`.
+  - **Anexos**: upload só de Admin/Master (já era), agora resolve a obra sem carregar o lançamento, e limita a **10 por lançamento**
+    (400 `{ message }`; checagem antes do R2 e de novo no `INSERT ... SELECT ... WHERE COUNT < max`; se a corrida estourar, o arquivo
+    é apagado do R2). `DELETE /financeiro/anexos/{id}` (204): anexo → obra → acesso → `DELETE ... USING ... WHERE l.obra_id` → R2;
+    auditoria `lancamento_anexo_removido` (na entidade do lançamento).
+  - **Categorias**: `categoria` é o enum `item_tipo` (`mao_de_obra`, `material`, `equipamento`); a tabela `categorias` do SPEC §9 não é
+    usada (`categoria_id` nulo) e **não mudamos schema**. `GET /financeiro/categorias` (`AdminOrMaster`) devolve `[{ valor, rotulo }]`
+    para o select. Pegadinha de contrato: **entra** snake_case, **sai** PascalCase (`MaoDeObra`); o POST/PUT aceitam os dois.
+  - **Varredura do módulo (violações corrigidas)**: `POST /financeiro/lancamentos` validava o corpo **antes** do acesso e, com obra
+    inexistente, dava 500 (FK) → agora acesso → validação → 404 se a obra não existe; o upload carregava o lançamento inteiro antes do
+    acesso (agora `ResolveLancamentoAsync` + `WHERE id AND obra_id`); o validator aceitava valor com mais de 2 casas ou acima de
+    `NUMERIC(14,2)` e datas absurdas (500 no INSERT) → limites iguais aos de Medições/Contratos (datas 2000–2100); anexos e lista com
+    ordem não determinística → `ORDER BY` estável.
+  - Auditoria: entidade `financeiro_lancamento` (consultável por `/auditoria/financeiro_lancamento/{id}`, Master); `user_id` = token.
+    Payloads só com ids, status e nomes de campos. Gravada depois do UPDATE, fora da transação (como Medições/Contratos).
+  - Testes: `Http/FinanceiroAdminTests` (lista admin x cliente, filtros, resumo 403, PUT/DELETE/lote/anexos com 403 antes do corpo,
+    outra obra, 404, 400, auditoria, limite de anexos, storage falhando), `FinanceiroValidatorTests`, rotas novas em
+    `WriteEndpointsAuthorizationTests`; `FakeFinanceiroRepository` espelha o SQL (preso à obra, tudo-ou-nada, limite). **Escrito na
+    nuvem sem .NET: `dotnet build` + `dotnet test` no Mac antes do merge** (o SQL novo só roda com Postgres de verdade: conferir à mão
+    lista com filtros, resumo, lote, exclusão e remoção de anexo).
+  - **Correções do security-reviewer (20/10, achados baixos)**: (B5) removido o código morto `GetByIdAsync(id)` sem filtro de obra
+    do serviço, da interface e do repositório (testes migrados para `GetByIdAndObraAsync`; o fake guarda um `GetByIdAsync` só para
+    os testes inspecionarem estado). (B3) upload com nome de arquivo vazio ou maior que 255 caracteres (coluna `VARCHAR(255)`) agora
+    responde **400 `{ message }`** antes de enviar ao R2 (recusa em vez de truncar, para nunca gravar um nome diferente do enviado);
+    se o `INSERT` do anexo lançar exceção depois do upload, o objeto é removido do R2 e a exceção é relançada. Testes em
+    `Http/FinanceiroAdminTests`. Front: tratar o 400 do upload também para nome longo (mesma forma `{ message }` do limite de anexos).
+- **Financeiro admin, front** (`feat/financeiro-admin`, 20/10). `modules/financeiro-admin`, rota `/admin/obras/:obraId/financeiro`, item
+  "Financeiro" (ícone `Wallet`) em `ADMIN_NAV.obra` **entre Medições e Contratos** (ordem do SPEC §6: 7 Medições, 8 Financeiro, 9 Contratos;
+  antes o Contratos vinha logo depois de Medições). Sem Importar/Exportar, sem pagador, sem abas Resumo/Por categoria.
+  - **Nomes reais do contrato** (o pedido dizia `data`/`competencia`; o DTO é `dataLancamento`/`mesCompetencia`): tipo `LancamentoAdmin extends
+    LancamentoCliente` + `visivelCliente`, `createdAt` (`interfaces/financeiroAdmin.ts`; `createdByUserId` vem no JSON mas não é tipado nem exibido).
+    Categoria entra snake_case (`CategoriaRequest`) e sai PascalCase; `utils/lancamentoCategoria` tem `CATEGORIA_LABEL` (subiu de
+    `modules/financeiro`, que re-exporta) e `categoriaParaRequest`.
+  - **Chaves de cache:** `['obra', id, 'financeiro-admin', 'lista'|'resumo', ...]`; toda escrita (criar, editar, excluir, flag unitária e em lote,
+    enviar/remover anexo) invalida essa família **e** `['obra', id, 'financeiro']` (lista do cliente). Categorias: `['financeiro', 'categorias']`,
+    `staleTime: Infinity`; se `GET /financeiro/categorias` falhar, o select usa as 3 categorias do enum (`CATEGORIAS_PADRAO`).
+  - **KPIs** (`GET .../financeiro/resumo`): Total lançado, Liberado ao cliente, Não liberado (+ "N lançamentos"). É custo real, **só no admin**; se
+    falhar (ou enquanto carrega) mostra "—" sem derrubar a tela.
+  - **Tabela** (20/página, `keepPreviousData`, `components/Pagination`): checkbox, Data, Competência (`formatMonthYearTitle`), Categoria (Badge
+    neutro), Descrição (truncate + `title`), Valor (direita, `tabular-nums`), Anexos (clipe + contagem; "—" sem anexo), Visível ao cliente
+    (Badge "Liberado" success / "Oculto" neutro + interruptor), Ações (Editar, Excluir em botões-ícone). `table-fixed` + `colgroup`:
+    **colunas fixas = 744px** (36 + 84 + 128 + 112 + 128 + 56 + 128 + 72; padding de 6px por lado) → em 1280 (998px úteis) a Descrição fica com
+    **~254px** (~239px com barra de rolagem), em 1440 com ~414px; sem rolagem horizontal. Altura de linha uniforme (células de controle com `h-7`).
+  - **Filtros** (visibilidade → `visivelCliente=true|false`; categoria do endpoint; competência `<input type="month">` → `competencia=yyyy-MM`):
+    mudar volta à página 1 e limpa a seleção/confirmação; competência incompleta (navegador sem input de mês) não vai à API (seria 400).
+  - **Flag por linha:** novo `components/ui/switch` (`role="switch"`, `aria-checked`, `loading` com spinner; escrito à mão porque `@radix-ui/react-switch`
+    não está instalado e o registro do shadcn é bloqueado na nuvem; trocar pelo do shadcn quando houver acesso). `PATCH .../visibilidade`, um por vez
+    (as outras linhas travam enquanto uma grava); sucesso e erro em `Alert`.
+  - **Lote:** seleção só da página atual (limpa ao trocar de página/filtro e conta só o que ainda está na lista), barra "N selecionados — Liberar ao
+    cliente / Ocultar do cliente / Limpar seleção", `PATCH .../lancamentos/visibilidade` (trava de 200 ids no cliente; o 400 `errors.Ids`
+    tudo-ou-nada cai como mensagem genérica do servidor num `Alert`). Checkbox do cabeçalho seleciona/limpa a página (estado indeterminado).
+  - **Novo/Editar** (`Dialog`, RHF + zod em `lancamentoForm.ts`, mesmas regras do `LancamentoRegras`: categoria do enum, descrição ≤255, valor > 0 com
+    2 casas e ≤ 999999999999,99, datas e competência entre 2000 e 2100). **`visivelCliente` começa FALSO** com texto explicando que o cliente só vê os
+    liberados; competência = `yyyy-MM` no formulário e `yyyy-MM-01` no corpo. No PUT o formulário manda a flag atual explicitamente. 400 `errors` →
+    campo (`Categoria`, `Descricao`, `Valor`, `DataLancamento`, `MesCompetencia`), o resto + 403/404/500 em `Alert` (500 com `requestId`). Novo lançamento
+    não tem comprovantes (precisam do id): anexar depois, em Editar. A edição usa a versão mais nova da lista (anexos enviados/removidos refletem na hora).
+  - **Comprovantes (Editar):** lista (nome truncado + tamanho + data), Baixar (`apiDownload` + `saveBlob`), Remover com confirmação inline na linha
+    (`DELETE /financeiro/anexos/{id}`), Enviar (`POST .../anexos` multipart, campo `file`; **`apiUpload` novo em `services/apiClient`**). Validação no
+    cliente em `utils/anexo.ts`, espelhando o `FileUploadValidator`: vazio, ≤10 MB, extensão (jpg, jpeg, png, webp, gif, pdf, doc, docx, xls, xlsx, txt);
+    `prepararAnexo` regrava o MIME pela extensão (o backend recusa MIME incompatível); limite de 10 por lançamento (campo travado no limite). Magic bytes
+    e MIME seguem só no servidor. Erros 400 `{ message }`/403/404/500 em `Alert`.
+  - **Excluir:** confirmação inline (`Alert` warning com foco em "Cancelar"): "Excluir definitivamente? Os comprovantes também serão removidos."
+    → `DELETE`; se era o único item da última página, volta uma página.
+  - **Base nova/movida** (módulo não importa módulo): `utils/serverErrors` (`mapServerErrors`; `contratos-admin/serverErrors` re-exporta),
+    `isDataValida` em `utils/dates`, `VALOR_MAX` em `utils/decimal` (`contratoForm` re-exporta), `formatBytes` em `utils/format`, `utils/anexo`,
+    `utils/lancamentoCategoria`, `components/ui/switch`. Testes unitários dos puros: `utils/anexo.test`, `utils/lancamentoCategoria.test`,
+    `modules/financeiro-admin/lancamentoForm.test`.
+  - **Testes antigos afetados:** `ContratosAdmin.test` ("Contratos fica depois de Medições na sidebar do admin") assume que Contratos vem logo
+    depois de Medições; com o Financeiro no meio (ordem do SPEC) o assert fica obsoleto. Não editado (é do tester): trocar por "depois de Financeiro".
 
 ## Registro
 
+- 2026-10-20 — `feat/financeiro-admin`: feat(financeiro): backend admin com edicao, exclusao, lote de visibilidade, resumo, filtros e anexos limitados, tudo preso a obra e auditado; docs: registro do financeiro admin (backend); feat(financeiro-admin): base compartilhada (switch, upload multipart, validacao de anexo, tipos, utilitarios movidos); feat(financeiro-admin): tela Financeiro admin com KPIs, tabela, flag por linha, lote, novo/editar com comprovantes e exclusao; test: financeiro-admin lista, KPIs, filtros, paginacao, papel e datas; ordem do menu em contratos-admin; test: financeiro-admin selecao, lote, interruptor por linha, novo e editar lancamento; test: financeiro-admin comprovantes (baixar, remover, enviar, limite) e exclusao de lancamento; test: financeiro-admin bordas dos utilitarios (anexo, categoria, formulario, datas no fuso de Sao Paulo); test: financeiro-admin mocks de captura (normal e estresse com 20 itens, descricoes longas e 10 anexos); test: financeiro-admin e2e (liberar, lote, criar/editar com anexo, excluir, larguras 1280/1440, acesso negado); test: financeiro-admin remove import sem uso; docs: capturas do financeiro-admin (claro, escuro, 1280, estresse); fix(financeiro): remove busca de lancamento sem filtro de obra e valida nome do anexo antes do R2. Arquivos: outros (1), backend (16), testes backend (7), docs (5), front (17), front/rotas-layouts (2), modules/contratos-admin (3), modules/financeiro-admin (23), modules/financeiro (1).
 - 2026-10-20 — `feat/dashboard-cliente`: feat(dashboard): GET /obras/{id}/dashboard com DTO unico seguro para o cliente, 4 consultas agregadas presas a obra e relogio injetavel; docs: registro; feat(dashboard): base do grafico (recharts 3.10.1 fixa, tipos, moeda compacta, stub de ResizeObserver) e rotulo truncado na ProgressBar; feat(dashboard): tela Dashboard do cliente com 4 KPIs, avanco por etapa e grafico de custo acumulado; test: dashboard do cliente (estados, KPIs, etapas, gráfico, papéis, regra 7); test: dashboard ProgressBar (rótulo truncado) e formatCurrencyCompact; test: dashboard e2e (Chromium) e mock de estresse para captura; fix(dashboard): eixo X com passo fixo e cards da linha com a mesma altura; docs: capturas do dashboard do cliente (claro, escuro, 1280, estresse). Arquivos: outros (1), backend (6), testes backend (2), docs (6), front (12), modules/dashboard (16), front/rotas-layouts (2).
 - 2026-10-20 — `feat/contratos`: feat(contratos): contratos e pagamentos com DTO reduzido ao cliente, totais no SQL, acesso preso a obra e auditoria; docs: registro; feat(contratos): telas Contratos do cliente (somente leitura) e do admin (novo contrato, registrar pagamento); docs: registro; test: contratos (cliente e admin) com Vitest + MSW; test: contratos e2e (cliente e admin) e mocks de captura; docs: capturas de contratos e contratos-admin (claro, escuro, 1280). Arquivos: outros (1), backend (17), testes backend (4), docs (6), front (13), front/rotas-layouts (2), modules/contratos-admin (14), modules/contratos (5), modules/medicoes-admin (1).
 - 2026-10-19 — `feat/medicoes-admin`: feat(medicoes): DTO reduzido ao cliente, acesso preso a obra, validacao, lista admin e auditoria; docs(medicoes): API.md atualizada e registro no PLAN-09; feat(medicoes-admin): tipos do admin, rotulo de item na base e plano da tela A3; feat(medicoes-admin): lista de acompanhamento, criacao de medicao e emissao de NF; test: medicoes-admin lista, criar, detalhe, emitir NF, papel e e2e com mocks de captura; fix(medicoes-admin): passa o total da página ao MedicoesKpis e evita consulta duplicada; fix(medicoes-admin): NF sem quebra de linha na lista e link Voltar alinhado ao botao no detalhe; fix(medicoes-admin): tabela da lista cabe em 1280 com table-fixed e colgroup; fix(medicoes-admin): larguras da tabela pelo conteudo real (NF 112px com truncate+title, Competencia 128px); docs: capturas de medicoes-admin (claro, escuro, 1280). Arquivos: outros (1), backend (10), testes backend (6), docs (13), front (5), front/rotas-layouts (2), modules/fechamento (1), modules/medicoes-admin (21), infra (1).

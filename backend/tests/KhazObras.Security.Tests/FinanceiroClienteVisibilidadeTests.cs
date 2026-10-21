@@ -18,7 +18,11 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
 
     public FinanceiroClienteVisibilidadeTests()
     {
-        _service = new FinanceiroService(FinanceiroRepository, new FakeStorageService());
+        _service = new FinanceiroService(
+            FinanceiroRepository,
+            new FakeStorageService(),
+            ObraRepository,
+            new LogAuditoriaService(new FakeLogAuditoriaRepository()));
     }
 
     private async Task<FinanceiroLancamento> SeedLancamentoAsync(Guid obraId, bool visivel, string descricao = "Cimento")
@@ -51,12 +55,16 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
     [Fact]
     public async Task Novo_lancamento_nasce_oculto_para_o_cliente()
     {
-        var created = await _service.CreateAsync(
+        await CreateObraAsync();
+
+        var result = await _service.CreateAsync(
             new CreateFinanceiroLancamentoRequest(
                 ObraId, "material", "Areia", 800m,
                 DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow)),
             AdminUserId);
 
+        Assert.Equal(FinanceiroCreateStatus.Created, result.Status);
+        var created = result.Lancamento!;
         Assert.False(created.VisivelCliente);
         Assert.Null(_service.ToClienteView(created));
     }
@@ -105,8 +113,8 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
         var oculto = await SeedLancamentoAsync(ObraId, visivel: false);
         var liberado = await SeedLancamentoAsync(ObraId, visivel: true);
 
-        var ocultoResponse = await _service.GetByIdAsync(oculto.Id);
-        var liberadoResponse = await _service.GetByIdAsync(liberado.Id);
+        var ocultoResponse = await _service.GetByIdAndObraAsync(oculto.Id, ObraId);
+        var liberadoResponse = await _service.GetByIdAndObraAsync(liberado.Id, ObraId);
 
         Assert.Null(_service.ToClienteView(ocultoResponse!));
         Assert.NotNull(_service.ToClienteView(liberadoResponse!));
@@ -140,7 +148,7 @@ public sealed class FinanceiroClienteVisibilidadeTests : IntegrationTestBase
         var resultado = await _service.SetVisibilidadeClienteAsync(lancamento.Id, Guid.NewGuid(), true);
 
         Assert.Null(resultado);
-        Assert.False((await _service.GetByIdAsync(lancamento.Id))!.VisivelCliente);
+        Assert.False((await _service.GetByIdAndObraAsync(lancamento.Id, ObraId))!.VisivelCliente);
     }
 
     [Fact]

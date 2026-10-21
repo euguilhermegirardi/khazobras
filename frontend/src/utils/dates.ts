@@ -12,6 +12,17 @@ export function formatDateOnly(value: string): string {
   return new Intl.DateTimeFormat('pt-BR').format(parseDateOnly(value));
 }
 
+const DATA_ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** `true` se o texto é uma data real "yyyy-MM-dd" (rejeita 2026-02-31). */
+export function isDataValida(texto: string): boolean {
+  const partes = DATA_ISO.exec(texto);
+  if (!partes) return false;
+  const [ano, mes, dia] = [Number(partes[1]), Number(partes[2]), Number(partes[3])];
+  const data = new Date(ano, mes - 1, dia);
+  return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
+}
+
 /** Para enviar ao backend: "yyyy-MM-dd" da data local. */
 export function toDateOnly(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0');

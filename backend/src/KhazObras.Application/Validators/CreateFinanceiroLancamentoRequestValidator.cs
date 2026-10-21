@@ -8,12 +8,10 @@ public sealed class CreateFinanceiroLancamentoRequestValidator : AbstractValidat
     public CreateFinanceiroLancamentoRequestValidator()
     {
         RuleFor(x => x.ObraId).NotEmpty();
-        RuleFor(x => x.Categoria).Must(c =>
-            string.Equals(c, "mao_de_obra", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(c, "material", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(c, "equipamento", StringComparison.OrdinalIgnoreCase))
-            .WithMessage("Categoria deve ser mao_de_obra, material ou equipamento.");
-        RuleFor(x => x.Descricao).NotEmpty().MaximumLength(255);
-        RuleFor(x => x.Valor).GreaterThan(0);
+        RuleFor(x => x.Categoria).CategoriaValida();
+        RuleFor(x => x.Descricao).DescricaoValida();
+        RuleFor(x => x.Valor).ValorValido();
+        RuleFor(x => x.DataLancamento).DataValida();
+        RuleFor(x => x.MesCompetencia).DataValida();
     }
 }

@@ -695,7 +695,7 @@ describe('Contratos (admin) - papel, sidebar e cache do cliente', () => {
     expect(await screen.findByRole('button', { name: /entrar/i })).toBeInTheDocument();
   });
 
-  it('"Contratos" fica depois de "Medições" na sidebar do admin e aponta para a obra aberta', async () => {
+  it('"Contratos" fica depois de "Financeiro" na sidebar do admin (ordem Medições, Financeiro, Contratos) e aponta para a obra aberta', async () => {
     server.use(...servidorPadrao().handlers);
     renderApp(ADMIN, 'Admin');
 
@@ -705,7 +705,8 @@ describe('Contratos (admin) - papel, sidebar e cache do cliente', () => {
       .map((l) => l.textContent?.trim());
     const i = nomes.indexOf('Contratos');
     expect(i).toBeGreaterThan(-1);
-    expect(nomes[i - 1]).toBe('Medições');
+    // SPEC §6: 7 Medições, 8 Financeiro, 9 Contratos.
+    expect(nomes.slice(i - 2, i + 1)).toEqual(['Medições', 'Financeiro', 'Contratos']);
     const link = within(nav).getByRole('link', { name: 'Contratos' });
     expect(link).toHaveAttribute('href', ADMIN);
     expect(link).toHaveAttribute('aria-current', 'page');

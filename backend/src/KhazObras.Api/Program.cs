@@ -716,12 +716,7 @@ app.MapPost("/contratos/{id:guid}/pagamentos", async (Guid id, CreatePagamentoRe
 
 app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest request, IValidator<CreateFinanceiroLancamentoRequest> validator, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var validation = await validator.ValidateAsync(request);
-    if (!validation.IsValid)
-    {
-        return Results.ValidationProblem(validation.ToDictionary());
-    }
-
+    // Acesso a obra ANTES de validar o corpo (padrao: 403 nao depende do conteudo enviado).
     try
     {
         await accessService.EnsureAccessAsync(principal, request.ObraId);
@@ -731,13 +726,29 @@ app.MapPost("/financeiro/lancamentos", async (CreateFinanceiroLancamentoRequest 
         return Results.Forbid();
     }
 
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
     var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-    var result = await financeiroService.CreateAsync(request, userId);
-    return Results.Created($"/financeiro/lancamentos/{result.Id}", result);
+    var created = await financeiroService.CreateAsync(request, userId);
+    if (created.Status == FinanceiroCreateStatus.ObraNaoEncontrada)
+    {
+        return Results.NotFound();
+    }
+
+    return Results.Created($"/financeiro/lancamentos/{created.Lancamento!.Id}", created.Lancamento);
 })
 .RequireAuthorization("AdminOrMaster")
 .WithName("CreateFinanceiroLancamento")
-.WithDescription("Cria lançamento financeiro (receita/despesa) em uma obra");
+.WithDescription("Cria lançamento financeiro em uma obra (Admin/Master). Nasce oculto para o cliente (visivelCliente=false, salvo se enviado). Obra inexistente = 404");
+
+app.MapGet("/financeiro/categorias", () => Results.Ok(FinanceiroCategorias.Todas))
+.RequireAuthorization("AdminOrMaster")
+.WithName("GetFinanceiroCategorias")
+.WithDescription("Categorias aceitas em um lançamento (valor snake_case para POST/PUT + rótulo para o select). Somente Admin/Master");
 
 app.MapGet("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -770,7 +781,7 @@ app.MapGet("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroServic
 .WithName("GetFinanceiroLancamentoById")
 .WithDescription("Retorna um lançamento financeiro (cliente: somente os liberados, em visão reduzida)");
 
-app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, int pageIndex = 0, int pageSize = 20) =>
+app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, int pageIndex = 0, int pageSize = 20, string? visivelCliente = null, string? categoria = null, string? competencia = null) =>
 {
     try
     {
@@ -788,17 +799,108 @@ app.MapGet("/obras/{obraId:guid}/financeiro/lancamentos", async (Guid obraId, Fi
 
     if (accessService.IsAdminOrMaster(principal))
     {
-        var adminResult = await financeiroService.GetPagedByObraIdAsync(obraId, pageIndex, pageSize);
+        // Filtros opcionais (so Admin/Master): visivelCliente=true|false, categoria, competencia=yyyy-MM. Todos no SQL.
+        if (!FinanceiroService.TryParseFiltro(visivelCliente, categoria, competencia, out var filtro, out var erroFiltro))
+        {
+            return Results.BadRequest(new { message = erroFiltro });
+        }
+
+        var adminResult = await financeiroService.GetPagedByObraIdAsync(obraId, pageIndex, pageSize, filtro);
         return Results.Ok(adminResult);
     }
 
-    // Cliente: filtro por visibilidade aplicado no SQL; DTO sem campos internos.
+    // Cliente: filtro por visibilidade aplicado no SQL; DTO sem campos internos; filtros da query sao ignorados.
     var clienteResult = await financeiroService.GetPagedParaClienteByObraIdAsync(obraId, pageIndex, pageSize);
     return Results.Ok(clienteResult);
 })
 .RequireAuthorization()
 .WithName("GetFinanceiroLancamentosByObra")
-.WithDescription("Lista lançamentos financeiros de uma obra (paginado). Cliente: somente os liberados, em visão reduzida");
+.WithDescription("Lista lançamentos financeiros de uma obra (paginado, mais recente primeiro). Admin/Master: todos, DTO completo, filtros opcionais visivelCliente/categoria/competencia. Cliente: somente os liberados, em visão reduzida");
+
+app.MapGet("/obras/{obraId:guid}/financeiro/resumo", async (Guid obraId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    // Custo real da obra: so Admin/Master (a policy barra o cliente antes do handler).
+    var result = await financeiroService.GetResumoAsync(obraId);
+    return Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("GetFinanceiroResumoByObra")
+.WithDescription("Resumo do financeiro da obra: total lançado, liberado ao cliente e não liberado, com quantidades (SQL agregado). Contém custo real: somente Admin/Master");
+
+app.MapPut("/financeiro/lancamentos/{id:guid}", async (Guid id, UpdateFinanceiroLancamentoRequest request, IValidator<UpdateFinanceiroLancamentoRequest> validator, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    var obraId = await financeiroService.ResolveLancamentoAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await financeiroService.UpdateAsync(id, obraId.Value, request, userId);
+    return result is null ? Results.NotFound() : Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateFinanceiroLancamento")
+.WithDescription("Edita um lançamento (categoria, descrição, valor, datas e, opcionalmente, visivelCliente); a obra não muda. Somente Admin/Master; audita lancamento_editado");
+
+app.MapDelete("/financeiro/lancamentos/{id:guid}", async (Guid id, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, ILogger<Program> logger) =>
+{
+    var obraId = await financeiroService.ResolveLancamentoAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await financeiroService.DeleteAsync(id, obraId.Value, userId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    if (result.FalhasNoStorage > 0)
+    {
+        logger.LogWarning("Lancamento {LancamentoId} excluido, mas {Falhas} arquivo(s) nao foram removidos do storage", id, result.FalhasNoStorage);
+    }
+
+    return Results.NoContent();
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("DeleteFinanceiroLancamento")
+.WithDescription("Exclui um lançamento e seus anexos (banco e R2). Exclusão definitiva, sem lixeira. Somente Admin/Master; audita lancamento_excluido");
 
 app.MapPatch("/financeiro/lancamentos/{id:guid}/visibilidade", async (Guid id, UpdateVisibilidadeLancamentoRequest request, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
@@ -817,24 +919,59 @@ app.MapPatch("/financeiro/lancamentos/{id:guid}/visibilidade", async (Guid id, U
         return Results.Forbid();
     }
 
-    var result = await financeiroService.SetVisibilidadeClienteAsync(id, obraId.Value, request.VisivelCliente);
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await financeiroService.SetVisibilidadeClienteAsync(id, obraId.Value, request.VisivelCliente, userId);
     return result is null ? Results.NotFound() : Results.Ok(result);
 })
 .RequireAuthorization("AdminOrMaster")
 .WithName("UpdateFinanceiroLancamentoVisibilidade")
-.WithDescription("Libera ou oculta um lançamento financeiro para o cliente da obra (Admin/Master)");
+.WithDescription("Libera ou oculta um lançamento financeiro para o cliente da obra (Admin/Master); audita lancamento_visibilidade_alterada");
+
+app.MapPatch("/obras/{obraId:guid}/financeiro/lancamentos/visibilidade", async (Guid obraId, UpdateVisibilidadeLoteRequest request, IValidator<UpdateVisibilidadeLoteRequest> validator, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await financeiroService.SetVisibilidadeLoteAsync(obraId, request.Ids, request.VisivelCliente, userId);
+    if (result is null)
+    {
+        // Mesma resposta para id inexistente e id de outra obra (nao confirma que o registro existe em outro lugar).
+        return Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["Ids"] = ["Um ou mais lancamentos informados nao pertencem a esta obra."]
+        });
+    }
+
+    return Results.Ok(result);
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateFinanceiroLancamentosVisibilidadeLote")
+.WithDescription("Libera ou oculta vários lançamentos da obra de uma vez (máx. 200 ids; tudo-ou-nada: id de outra obra = 400 sem alterar nada). Somente Admin/Master; audita um registro por lançamento alterado");
 
 app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFile file, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal) =>
 {
-    var lancamento = await financeiroService.GetByIdAsync(id);
-    if (lancamento is null)
+    var obraId = await financeiroService.ResolveLancamentoAsync(id);
+    if (obraId is null)
     {
         return Results.NotFound();
     }
 
     try
     {
-        await accessService.EnsureAccessAsync(principal, lancamento.ObraId);
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
     }
     catch (UnauthorizedAccessException)
     {
@@ -847,13 +984,55 @@ app.MapPost("/financeiro/lancamentos/{id:guid}/anexos", async (Guid id, IFormFil
     }
 
     using var stream = file.OpenReadStream();
-    var result = await financeiroService.UploadAnexoAsync(id, stream, file.FileName, file.ContentType, file.Length);
-    return Results.Created($"/financeiro/anexos/{result.Id}", result);
+    var result = await financeiroService.UploadAnexoAsync(id, obraId.Value, stream, file.FileName, file.ContentType, file.Length);
+
+    return result.Status switch
+    {
+        AnexoUploadStatus.Created => Results.Created($"/financeiro/anexos/{result.Anexo!.Id}", result.Anexo),
+        AnexoUploadStatus.LimiteExcedido => Results.BadRequest(new { message = $"Cada lancamento aceita no maximo {FinanceiroService.MaxAnexosPorLancamento} anexos." }),
+        AnexoUploadStatus.NomeArquivoInvalido => Results.BadRequest(new { message = $"O nome do arquivo deve ter de 1 a {FinanceiroService.MaxNomeArquivo} caracteres." }),
+        _ => Results.NotFound()
+    };
 })
 .DisableAntiforgery()
 .RequireAuthorization("AdminOrMaster")
 .WithName("UploadFinanceiroAnexo")
-.WithDescription("Anexa arquivo a um lançamento financeiro (máx 10MB, validado por magic bytes)");
+.WithDescription("Anexa arquivo a um lançamento financeiro (máx 10MB, validado por magic bytes; no máximo 10 anexos por lançamento, 400 ao exceder). Somente Admin/Master");
+
+app.MapDelete("/financeiro/anexos/{anexoId:guid}", async (Guid anexoId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, ILogger<Program> logger) =>
+{
+    var obraId = await financeiroService.ResolveAnexoAsync(anexoId);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await financeiroService.DeleteAnexoAsync(anexoId, obraId.Value, userId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    if (result.FalhasNoStorage > 0)
+    {
+        logger.LogWarning("Anexo {AnexoId} removido do banco, mas o arquivo nao foi removido do storage", anexoId);
+    }
+
+    return Results.NoContent();
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("DeleteFinanceiroAnexo")
+.WithDescription("Remove um anexo de lançamento (banco e R2). Somente Admin/Master; audita lancamento_anexo_removido");
 
 app.MapGet("/financeiro/anexos/{anexoId:guid}/download", async (Guid anexoId, FinanceiroService financeiroService, ObraAccessService accessService, ClaimsPrincipal principal, HttpContext httpContext) =>
 {
