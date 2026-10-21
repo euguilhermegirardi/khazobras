@@ -14,3 +14,12 @@ export interface ProjetoDocumento {
   /** Timestamp ISO. */
   uploadedAt: string;
 }
+
+/** Corpo de `PUT /projetos/{id}` (admin): sempre os três campos; `null` limpa tipo e etapa. */
+export interface ProjetoRequest {
+  /** 1 a 255, sem barras nem caracteres de controle, com a extensão do arquivo. */
+  nome: string;
+  /** Até 50 caracteres. */
+  tipoDocumento: string | null;
+  etapaId: string | null;
+}

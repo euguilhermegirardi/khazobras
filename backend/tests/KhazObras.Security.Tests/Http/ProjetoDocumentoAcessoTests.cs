@@ -90,6 +90,7 @@ public sealed class ProjetoDocumentoAcessoTests : IClassFixture<ApiFactory>
                 services.AddSingleton<IEtapaRepository>(etapas);
                 services.AddSingleton<IUserObraRepository>(vinculos);
                 services.AddSingleton<IStorageService>(storage);
+                services.AddSingleton<ILogAuditoriaRepository>(new FakeLogAuditoriaRepository());
             }))
             .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
@@ -202,7 +203,7 @@ public sealed class ProjetoDocumentoAcessoTests : IClassFixture<ApiFactory>
     public async Task Service_nao_devolve_documento_de_outra_obra()
     {
         var c = await CriarCenarioAsync();
-        var service = new ProjetoDocumentoService(c.Documentos, c.Etapas, c.Storage);
+        var service = new ProjetoDocumentoService(c.Documentos, c.Etapas, c.Storage, new LogAuditoriaService(new FakeLogAuditoriaRepository()));
 
         var certo = await service.DownloadAsync(c.DocumentoId, c.ObraId);
         var obraErrada = await service.DownloadAsync(c.DocumentoId, c.OutraObraId);
@@ -224,7 +225,7 @@ public sealed class ProjetoDocumentoAcessoTests : IClassFixture<ApiFactory>
             StorageKey = $"obras/{c.ObraId}/projetos/{Guid.NewGuid()}.pdf",
             UploadedAt = DateTime.UtcNow
         });
-        var service = new ProjetoDocumentoService(c.Documentos, c.Etapas, c.Storage);
+        var service = new ProjetoDocumentoService(c.Documentos, c.Etapas, c.Storage, new LogAuditoriaService(new FakeLogAuditoriaRepository()));
 
         var result = await service.DownloadAsync(inseguro.Id, c.ObraId);
 

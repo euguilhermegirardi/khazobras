@@ -4,6 +4,7 @@ using KhazObras.Application.Dtos.Fornecedores;
 using KhazObras.Application.Dtos.Prestadores;
 using KhazObras.Application.Dtos.Estoque;
 using KhazObras.Application.Dtos.Pipelines;
+using KhazObras.Application.Dtos.ProjetosDocumentos;
 using KhazObras.Application.Dtos.RelatoriosFotograficos;
 using KhazObras.Application.Dtos.RelatoriosMensais;
 using KhazObras.Application.Dtos.Financeiro;
@@ -1539,20 +1540,109 @@ app.MapPost("/obras/{obraId:guid}/projetos", async (Guid obraId, IFormFile file,
         return Results.BadRequest(new { message = validationError });
     }
 
-    // Etapa informada precisa ser desta obra (senao 400); nada vai ao R2 antes dessa checagem.
-    if (etapaId is not null && !await service.EtapaPertenceAObraAsync(etapaId.Value, obraId))
-    {
-        return Results.BadRequest(new { message = "Etapa nao encontrada nesta obra." });
-    }
-
+    // Obra existe (404), limite, etapa da obra, nome, tipo e extensao: tudo no service, ANTES do R2.
     using var stream = file.OpenReadStream();
-    var result = await service.UploadAsync(obraId, etapaId, stream, file.FileName, file.ContentType, tipoDocumento);
-    return Results.Created($"/projetos/{result.Id}", result);
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.UploadAsync(obraId, etapaId, stream, file.FileName, file.ContentType, tipoDocumento, userId);
+
+    return result.Status switch
+    {
+        ProjetoUploadStatus.Created => Results.Created($"/projetos/{result.Documento!.Id}", result.Documento),
+        ProjetoUploadStatus.ObraNaoEncontrada => Results.NotFound(),
+        ProjetoUploadStatus.LimiteExcedido => Results.BadRequest(new { message = $"Cada obra aceita no maximo {ProjetoRegras.MaxDocumentosPorObra} documentos de projeto." }),
+        // Mesma resposta para etapa inexistente e etapa de outra obra (nao confirma que ela existe em outro lugar).
+        ProjetoUploadStatus.EtapaInvalida => Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["EtapaId"] = ["A etapa informada deve ser desta obra."]
+        }),
+        ProjetoUploadStatus.NomeArquivoInvalido => Results.BadRequest(new { message = $"O nome do arquivo deve ter de 1 a {ProjetoRegras.MaxNomeArquivo} caracteres, sem barras nem caracteres de controle." }),
+        ProjetoUploadStatus.TipoDocumentoInvalido => Results.BadRequest(new { message = $"O tipo do documento deve ter no maximo {ProjetoRegras.MaxTipoDocumento} caracteres, sem caracteres de controle." }),
+        _ => Results.BadRequest(new { message = "Documento de projeto deve ser PDF, imagem (jpg, jpeg, png, webp, gif), Word (doc, docx) ou Excel (xls, xlsx)." })
+    };
 })
 .DisableAntiforgery()
 .RequireAuthorization("AdminOrMaster")
 .WithName("UploadProjetoDocumento")
-.WithDescription("Anexa documento/projeto a uma obra (máx 10MB, validado por magic bytes)");
+.WithDescription("Anexa documento de projeto a uma obra (pdf, imagem, doc/docx, xls/xlsx; máx 10MB, validado por magic bytes; máx 200 por obra). etapaId e tipoDocumento na query string. Somente Admin/Master; audita projeto_enviado");
+
+app.MapPut("/projetos/{id:guid}", async (Guid id, UpdateProjetoDocumentoRequest request, IValidator<UpdateProjetoDocumentoRequest> validator, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal) =>
+{
+    // Padrao: resolve so o obra_id -> acesso -> corpo (400) -> UPDATE preso a obra.
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var validation = await validator.ValidateAsync(request);
+    if (!validation.IsValid)
+    {
+        return Results.ValidationProblem(validation.ToDictionary());
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.UpdateAsync(id, obraId.Value, request, userId);
+    return result.Status switch
+    {
+        ProjetoUpdateStatus.Updated => Results.Ok(result.Documento),
+        ProjetoUpdateStatus.NaoEncontrado => Results.NotFound(),
+        ProjetoUpdateStatus.NomeInvalido => Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["Nome"] = ["O nome deve ser valido e manter a extensao do arquivo."]
+        }),
+        _ => Results.ValidationProblem(new Dictionary<string, string[]>
+        {
+            ["EtapaId"] = ["A etapa informada deve ser desta obra."]
+        })
+    };
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("UpdateProjetoDocumento")
+.WithDescription("Edita nome, tipoDocumento e etapa de um documento de projeto (o arquivo e a obra não mudam; null limpa tipo e etapa). Somente Admin/Master; audita projeto_editado");
+
+app.MapDelete("/projetos/{id:guid}", async (Guid id, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal, ILogger<Program> logger) =>
+{
+    var obraId = await service.ResolveAsync(id);
+    if (obraId is null)
+    {
+        return Results.NotFound();
+    }
+
+    try
+    {
+        await accessService.EnsureAccessAsync(principal, obraId.Value);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Results.Forbid();
+    }
+
+    var userId = Guid.Parse(principal.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    var result = await service.DeleteAsync(id, obraId.Value, userId);
+    if (result is null)
+    {
+        return Results.NotFound();
+    }
+
+    if (result.FalhasNoStorage > 0)
+    {
+        logger.LogWarning("Documento de projeto {DocumentoId} excluido, mas o arquivo nao foi removido do storage", id);
+    }
+
+    return Results.NoContent();
+})
+.RequireAuthorization("AdminOrMaster")
+.WithName("DeleteProjetoDocumento")
+.WithDescription("Exclui um documento de projeto (banco e R2). Exclusão definitiva, sem lixeira. Somente Admin/Master; audita projeto_excluido");
 
 app.MapGet("/projetos/{id:guid}/download", async (Guid id, ProjetoDocumentoService service, ObraAccessService accessService, ClaimsPrincipal principal, HttpContext httpContext) =>
 {

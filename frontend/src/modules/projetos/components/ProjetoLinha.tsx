@@ -1,10 +1,11 @@
 import { Download, Eye } from 'lucide-react';
+import { ArquivoIcone } from '@/components/ArquivoIcone';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { ProjetoDocumento } from '@/interfaces/projeto';
 import { formatTimestamp } from '@/utils/dates';
-import { ARQUIVO_ICONE, ARQUIVO_ROTULO, arquivoTipo, podeVisualizar } from '../constants';
+import { podeVisualizar } from '../constants';
 import type { ProjetoAcao } from '../hooks';
 
 interface ProjetoLinhaProps {
@@ -16,8 +17,6 @@ interface ProjetoLinhaProps {
 
 export const ProjetoLinha = ({ projeto, ocupadoId, onAcao }: ProjetoLinhaProps) => {
   // Constants derivadas
-  const tipo = arquivoTipo(projeto.nome);
-  const Icone = ARQUIVO_ICONE[tipo];
   const ocupado = ocupadoId === projeto.id;
 
   // Functions
@@ -29,7 +28,7 @@ export const ProjetoLinha = ({ projeto, ocupadoId, onAcao }: ProjetoLinhaProps) 
     <TableRow>
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
-          <Icone className="size-4 shrink-0 text-muted-foreground" aria-label={ARQUIVO_ROTULO[tipo]} role="img" />
+          <ArquivoIcone nome={projeto.nome} />
           <span className="break-all">{projeto.nome}</span>
         </div>
       </TableCell>
