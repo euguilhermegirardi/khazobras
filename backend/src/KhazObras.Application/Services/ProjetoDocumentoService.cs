@@ -96,7 +96,9 @@ public sealed class ProjetoDocumentoService
 
         // Chave nova: .../{guid}{ext}, sem o nome original (que segue em Nome). Chaves antigas {guid}-{nome} continuam legiveis.
         var storageKey = $"obras/{obraId}/projetos/{Guid.NewGuid()}{extension}";
-        await _storageService.UploadAsync(storageKey, content, contentType);
+        // DWG: o MIME do navegador varia (ou vem vazio); no R2 fica sempre application/octet-stream.
+        var contentTypeArmazenado = extension == ".dwg" ? "application/octet-stream" : contentType;
+        await _storageService.UploadAsync(storageKey, content, contentTypeArmazenado);
 
         var documento = new ProjetoDocumento
         {
@@ -285,6 +287,8 @@ public sealed class ProjetoDocumentoService
         ".xls" => "application/vnd.ms-excel",
         ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         ".txt" => "text/plain",
+        // DWG: octet-stream (generico) e mais seguro que image/vnd.dwg, que alguns SOs/navegadores tentam abrir. Sempre download.
+        ".dwg" => "application/octet-stream",
         _ => "application/octet-stream"
     };
 

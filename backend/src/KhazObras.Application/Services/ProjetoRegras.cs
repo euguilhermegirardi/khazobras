@@ -13,11 +13,12 @@ public static class ProjetoRegras
     public const int MaxTipoDocumento = 50;
 
     /// <summary>
-    /// Tipos aceitos como documento de projeto: PDF e imagens (o cliente visualiza) e Word/Excel (o cliente baixa).
+    /// Tipos aceitos como documento de projeto: PDF e imagens (o cliente visualiza) e Word/Excel/AutoCAD DWG (o cliente so baixa;
+    /// DWG e binario proprietario, o sistema apenas armazena e serve como download, nunca abre nem interpreta).
     /// Fora o <c>.txt</c>, que o validador generico aceita mas nao tem assinatura para conferir.
     /// </summary>
     public static readonly string[] ExtensoesPermitidas =
-        [".pdf", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".doc", ".docx", ".xls", ".xlsx"];
+        [".pdf", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".doc", ".docx", ".xls", ".xlsx", ".dwg"];
 
     public static bool ExtensaoPermitida(string extension) =>
         ExtensoesPermitidas.Contains(extension, StringComparer.OrdinalIgnoreCase);

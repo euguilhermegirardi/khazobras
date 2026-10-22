@@ -83,7 +83,9 @@ public sealed class ProjetoValidatorTests
     [InlineData(".exe", false)]
     [InlineData(".html", false)]
     [InlineData(".svg", false)]
-    [InlineData(".dwg", false)]
+    [InlineData(".dwg", true)]
+    [InlineData(".DWG", true)]
+    [InlineData(".dxf", false)]
     [InlineData(".zip", false)]
     [InlineData("", false)]
     public void Extensoes_permitidas_para_projeto(string extensao, bool permitida)
@@ -93,6 +95,7 @@ public sealed class ProjetoValidatorTests
 
     [Theory]
     [InlineData("Planta.PDF", ".pdf")]
+    [InlineData("Eletrico.DWG", ".dwg")]
     [InlineData("obras/x/projetos/abc.docx", ".docx")]
     [InlineData("sem-extensao", "")]
     [InlineData("a.extensaomuitolonga", "")]

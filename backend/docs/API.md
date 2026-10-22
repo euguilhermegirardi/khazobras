@@ -1041,8 +1041,15 @@ máximo 200 por obra), 403. Obra inexistente devolve `[]` para Admin/Master.
 `etapaId` e `tipoDocumento` vão na **query string** (opcionais).
 
 - Arquivo: máx 10 MB, extensão + MIME + magic bytes (`FileUploadValidator`) e **só estes tipos**: `.pdf`, `.jpg`, `.jpeg`, `.png`,
-  `.webp`, `.gif` (o cliente visualiza) e `.doc`, `.docx`, `.xls`, `.xlsx` (o cliente baixa). `.txt` (aceito pelo validador genérico),
-  DWG e ZIP = 400 `{ message }`.
+  `.webp`, `.gif` (o cliente visualiza) e `.doc`, `.docx`, `.xls`, `.xlsx`, `.dwg` (o cliente baixa). `.txt` (aceito pelo validador
+  genérico) e ZIP = 400 `{ message }`.
+- **DWG (AutoCAD)**, só neste endpoint (`FileUploadValidator.IsValidProjeto`; financeiro, fotos e demais módulos continuam recusando):
+  extensão `.dwg` em qualquer caixa (a chave no R2 fica `{guid}.dwg`, minúscula); MIME `application/octet-stream`, `application/acad`,
+  `application/x-acad`, `application/autocad_dwg`, `application/dwg`, `image/vnd.dwg`, `drawing/dwg` ou vazio (valem **só** para `.dwg`);
+  magic bytes: os 6 primeiros bytes ASCII `AC1012`, `AC1014`, `AC1015`, `AC1018`, `AC1021`, `AC1024`, `AC1027` ou `AC1032` (R13 a
+  2018+). Qualquer outro cabeçalho (texto, PDF, ZIP, EXE, DWG antigo `AC1.xx`/`AC1002`..`AC1009`/`MC0.0`), arquivo com menos de 6 bytes
+  ou vazio = 400 `{ message }`, nada vai ao R2. No R2 o objeto é gravado como `application/octet-stream`. DWG é binário proprietário e
+  pode conter OLE/links externos: o sistema só armazena e serve como download (anexo), nunca abre, converte nem gera prévia.
 - Nome do arquivo: 1 a **255** caracteres, sem `/`, `\` nem caracteres de controle (400 `{ message }`, antes do R2). O nome vira o
   `nome` exibido/baixado; a chave no R2 é `obras/{obraId}/projetos/{guid}{ext}` (sem o nome original, nunca exposta).
 - `tipoDocumento`: texto livre aparado, até **50** caracteres, sem controle (vazio = `null`); acima disso 400 `{ message }`.
@@ -1077,7 +1084,8 @@ RETURNING` e, com o banco confirmado, o arquivo sai do R2 (falha no R2 não desf
 **GET** `/projetos/{id}/download` — qualquer usuário com acesso à obra (cliente só da própria). Resposta: o arquivo, com `Content-Type`
 pela extensão da **chave** do R2 (não do nome editável), `X-Content-Type-Options: nosniff` e `Content-Disposition` com o `nome` do
 documento (se o nome estiver vazio, tiver barras/controle ou extensão diferente da do arquivo: `projeto-{id}{ext}`). O front busca com o
-token (fetch → blob); só PDF e imagem abrem no navegador, o resto baixa. **200**, 403, 404.
+token (fetch → blob); só PDF e imagem abrem no navegador, o resto baixa. Para `.dwg` o `Content-Type` é sempre
+`application/octet-stream` (genérico, de propósito: nada tenta abrir) com `nosniff` e `Content-Disposition: attachment`. **200**, 403, 404.
 
 ---
 

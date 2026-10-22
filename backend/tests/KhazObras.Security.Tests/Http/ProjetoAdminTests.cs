@@ -30,6 +30,7 @@ public sealed class ProjetoAdminTests : IClassFixture<ApiFactory>
     private sealed class CapturingStorageService : IStorageService
     {
         public List<string> Uploads { get; } = [];
+        public List<string> UploadContentTypes { get; } = [];
         public List<string> Downloads { get; } = [];
         public List<string> Deletes { get; } = [];
         public bool FalharAoApagar { get; set; }
@@ -37,6 +38,7 @@ public sealed class ProjetoAdminTests : IClassFixture<ApiFactory>
         public Task<string> UploadAsync(string key, Stream content, string contentType)
         {
             Uploads.Add(key);
+            UploadContentTypes.Add(contentType);
             return Task.FromResult(key);
         }
 
@@ -462,6 +464,188 @@ public sealed class ProjetoAdminTests : IClassFixture<ApiFactory>
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Empty(c.Storage.Uploads);
+    }
+
+    // ===== DWG (AutoCAD) =====
+
+    private static byte[] DwgBytes(string versao = "AC1032")
+    {
+        var bytes = new byte[64];
+        System.Text.Encoding.ASCII.GetBytes(versao).CopyTo(bytes, 0);
+        return bytes;
+    }
+
+    [Theory]
+    [InlineData("AC1032", "Eletrico.dwg")]
+    [InlineData("AC1015", "Hidraulico.dwg")]
+    public async Task Upload_aceita_dwg_valido_com_chave_guid_dwg_sem_nome_original_e_mime_octet_stream(string versao, string nome)
+    {
+        var c = await CriarCenarioAsync();
+
+        using var response = await UploadAsync(
+            c, c.ObraId, UserRole.Admin, fileName: nome, contentType: "application/acad", bytes: DwgBytes(versao));
+        var texto = await response.Content.ReadAsStringAsync();
+        var json = JsonDocument.Parse(texto).RootElement;
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(nome, json.GetProperty("nome").GetString());
+        NaoVazaChaveDoBucket(texto);
+        var chave = Assert.Single(c.Storage.Uploads);
+        Assert.Matches($@"^obras/{c.ObraId}/projetos/[0-9a-f\-]{{36}}\.dwg$", chave);
+        Assert.DoesNotContain(nome, chave, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("application/octet-stream", Assert.Single(c.Storage.UploadContentTypes));
+    }
+
+    [Fact]
+    public async Task Upload_de_dwg_com_extensao_maiuscula_grava_chave_com_extensao_minuscula()
+    {
+        var c = await CriarCenarioAsync();
+
+        using var response = await UploadAsync(
+            c, c.ObraId, UserRole.Master, fileName: "PLANTA.DWG", contentType: "application/octet-stream", bytes: DwgBytes());
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.EndsWith(".dwg", Assert.Single(c.Storage.Uploads), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("texto")]
+    [InlineData("pdf")]
+    [InlineData("zip")]
+    [InlineData("exe")]
+    [InlineData("dwg-antigo")]
+    [InlineData("curto")]
+    public async Task Upload_de_arquivo_renomeado_para_dwg_retorna_400_com_message_e_nada_vai_ao_r2(string tipo)
+    {
+        var c = await CriarCenarioAsync();
+        byte[] bytes = tipo switch
+        {
+            "texto" => "isto nao e um desenho"u8.ToArray(),
+            "pdf" => "%PDF-1.4 conteudo"u8.ToArray(),
+            "zip" => new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00 },
+            "exe" => new byte[] { 0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00 },
+            "dwg-antigo" => DwgBytes("AC1009"),
+            _ => "AC103"u8.ToArray()
+        };
+
+        using var response = await UploadAsync(
+            c, c.ObraId, UserRole.Admin, fileName: "falso.dwg", contentType: "application/octet-stream", bytes: bytes);
+        var json = await JsonAsync(response);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False(string.IsNullOrWhiteSpace(json.GetProperty("message").GetString()));
+        Assert.Empty(c.Storage.Uploads);
+        Assert.Empty(c.Logs.Logs);
+    }
+
+    [Fact]
+    public async Task Upload_de_dwg_vazio_retorna_400_e_nada_vai_ao_r2()
+    {
+        var c = await CriarCenarioAsync();
+
+        using var response = await UploadAsync(
+            c, c.ObraId, UserRole.Admin, fileName: "vazio.dwg", contentType: "application/octet-stream", bytes: []);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(c.Storage.Uploads);
+    }
+
+    [Theory]
+    [InlineData("application/pdf")]
+    [InlineData("text/plain")]
+    public async Task Upload_de_dwg_com_mime_de_outro_tipo_retorna_400_e_nada_vai_ao_r2(string mime)
+    {
+        var c = await CriarCenarioAsync();
+
+        using var response = await UploadAsync(c, c.ObraId, UserRole.Admin, fileName: "planta.dwg", contentType: mime, bytes: DwgBytes());
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Empty(c.Storage.Uploads);
+    }
+
+    [Fact]
+    public async Task Mime_octet_stream_continua_recusado_para_outras_extensoes_em_projeto()
+    {
+        var c = await CriarCenarioAsync();
+
+        using var pdf = await UploadAsync(c, c.ObraId, UserRole.Admin, fileName: "a.pdf", contentType: "application/octet-stream");
+        using var png = await UploadAsync(
+            c, c.ObraId, UserRole.Admin, fileName: "a.png", contentType: "application/octet-stream",
+            bytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+
+        Assert.Equal(HttpStatusCode.BadRequest, pdf.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, png.StatusCode);
+        Assert.Empty(c.Storage.Uploads);
+    }
+
+    [Fact]
+    public async Task Upload_de_dwg_do_cliente_recebe_403_e_nada_e_gravado()
+    {
+        var c = await CriarCenarioAsync();
+
+        using var daObra = await UploadAsync(
+            c, c.ObraId, UserRole.Client, c.ClienteId, fileName: "planta.dwg", contentType: "application/octet-stream", bytes: DwgBytes());
+        using var invalido = await UploadAsync(
+            c, c.ObraId, UserRole.Client, c.ClienteId, fileName: "falso.dwg", contentType: "application/octet-stream", bytes: [0x01]);
+
+        Assert.Equal(HttpStatusCode.Forbidden, daObra.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, invalido.StatusCode);
+        Assert.Empty(c.Storage.Uploads);
+    }
+
+    [Fact]
+    public async Task Download_de_dwg_serve_octet_stream_como_anexo_com_nosniff_para_admin_e_cliente_da_obra()
+    {
+        var c = await CriarCenarioAsync();
+        var dwg = NovoDocumento(c.ObraId, "Eletrico.DWG", ".dwg");
+        await c.Documentos.CreateAsync(dwg);
+
+        using var admin = await SendAsync(c, HttpMethod.Get, $"/projetos/{dwg.Id}/download", UserRole.Admin);
+        using var cliente = await SendAsync(c, HttpMethod.Get, $"/projetos/{dwg.Id}/download", UserRole.Client, c.ClienteId);
+        using var outroCliente = await SendAsync(c, HttpMethod.Get, $"/projetos/{dwg.Id}/download", UserRole.Client, c.OutroClienteId);
+
+        Assert.Equal(HttpStatusCode.Forbidden, outroCliente.StatusCode);
+        foreach (var response in new[] { admin, cliente })
+        {
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            Assert.Equal("application/octet-stream", response.Content.Headers.ContentType?.MediaType);
+            Assert.Contains("nosniff", response.Headers.GetValues("X-Content-Type-Options"));
+            Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
+            Assert.Equal("Eletrico.DWG", response.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
+        }
+    }
+
+    [Fact]
+    public async Task Put_de_dwg_mantem_a_extensao_e_recusa_trocar_por_outra()
+    {
+        var c = await CriarCenarioAsync();
+        var dwg = NovoDocumento(c.ObraId, "eletrico.dwg", ".dwg");
+        await c.Documentos.CreateAsync(dwg);
+
+        using var ok = await SendAsync(
+            c, HttpMethod.Put, $"/projetos/{dwg.Id}", UserRole.Admin, body: new { nome = "Eletrico rev B.DWG", tipoDocumento = "eletrico", etapaId = (Guid?)null });
+        using var viraPdf = await SendAsync(
+            c, HttpMethod.Put, $"/projetos/{dwg.Id}", UserRole.Admin, body: new { nome = "eletrico.pdf", tipoDocumento = "eletrico", etapaId = (Guid?)null });
+        using var semExtensao = await SendAsync(
+            c, HttpMethod.Put, $"/projetos/{dwg.Id}", UserRole.Admin, body: new { nome = "eletrico", tipoDocumento = "eletrico", etapaId = (Guid?)null });
+
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, viraPdf.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, semExtensao.StatusCode);
+        Assert.Equal("Eletrico rev B.DWG", c.Documentos.Inspecionar(dwg.Id)!.Nome);
+        Assert.EndsWith(".dwg", c.Documentos.Inspecionar(dwg.Id)!.StorageKey);
+    }
+
+    [Fact]
+    public async Task Put_de_pdf_nao_pode_virar_dwg()
+    {
+        var c = await CriarCenarioAsync();
+
+        using var response = await SendAsync(
+            c, HttpMethod.Put, $"/projetos/{c.Doc1Id}", UserRole.Admin, body: new { nome = "planta.dwg", tipoDocumento = "planta", etapaId = c.EtapaId });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("planta-baixa.pdf", c.Documentos.Inspecionar(c.Doc1Id)!.Nome);
     }
 
     [Fact]
