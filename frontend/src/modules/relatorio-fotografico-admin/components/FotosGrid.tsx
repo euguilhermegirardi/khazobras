@@ -27,6 +27,8 @@ export const FotosGrid = ({ obraId, relatorioId, fotos }: FotosGridProps) => {
   const [erro, setErro] = useState<MensagemErro | null>(null);
   /** Frase para leitor de tela depois de mover ("Foto movida para a posição 2 de 7."). */
   const [aviso, setAviso] = useState('');
+  /** Muda depois de um erro de reordenação para o efeito devolver o foco ao botão acionado (já com o rollback aplicado). */
+  const [refocar, setRefocar] = useState(0);
   // Hooks
   const reordenar = useReordenarFotos(obraId, relatorioId);
   const remover = useRemoverFoto(obraId);
@@ -59,6 +61,8 @@ export const FotosGrid = ({ obraId, relatorioId, fotos }: FotosGridProps) => {
     } catch (e) {
       // A tela já voltou à ordem anterior (rollback); o foco volta ao botão que acionou.
       setAviso('');
+      focoRef.current = { fotoId: foto.id, direcao };
+      setRefocar((n) => n + 1);
       // 400 `errors.Fotos` não traz `message`: mostra o texto do servidor em vez de "Dados inválidos.".
       const doServidor = e instanceof ApiError ? Object.values(e.fieldErrors ?? {}).flat() : [];
       setErro(
@@ -101,7 +105,8 @@ export const FotosGrid = ({ obraId, relatorioId, fotos }: FotosGridProps) => {
     }
   };
 
-  // Effects (devolve o foco ao botão de mover; se a foto chegou à ponta, ao botão oposto)
+  // Effects (devolve o foco ao botão de mover; se a foto chegou à ponta, ao botão oposto). Roda na troca otimista da
+  // ordem e de novo depois de um erro (o rollback troca a ordem outra vez, com a mutation ainda pendente).
   useEffect(() => {
     const alvo = focoRef.current;
     if (!alvo) return;
@@ -110,7 +115,7 @@ export const FotosGrid = ({ obraId, relatorioId, fotos }: FotosGridProps) => {
     const oposto = document.getElementById(idBotaoMover(alvo.fotoId, alvo.direcao === -1 ? 1 : -1));
     const botao = preferido instanceof HTMLButtonElement && !preferido.disabled ? preferido : oposto;
     botao?.focus();
-  }, [ordemAtual]);
+  }, [ordemAtual, refocar]);
 
   // Retornos breves
   if (fotos.length === 0) {
