@@ -565,7 +565,8 @@ describe('Relatório fotográfico (admin) - excluir (lista)', () => {
     await user().click(await screen.findByRole('button', { name: 'Excluir relatório: Setembro de 2026' }));
     await user().click(screen.getByRole('button', { name: 'Excluir definitivamente' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Código para o suporte: req-del-500');
+    // A confirmação também é um alert e fica na tela até a resposta chegar: espera o alerta de erro (estado final).
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Código para o suporte: req-del-500'));
     expect(cartao('Setembro de 2026')).toBeInTheDocument();
   });
 
@@ -576,7 +577,7 @@ describe('Relatório fotográfico (admin) - excluir (lista)', () => {
     await user().click(await screen.findByRole('button', { name: 'Excluir relatório: Setembro de 2026' }));
     await user().click(screen.getByRole('button', { name: 'Excluir definitivamente' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Você não tem permissão para esta ação.');
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Você não tem permissão para esta ação.'));
   });
 
   it('404 ao excluir (já excluído em outra aba) orienta a atualizar e a lista relê o servidor', async () => {

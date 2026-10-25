@@ -136,7 +136,8 @@ describe('Financeiro (admin) - estados da lista', () => {
     expect(await screen.findByRole('table')).toHaveTextContent('Só oculto');
     expect(screen.getByLabelText('Visibilidade')).toHaveValue('');
     expect(screen.queryByRole('button', { name: 'Limpar filtros' })).not.toBeInTheDocument();
-    expect(ultimaLista(api)?.has('visivelCliente')).toBe(false);
+    // A requisição sem filtro pode ainda não ter sido registrada pelo handler quando a tabela reaparece.
+    await waitFor(() => expect(ultimaLista(api)?.has('visivelCliente')).toBe(false));
   });
 });
 
