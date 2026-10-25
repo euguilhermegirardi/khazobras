@@ -40,7 +40,7 @@ brew services start postgresql@16                              # Postgres local
 cd backend && dotnet build && dotnet test tests/KhazObras.Security.Tests
 cd backend && dotnet run --project src/KhazObras.Api           # API em :5285 (/healthcheck)
 cd backend && dotnet run --project tools/ResetMasterPassword   # redefine a senha do master
-cd frontend && npm run dev                                     # front em :5173 (Node 20.19+/22.12+)
+cd frontend && npm run dev                                     # front em :5173 (Node 22 via `nvm use`; 20.19+ serve; 23+ não)
 cd frontend && npm run format && npm run lint && npm run typecheck && npm test   # format: Prettier (pre-commit confere)
 bash scripts/instalar-hooks.sh                                 # uma vez por clone
 ```

@@ -128,5 +128,5 @@ npm test
 npx playwright test   # quando existir
 ```
 
-Requer Node 20.19+ (ou 22.12+). Primeira vez: `cp .env.example .env && npm install`.
+Requer Node 22 (`nvm use`, há `.nvmrc`); 20.19+ também serve. **Node 23+ (inclusive o 24) não foi validado**: no 24.21 a suíte falhou em 26 testes que passam no 22 (causa não investigada a fundo). Primeira vez: `cp .env.example .env && npm install`.
 Para logar de verdade a API precisa estar rodando (`cd backend && dotnet run --project src/KhazObras.Api`).
