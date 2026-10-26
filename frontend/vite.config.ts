@@ -19,5 +19,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Teto folgado para máquinas lentas (Mac Intel, CI com 2 CPUs); o teste que passa não fica mais lento.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
   },
 });

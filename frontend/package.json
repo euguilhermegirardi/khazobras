@@ -1,6 +1,9 @@
 {
   "name": "khazobras-frontend",
   "private": true,
+  "engines": {
+    "node": ">=20.19.0 <23"
+  },
   "version": "0.0.0",
   "type": "module",
   "scripts": {

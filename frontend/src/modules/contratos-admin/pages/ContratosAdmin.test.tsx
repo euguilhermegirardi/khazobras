@@ -312,7 +312,10 @@ describe('Contratos (admin) - novo contrato', () => {
 
     expect(await screen.findByRole('heading', { name: 'Contrato CT-2026/09' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Contrato CT-2026/09 criado.');
+    // Pode haver mais de um status na tela (o card novo mostra o skeleton "Carregando pagamentos…" enquanto busca).
+    expect(screen.getAllByRole('status').map((el) => el.textContent)).toContainEqual(
+      expect.stringContaining('Contrato CT-2026/09 criado.'),
+    );
     expect(api.chamadas.listas).toBe(2);
     expect(valorDe(card('CT-2026/09'), 'Valor contratado')).toHaveTextContent(/R\$\s*75\.000,00/);
     // Com 2 contratos aparecem os totais da obra.

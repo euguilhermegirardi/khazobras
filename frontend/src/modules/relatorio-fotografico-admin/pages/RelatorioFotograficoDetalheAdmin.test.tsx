@@ -74,7 +74,8 @@ describe('Relatório fotográfico (admin) - detalhe', () => {
     );
     renderApp(ROTA, 'Admin');
 
-    const item = (await screen.findAllByRole('listitem'))[0] as HTMLElement;
+    const lista = await screen.findByRole('list', { name: 'Fotos do relatório' });
+    const item = within(lista).getAllByRole('listitem')[0] as HTMLElement;
     expect(item).toHaveTextContent('Sem descrição');
     expect(item).toHaveTextContent('Sem data');
     expect(acao('Editar', 'foto 1')).toBeInTheDocument();
@@ -487,7 +488,7 @@ describe('Relatório fotográfico (admin) - remover foto', () => {
     );
     renderApp(ROTA, 'Admin');
 
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
     // Por regex (prefixo), "foto 1" casa com "foto 1" e "foto 10"; com o nome inteiro (string) cada botão é único.
     expect(screen.getAllByRole('button', { name: /^Remover a foto 1/ })).toHaveLength(2);
     expect(acao('Remover', 'foto 1')).toBeInTheDocument();
@@ -501,7 +502,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
   it('setas desabilitadas nas pontas: primeira sem "esquerda", última sem "direita"', async () => {
     server.use(...servidorFotos([tres()]).handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     expect(acao('Mover', 'foto 1 (Descrição 1)', para('esquerda'))).toBeDisabled();
     expect(acao('Mover', 'foto 1 (Descrição 1)', para('direita'))).toBeEnabled();
@@ -514,7 +515,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
     const api = servidorFotos([tres()]);
     server.use(...api.handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 2 (Descrição 2)', para('esquerda')));
 
@@ -544,7 +545,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
     const api = servidorFotos([relatorio({ id: 'rf1', fotos: fotosEmOrdem(4) })]);
     server.use(...api.handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 2 (Descrição 2)', para('direita')));
 
@@ -558,7 +559,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
   it('o foco continua na seta acionada depois de mover (a foto muda de posição e de nome)', async () => {
     server.use(...servidorFotos([relatorio({ id: 'rf1', fotos: fotosEmOrdem(4) })]).handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 2 (Descrição 2)', para('direita')));
 
@@ -568,7 +569,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
   it('se a foto chega à ponta, o foco vai para a seta oposta (a acionada fica desabilitada)', async () => {
     server.use(...servidorFotos([tres()]).handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 2 (Descrição 2)', para('esquerda')));
 
@@ -579,7 +580,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
   it('anuncia a nova posição para leitor de tela em uma região aria-live', async () => {
     server.use(...servidorFotos([tres()]).handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 2 (Descrição 2)', para('esquerda')));
 
@@ -593,7 +594,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
     const api = servidorFotos([relatorio({ id: 'rf1', fotos: empatadas })]);
     server.use(...api.handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 3 (Descrição 3)', para('esquerda')));
 
@@ -614,7 +615,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
       ...api.handlers,
     );
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 2 (Descrição 2)', para('esquerda')));
 
@@ -629,7 +630,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
       ]);
     });
     expect(screen.queryByText(/Foto movida para a posição/)).not.toBeInTheDocument();
-    expect(acao('Mover', 'foto 2 (Descrição 2)', para('esquerda'))).toHaveFocus();
+    await waitFor(() => expect(acao('Mover', 'foto 2 (Descrição 2)', para('esquerda'))).toHaveFocus());
   });
 
   it('500 ao reordenar mostra o código de suporte e a ordem original', async () => {
@@ -638,7 +639,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
       ...servidorFotos([tres()]).handlers,
     );
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 1 (Descrição 1)', para('direita')));
 
@@ -649,7 +650,7 @@ describe('Relatório fotográfico (admin) - reordenar', () => {
   it('403 e 404 ao reordenar mostram a mensagem e mantêm a ordem', async () => {
     server.use(erroEm('patch', '/relatorios-fotograficos/rf1/fotos/ordem', 403), ...servidorFotos([tres()]).handlers);
     renderApp(ROTA, 'Admin');
-    await screen.findAllByRole('listitem');
+    await screen.findByRole('list', { name: 'Fotos do relatório' });
 
     await user().click(acao('Mover', 'foto 1 (Descrição 1)', para('direita')));
     expect(await screen.findByRole('alert')).toHaveTextContent('Você não tem permissão para esta ação.');
@@ -682,7 +683,8 @@ describe('Relatório fotográfico (admin) - estresse', () => {
     server.use(...servidorFotos([relatorio({ id: 'rf1', fotos: [foto('f1', { descricao })] })]).handlers);
     renderApp(ROTA, 'Admin');
 
-    const item = (await screen.findAllByRole('listitem'))[0] as HTMLElement;
+    const lista = await screen.findByRole('list', { name: 'Fotos do relatório' });
+    const item = within(lista).getAllByRole('listitem')[0] as HTMLElement;
     expect(within(item).getByText(descricao)).toHaveAttribute('title', descricao);
     expect(acao('Editar', `foto 1 (${descricao.slice(0, 40)}…)`)).toBeInTheDocument();
   });

@@ -575,7 +575,9 @@ describe('Financeiro (admin) - excluir lançamento', () => {
 
     await user().click(screen.getByRole('button', { name: 'Excluir definitivamente' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(texto);
+    // A confirmação inline também é um alert e continua na tela ("Excluindo…") até a resposta chegar: espera o estado
+    // final (alerta de erro), não o primeiro alert que aparecer.
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(texto));
     expect(screen.queryByRole('button', { name: 'Excluir definitivamente' })).not.toBeInTheDocument();
     expect(screen.queryByText('Lançamento excluído.')).not.toBeInTheDocument();
     expect(screen.getByRole('table')).toHaveTextContent('Item 02');
@@ -589,6 +591,8 @@ describe('Financeiro (admin) - excluir lançamento', () => {
     await user().click(screen.getByRole('button', { name: 'Próxima' }));
 
     await screen.findByText('Página 2 de 2');
-    expect(screen.queryByRole('button', { name: 'Excluir definitivamente' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Excluir definitivamente' })).not.toBeInTheDocument(),
+    );
   });
 });

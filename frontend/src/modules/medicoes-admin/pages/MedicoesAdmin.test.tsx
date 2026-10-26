@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -151,9 +151,9 @@ describe('Medições (admin) - KPIs', () => {
     await screen.findByRole('table');
 
     await waitFor(() => expect(KPI('Total de medições')).toHaveTextContent('3'));
-    expect(KPI('Aguardando aprovação')).toHaveTextContent('1');
-    expect(KPI('Aprovadas, aguardando NF')).toHaveTextContent('1');
-    expect(KPI('NF emitida')).toHaveTextContent('1');
+    await waitFor(() => expect(KPI('Aguardando aprovação')).toHaveTextContent('1'));
+    await waitFor(() => expect(KPI('Aprovadas, aguardando NF')).toHaveTextContent('1'));
+    await waitFor(() => expect(KPI('NF emitida')).toHaveTextContent('1'));
 
     const kpis = chamadasDosKpis(api.chamadas);
     expect(new Set(kpis.map((c) => c.get('status') ?? 'todas'))).toEqual(
@@ -170,8 +170,8 @@ describe('Medições (admin) - KPIs', () => {
     await screen.findByRole('table');
 
     await waitFor(() => expect(KPI('Total de medições')).toHaveTextContent('45'));
-    expect(KPI('Aguardando aprovação')).toHaveTextContent('45');
-    expect(KPI('Aprovadas, aguardando NF')).toHaveTextContent('0');
+    await waitFor(() => expect(KPI('Aguardando aprovação')).toHaveTextContent('45'));
+    await waitFor(() => expect(KPI('Aprovadas, aguardando NF')).toHaveTextContent('0'));
   });
 
   it('se uma consulta de KPI falhar, esse KPI mostra "—" e o resto da tela continua funcionando', async () => {
@@ -181,8 +181,8 @@ describe('Medições (admin) - KPIs', () => {
     expect(await screen.findByRole('table')).toBeInTheDocument();
     await waitFor(() => expect(KPI('Total de medições')).toHaveTextContent('3'));
     await waitFor(() => expect(KPI('Aprovadas, aguardando NF')).toHaveTextContent('—'));
-    expect(KPI('Aguardando aprovação')).toHaveTextContent('1');
-    expect(KPI('NF emitida')).toHaveTextContent('1');
+    await waitFor(() => expect(KPI('Aguardando aprovação')).toHaveTextContent('1'));
+    await waitFor(() => expect(KPI('NF emitida')).toHaveTextContent('1'));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -192,7 +192,7 @@ describe('Medições (admin) - KPIs', () => {
 
     expect(await screen.findByRole('table')).toBeInTheDocument();
     await waitFor(() => expect(KPI('Total de medições')).toHaveTextContent('—'));
-    expect(KPI('Aguardando aprovação')).toHaveTextContent('1');
+    await waitFor(() => expect(KPI('Aguardando aprovação')).toHaveTextContent('1'));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
@@ -430,10 +430,14 @@ describe('Medições (admin) - criar medição', () => {
       const dialog = await abrir(user());
 
       const adicionar = within(dialog).getByRole('button', { name: 'Item' });
-      for (let i = 1; i < 200; i += 1) fireEvent.click(adicionar);
+      // Os 199 cliques num único act: o React junta as atualizações e renderiza a lista uma vez (um render por clique
+      // com até 200 linhas é quadrático e estourava o tempo em máquina lenta).
+      act(() => {
+        for (let i = 1; i < 200; i += 1) fireEvent.click(adicionar);
+      });
       expect(within(dialog).getAllByLabelText(/^Descrição do item/)).toHaveLength(200);
       expect(adicionar).toBeDisabled();
-    }, 60_000);
+    });
   });
 
   describe('validações no formulário', () => {
@@ -653,7 +657,7 @@ describe('Medições (admin) - criar medição', () => {
       expect(await screen.findByRole('status')).toHaveTextContent('Medição 4 criada.');
       expect(await screen.findByRole('link', { name: 'Abrir medição 4' })).toBeInTheDocument();
       await waitFor(() => expect(KPI('Total de medições')).toHaveTextContent('4'));
-      expect(KPI('Aguardando aprovação')).toHaveTextContent('2');
+      await waitFor(() => expect(KPI('Aguardando aprovação')).toHaveTextContent('2'));
     });
 
     it('depois de criar, volta ao filtro "Todos os status" para a nova medição aparecer', async () => {
@@ -778,9 +782,13 @@ describe('Medições (admin) - criar medição', () => {
       renderApp(LISTA, 'Admin');
       const dialog = await enviarValido(user());
 
-      expect(await within(dialog).findByLabelText('Número')).toHaveAccessibleDescription('Número inválido.');
-      expect(within(dialog).getByLabelText('Etapa (opcional)')).toHaveAccessibleDescription(
-        'Etapa não pertence à obra.',
+      await waitFor(() =>
+        expect(within(dialog).getByLabelText('Número')).toHaveAccessibleDescription('Número inválido.'),
+      );
+      await waitFor(() =>
+        expect(within(dialog).getByLabelText('Etapa (opcional)')).toHaveAccessibleDescription(
+          'Etapa não pertence à obra.',
+        ),
       );
     });
 

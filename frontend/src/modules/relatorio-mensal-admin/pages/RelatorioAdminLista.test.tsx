@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -274,8 +274,11 @@ describe('Relatório ao cliente (admin) - lista', () => {
     await u.click(screen.getByRole('button', { name: 'Excluir relatório de Outubro de 2026' }));
     await u.click(screen.getByRole('button', { name: 'Excluir definitivamente' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Este relatório já foi publicado e não pode ser excluído. A lista foi atualizada.',
+    // A confirmação também é um alert e fica na tela até a resposta chegar: espera o texto final (waitFor refaz a busca).
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Este relatório já foi publicado e não pode ser excluído. A lista foi atualizada.',
+      ),
     );
     expect(screen.queryByText('Rascunho excluído.')).not.toBeInTheDocument();
     expect(api.chamadas.listas).toEqual(['false', 'false']);
@@ -296,7 +299,7 @@ describe('Relatório ao cliente (admin) - lista', () => {
     await u.click(screen.getByRole('button', { name: 'Excluir relatório de Outubro de 2026' }));
     await u.click(screen.getByRole('button', { name: 'Excluir definitivamente' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('req-del');
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('req-del'));
     expect(screen.getByRole('link', { name: 'Abrir relatório de Outubro de 2026' })).toBeInTheDocument();
   });
 
