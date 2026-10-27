@@ -8,6 +8,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useEtapas } from '@/hooks/useEtapas';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { RelatorioFotografico } from '@/interfaces/relatorioFotografico';
 import { ApiError } from '@/services/apiClient';
 import { toMensagemErro, type MensagemErro } from '@/utils/erros';
@@ -44,6 +45,7 @@ export const RelatorioForm = ({ obraId, relatorio, onCancel, onSaved }: Relatori
   // Hoje fixado na montagem: competência padrão do relatório novo.
   const [hoje] = useState(() => new Date());
   // Hooks
+  const envio = useEnvioUnico();
   const criar = useCriarRelatorio(obraId);
   const editar = useEditarRelatorio(obraId, relatorio?.id ?? '');
   // O diálogo só monta o formulário com as etapas resolvidas (o select nativo não reaplica o valor se as opções
@@ -63,7 +65,7 @@ export const RelatorioForm = ({ obraId, relatorio, onCancel, onSaved }: Relatori
   const [tipo, etapaId, competencia] = useWatch({ control, name: ['tipo', 'etapaId', 'competencia'] });
 
   // Constants derivadas
-  const salvando = criar.isPending || editar.isPending;
+  const salvando = criar.isPending || editar.isPending || envio.enviando;
   const sugestoes = sugestoesDoFormulario({ tipo, etapaId, competencia });
   const etapaAtualDesconhecida = Boolean(relatorio?.etapaId) && !etapas.some((e) => e.id === relatorio?.etapaId);
 
@@ -82,16 +84,19 @@ export const RelatorioForm = ({ obraId, relatorio, onCancel, onSaved }: Relatori
     else setFormError(toMensagemErro(error, MENSAGEM_FALHA, MENSAGEM_NAO_ENCONTRADO));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const body = toRelatorioBody(values);
-      const salvo = relatorio ? await editar.mutateAsync(body) : await criar.mutateAsync({ obraId, ...body });
-      onSaved(relatorio ? `Relatório “${body.titulo}” atualizado.` : `Relatório “${body.titulo}” criado.`, salvo);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const body = toRelatorioBody(values);
+        const salvo = relatorio ? await editar.mutateAsync(body) : await criar.mutateAsync({ obraId, ...body });
+        envio.concluir();
+        onSaved(relatorio ? `Relatório “${body.titulo}” atualizado.` : `Relatório “${body.titulo}” criado.`, salvo);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (

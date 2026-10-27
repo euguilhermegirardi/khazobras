@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { LancamentoAdmin } from '@/interfaces/financeiroAdmin';
 import { ApiError } from '@/services/apiClient';
 import { mapServerErrors } from '@/utils/serverErrors';
@@ -42,6 +43,7 @@ export const LancamentoForm = ({ obraId, lancamento, onCancel, onSaved }: Lancam
   // Hoje fixado na montagem: data e competência padrão do lançamento novo.
   const [hoje] = useState(() => new Date());
   // Hooks
+  const envio = useEnvioUnico();
   const criar = useCriarLancamento(obraId);
   const editar = useEditarLancamento(obraId, lancamento?.id ?? '');
   const categorias = useCategoriaOpcoes();
@@ -56,7 +58,7 @@ export const LancamentoForm = ({ obraId, lancamento, onCancel, onSaved }: Lancam
   });
 
   // Constants derivadas
-  const salvando = criar.isPending || editar.isPending;
+  const salvando = criar.isPending || editar.isPending || envio.enviando;
 
   // Functions
   const handleServerError = (error: unknown) => {
@@ -73,18 +75,21 @@ export const LancamentoForm = ({ obraId, lancamento, onCancel, onSaved }: Lancam
     else setFormError(toMensagemErro(error, MENSAGEM_FALHA, MENSAGEM_NAO_ENCONTRADO));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const body = toLancamentoBody(values);
-      if (lancamento) await editar.mutateAsync(body);
-      else await criar.mutateAsync({ obraId, ...body });
-      const valor = formatCurrency(body.valor);
-      onSaved(lancamento ? `Lançamento de ${valor} atualizado.` : `Lançamento de ${valor} criado.`);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const body = toLancamentoBody(values);
+        if (lancamento) await editar.mutateAsync(body);
+        else await criar.mutateAsync({ obraId, ...body });
+        const valor = formatCurrency(body.valor);
+        envio.concluir();
+        onSaved(lancamento ? `Lançamento de ${valor} atualizado.` : `Lançamento de ${valor} criado.`);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (

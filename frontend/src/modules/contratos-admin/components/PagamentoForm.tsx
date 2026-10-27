@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import { ApiError } from '@/services/apiClient';
 import { formatMonthYearTitle } from '@/utils/dates';
 import { formatCurrency } from '@/utils/format';
@@ -56,6 +57,7 @@ export const PagamentoForm = ({ obraId, contratoId, numeroContrato, onCancel, on
   // Hoje fixado na montagem: data padrão e limite do campo.
   const [hoje] = useState(() => new Date());
   // Hooks
+  const envio = useEnvioUnico();
   const registrar = useRegistrarPagamento(obraId, contratoId);
   const medicoes = useMedicoesComNf(obraId);
   const {
@@ -89,16 +91,19 @@ export const PagamentoForm = ({ obraId, contratoId, numeroContrato, onCancel, on
     setFormError(temErroDeCampo && gerais.length === 0 ? null : toFormError(error, gerais));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const body = toCreatePagamentoBody(values);
-      await registrar.mutateAsync(body);
-      onSaved(`Pagamento de ${formatCurrency(body.valor)} registrado no contrato ${numeroContrato}.`);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const body = toCreatePagamentoBody(values);
+        await registrar.mutateAsync(body);
+        envio.concluir();
+        onSaved(`Pagamento de ${formatCurrency(body.valor)} registrado no contrato ${numeroContrato}.`);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -150,11 +155,11 @@ export const PagamentoForm = ({ obraId, contratoId, numeroContrato, onCancel, on
       </FormField>
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={registrar.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={registrar.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={registrar.isPending}>
-          {registrar.isPending ? 'Salvando…' : 'Registrar pagamento'}
+        <Button type="submit" disabled={registrar.isPending || envio.enviando}>
+          {registrar.isPending || envio.enviando ? 'Salvando…' : 'Registrar pagamento'}
         </Button>
       </DialogFooter>
     </form>

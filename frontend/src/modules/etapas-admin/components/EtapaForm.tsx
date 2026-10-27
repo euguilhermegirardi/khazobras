@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { EtapaCronograma } from '@/interfaces/etapa';
 import { ApiError } from '@/services/apiClient';
 import { STATUS_OPCOES, STATUS_REGRA } from '../constants';
@@ -51,6 +52,7 @@ export const EtapaForm = ({ obraId, etapa, proximaOrdem, onCancel, onSaved }: Et
   // Estados
   const [formError, setFormError] = useState<FormError | null>(null);
   // Hooks
+  const envio = useEnvioUnico();
   const salvar = useSalvarEtapa(obraId);
   const {
     register,
@@ -86,19 +88,22 @@ export const EtapaForm = ({ obraId, etapa, proximaOrdem, onCancel, onSaved }: Et
     setFormError(temErroDeCampo && gerais.length === 0 ? null : toFormError(error, gerais));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const salva = await salvar.mutateAsync(
-        etapa
-          ? { mode: 'edit', id: etapa.id, body: toUpdateBody(values) }
-          : { mode: 'create', body: toCreateBody(obraId, values) },
-      );
-      onSaved(`Etapa "${salva.nome}" ${editando ? 'atualizada' : 'criada'}.`);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const salva = await salvar.mutateAsync(
+          etapa
+            ? { mode: 'edit', id: etapa.id, body: toUpdateBody(values) }
+            : { mode: 'create', body: toCreateBody(obraId, values) },
+        );
+        envio.concluir();
+        onSaved(`Etapa "${salva.nome}" ${editando ? 'atualizada' : 'criada'}.`);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -177,11 +182,11 @@ export const EtapaForm = ({ obraId, etapa, proximaOrdem, onCancel, onSaved }: Et
       )}
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={salvar.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={salvar.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={salvar.isPending}>
-          {salvar.isPending ? 'Salvando…' : 'Salvar'}
+        <Button type="submit" disabled={salvar.isPending || envio.enviando}>
+          {salvar.isPending || envio.enviando ? 'Salvando…' : 'Salvar'}
         </Button>
       </DialogFooter>
     </form>
