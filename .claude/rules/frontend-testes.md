@@ -35,6 +35,15 @@ paths:
     e libere antes do fim do teste.
   - Loops grandes (200 itens etc.): `fireEvent` dentro de um único `act(() => { ... })` (o React junta os
     renders); `userEvent` em loop só com poucas iterações. Não eleve o timeout do teste para esconder custo.
+  - **Listas cheias (200 documentos/itens, 100 fotos):** cada `getByRole`/`getByLabelText` sem escopo varre o DOM
+    inteiro (visibilidade via `getComputedStyle` de cada nó, nome de ~800 botões): custa ~1 s na nuvem e muito mais num
+    Mac lento. Use `within(linha/cartão)` (linha achada por `getByTitle(...).closest('tr')`), `hidden: true` onde a
+    visibilidade não é o assunto, input por `document.querySelector('input[type="file"]')` + `toHaveAccessibleName`,
+    contagem por `querySelectorAll`, `fireEvent` (ou `userEvent.setup({ pointerEventsCheck: 0 })`/`delay: null`) e
+    `esperarTitulo2` de `@/test/esperas` para "a tela montou". Teste de limite fica em **arquivo próprio**
+    (`*Limite.test.tsx`) com `vi.mock('lucide-react')` (ícones viram `null`) e/ou `FotoMiniatura` stubada, sem perder
+    asserção. Meta: < 10 s por teste sob CPU saturada (6–10 laços `while :` em 2 CPUs, `--maxWorkers=1`) e ≤ 1/3 disso
+    sem carga. Lentidão que vem do componente (200 linhas re-renderizando) é achado de produção: reporte, não esconda.
   - Para provar que o teste é robusto, rode-o com latência: `vi.mock('msw')` embrulhando `http.*` com
     `await delay(150-300)` (não commitar), ou CPU saturada com `nice`. Teste que só passa sem latência é frágil.
 - `sessionStorage` é limpo em `afterEach` pelo setup. Dados sintéticos apenas, sem credenciais reais.
