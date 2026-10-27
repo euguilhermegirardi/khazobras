@@ -43,12 +43,6 @@ const comTamanho = (file: File, size: number) => {
   return file;
 };
 
-/**
- * Com ~100 fotos as miniaturas não interessam a estes testes (o limite não depende delas) e o jsdom as baixa uma a uma:
- * responder 404 evita esperar 100 downloads ("Imagem indisponível" em cada cartão).
- */
-const semImagens = http.get(`${API}/fotos/:id/arquivo`, () => HttpResponse.json({}, { status: 404 }));
-
 /** Monta a página do relatório `rf1` (com as fotos dadas) e devolve a API em memória. */
 async function montar(fotos: Foto[] = [], extra: HttpHandler[] = []) {
   const api = servidorFotos([relatorio({ id: 'rf1', fotos })], { envios: enviados });
@@ -114,24 +108,7 @@ describe('Relatório fotográfico (admin) - envio: validação ao escolher', () 
     expect(await screen.findByRole('button', { name: 'Enviar 1 foto' })).toBeEnabled();
   });
 
-  it('o relatório com 98 fotos aceita só 2: o resto é recusado pelo limite de 100 e o campo trava', async () => {
-    await montar(fotosEmOrdem(98), [semImagens]);
-
-    escolher(imagem('1.jpg'), imagem('2.jpg'), imagem('3.jpg'), imagem('4.jpg'), imagem('5.jpg'));
-
-    expect(await screen.findByRole('button', { name: 'Enviar 2 fotos' })).toBeEnabled();
-    const aviso = screen.getByText('3 arquivos não foram adicionados:').closest('[role="alert"]') as HTMLElement;
-    expect(within(aviso).getAllByText(/Limite de 100 fotos por relatório atingido\./)).toHaveLength(3);
-    // 98 no servidor + 2 na fila = 100: nada mais entra.
-    expect(screen.getByLabelText(/Limite de 100 fotos atingido/)).toBeDisabled();
-  });
-
-  it('relatório já com 100 fotos: envio bloqueado e orientação para remover uma', async () => {
-    await montar(fotosEmOrdem(100), [semImagens]);
-
-    expect(screen.getByLabelText(/Limite de 100 fotos atingido: remova uma foto/)).toBeDisabled();
-    expect(screen.queryByRole('button', { name: /^Enviar \d/ })).not.toBeInTheDocument();
-  });
+  // Os testes do relatório cheio (98 e 100 fotos) estão em RelatorioFotograficoUploadLimite.test.tsx.
 
   it('nome de arquivo com HTML é mostrado como texto, nunca interpretado', async () => {
     await montar();
