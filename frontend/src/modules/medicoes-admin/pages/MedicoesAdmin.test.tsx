@@ -435,7 +435,9 @@ describe('Medições (admin) - criar medição', () => {
       act(() => {
         for (let i = 1; i < 200; i += 1) fireEvent.click(adicionar);
       });
-      expect(within(dialog).getAllByLabelText(/^Descrição do item/)).toHaveLength(200);
+      // Contagem por seletor do aria-label: `getAllByLabelText` varre todos os rótulos do diálogo (lento com 200 itens).
+      expect(dialog.querySelectorAll('input[aria-label^="Descrição do item"]')).toHaveLength(200);
+      expect(dialog.querySelector('input[aria-label="Descrição do item 200"]')).not.toBeNull();
       expect(adicionar).toBeDisabled();
     });
   });
