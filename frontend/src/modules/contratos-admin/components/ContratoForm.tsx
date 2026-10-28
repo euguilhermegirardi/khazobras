@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import { ApiError } from '@/services/apiClient';
 import {
   CONTRATO_CAMPOS_SERVIDOR,
@@ -48,6 +49,7 @@ export const ContratoForm = ({ obraId, onCancel, onSaved }: ContratoFormProps) =
   // Estados
   const [formError, setFormError] = useState<FormError | null>(null);
   // Hooks
+  const envio = useEnvioUnico();
   const criar = useCriarContrato(obraId);
   const {
     register,
@@ -78,15 +80,18 @@ export const ContratoForm = ({ obraId, onCancel, onSaved }: ContratoFormProps) =
     setFormError(temErroDeCampo && gerais.length === 0 ? null : toFormError(error, gerais));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const criado = await criar.mutateAsync(toCreateContratoBody(obraId, values));
-      onSaved(`Contrato ${criado.numero} criado.`);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const criado = await criar.mutateAsync(toCreateContratoBody(obraId, values));
+        envio.concluir();
+        onSaved(`Contrato ${criado.numero} criado.`);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -120,11 +125,11 @@ export const ContratoForm = ({ obraId, onCancel, onSaved }: ContratoFormProps) =
       </div>
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={criar.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={criar.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={criar.isPending}>
-          {criar.isPending ? 'Salvando…' : 'Criar contrato'}
+        <Button type="submit" disabled={criar.isPending || envio.enviando}>
+          {criar.isPending || envio.enviando ? 'Salvando…' : 'Criar contrato'}
         </Button>
       </DialogFooter>
     </form>

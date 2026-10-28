@@ -865,8 +865,16 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   - **Testes antigos afetados:** nenhum (1089 verdes, incluindo os 8+ novos dos utilitários puros). O de ordem do menu do admin só vale se Relatório ao cliente for aceito depois de Projetos.
   - **Falta (tester):** tela, e2e, mocks de captura; segurança (escrita) e design.
 
+- **Robustez sob lentidão (fix/testes-robustos-2, 27/10):** (1) excluir pelo detalhe do Relatório fotográfico admin não relê o detalhe apagado
+  (`useExcluirRelatorio(obraId, false)` invalida com `predicate` que pula a chave do id; a página chama `removerRelatorioDoCache` ao desmontar; mesmo padrão do
+  Relatório ao cliente admin). (2) **Envio duplo de formulário era bug real:** o React Router troca a tela dentro de uma transição, então o formulário ficava
+  montado e o botão voltava a habilitar depois da resposta; um segundo clique criava de novo. Novo `hooks/useEnvioUnico` (trava síncrona por `ref`; `concluir()`
+  antes de `onSaved` mantém a trava 3 s; erro solta na hora), aplicado nos 10 formulários admin com `handleSubmit` (Medição, Emitir NF, Lançamento, Etapa, Contrato,
+  Pagamento, Relatório fotográfico, Editar foto, Relatório ao cliente, Editar projeto). O `LoginPage` ficou de fora.
+
 ## Registro
 
+- 2026-10-27 — `fix/testes-robustos-2`: (sem commits ainda; descreva o que está staged). Arquivos: modules/relatorio-fotografico-admin (2).
 - 2026-10-25 — `fix/testes-robustos`: test: timeouts folgados e espera das requisições em voo no afterEach; test: esperar o estado final em vez de checar logo após o primeiro elemento; docs: regras de teste anti-flaky em frontend-testes.md. Arquivos: infra (1), modules/contratos-admin (1), modules/financeiro-admin (2), modules/medicoes-admin (1), modules/relatorio-fotografico-admin (3), modules/relatorio-mensal-admin (1), front (2).
 - 2026-10-21 — `feat/projetos-dwg`: feat(backend): validador aceita DWG (AutoCAD) so para projetos. Arquivos: backend (1), testes backend (1). Pendente: front incluir `.dwg` nos tipos aceitos e no ícone; decidir limite de 10 MB para DWG; build/test não rodados (sem .NET no ambiente).
 - 2026-10-21 — `feat/relatorio-admin`: feat(relatorio-mensal): backend admin com editar, excluir, publicar atomico, historico e auditoria, tudo preso a obra e a draft no SQL; docs(relatorio-mensal): contrato do modulo em API.md e exemplos de curl; docs: registro; refactor(relatorio-mensal): card, chave de cache e tipos admin sobem para a base; Textarea e formatDateTime; feat(relatorio-mensal-admin): tela Relatório ao cliente com lista, criar/editar rascunho, publicar, excluir e histórico; test: relatorio ao cliente (admin) lista, novo, detalhe, historico, papeis, cache e e2e; fix(relatorio-mensal-admin): excluir pelo detalhe não relê o detalhe nem o histórico apagados; docs: capturas da revisao de design do Relatorio ao cliente admin; docs: relatorio da manha do Relatorio ao cliente admin, status e backlog. Arquivos: outros (2), backend (9), testes backend (5), docs (19), front (13), front/rotas-layouts (2), modules/relatorio-mensal-admin (22), modules/relatorio-mensal (4).

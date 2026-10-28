@@ -1,5 +1,6 @@
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ErroAlert } from '@/components/ErroAlert';
 import { ErrorState } from '@/components/ErrorState';
@@ -18,7 +19,7 @@ import { ExcluirRelatorioConfirmacao } from '../components/ExcluirRelatorioConfi
 import { FotosGrid } from '../components/FotosGrid';
 import { FotosUploadSecao } from '../components/FotosUploadSecao';
 import { RelatorioFormDialog } from '../components/RelatorioFormDialog';
-import { useExcluirRelatorio, useRelatorio } from '../hooks';
+import { removerRelatorioDoCache, useExcluirRelatorio, useRelatorio } from '../hooks';
 
 const TITULO = 'Relatório fotográfico';
 const MENSAGEM_ERRO = 'Não foi possível carregar o relatório.';
@@ -30,7 +31,9 @@ export const RelatorioFotograficoDetalheAdminPage = () => {
   const [excluindo, setExcluindo] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [erroAcao, setErroAcao] = useState<MensagemErro | null>(null);
+  const excluidoRef = useRef(false);
   // Hooks
+  const queryClient = useQueryClient();
   const { obraId = '', relatorioId = '' } = useParams();
   const navigate = useNavigate();
   const { data, isPending, isError, error, refetch } = useRelatorio(obraId, relatorioId);
@@ -40,6 +43,14 @@ export const RelatorioFotograficoDetalheAdminPage = () => {
 
   // Constants derivadas
   const listaPath = `/admin/obras/${obraId}/relatorio-fotografico`;
+
+  // Effects: depois de apagar e sair da tela, o detalhe sai do cache (com a página montada o observer o buscaria de novo).
+  useEffect(
+    () => () => {
+      if (excluidoRef.current) removerRelatorioDoCache(queryClient, obraId, relatorioId);
+    },
+    [queryClient, obraId, relatorioId],
+  );
 
   // Functions
   const handleRetry = () => void refetch();
@@ -70,6 +81,7 @@ export const RelatorioFotograficoDetalheAdminPage = () => {
     setErroAcao(null);
     try {
       await excluir.mutateAsync(relatorioId);
+      excluidoRef.current = true;
       navigate(listaPath);
     } catch (e) {
       setExcluindo(false);

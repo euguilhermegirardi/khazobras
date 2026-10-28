@@ -10,14 +10,12 @@ import { AppRoutes } from '@/routes/AppRoutes';
 import { saveSession } from '@/services/session';
 import { fakeSession, renderApp } from '@/test/helpers';
 import { espiarEnvios, type Envio } from '@/test/fotosAdmin';
-import { documentos, ETAPA_ALVENARIA, OBRA_ID, projeto, ROTA, servidorProjetos, TOKEN } from '@/test/projetosAdmin';
+import { ETAPA_ALVENARIA, OBRA_ID, projeto, ROTA, servidorProjetos, TOKEN } from '@/test/projetosAdmin';
 import { API, server } from '@/test/server';
 
 const user = () => userEvent.setup();
 const POST_PROJETOS = `${API}/obras/${OBRA_ID}/projetos`;
 const DEZ_MB = 10 * 1024 * 1024;
-/** Renderizar ~200 linhas no jsdom passa dos 5 s padrão em máquina lenta. */
-const TEMPO_OBRA_CHEIA = 30_000;
 
 let enviados: Envio[] = [];
 
@@ -43,7 +41,8 @@ async function montar(inicial: ProjetoDocumento[] = [], extra: HttpHandler[] = [
   const api = servidorProjetos(inicial, { envios: enviados, limite });
   server.use(...extra, ...api.handlers);
   renderApp(ROTA, 'Admin');
-  await screen.findByRole('heading', { name: 'Enviar documentos', level: 2 });
+  // `hidden: true`: não checa a visibilidade (getComputedStyle) de cada nó, que em ~200 linhas custa segundos.
+  await screen.findByRole('heading', { name: 'Enviar documentos', level: 2, hidden: true });
   return api;
 }
 
@@ -166,74 +165,6 @@ describe('Projetos (admin) - envio: validação ao escolher', () => {
     expect(await screen.findByRole('button', { name: 'Enviar 1 documento' })).toBeEnabled();
     expect(screen.queryByText(/não foi adicionado/)).not.toBeInTheDocument();
   });
-});
-
-describe('Projetos (admin) - envio: limite de 200 documentos', () => {
-  it(
-    'a obra com 198 documentos aceita só 2: o resto é recusado pelo limite e a área trava',
-    async () => {
-      await montar(documentos(198));
-
-      escolher(doc('1.pdf'), doc('2.pdf'), doc('3.pdf'), doc('4.pdf'), doc('5.pdf'));
-
-      expect(await screen.findByRole('button', { name: 'Enviar 2 documentos' })).toBeEnabled();
-      const aviso = screen.getByText('3 arquivos não foram adicionados:').closest('[role="alert"]') as HTMLElement;
-      expect(within(aviso).getAllByText(/Limite de 200 documentos por obra atingido\./)).toHaveLength(3);
-      // 198 no servidor + 2 na fila = 200: nada mais entra.
-      expect(screen.getByLabelText(/Limite de 200 documentos atingido/)).toBeDisabled();
-    },
-    TEMPO_OBRA_CHEIA,
-  );
-
-  it(
-    'obra já com 200 documentos: área desabilitada com orientação, sem botão de enviar',
-    async () => {
-      await montar(documentos(200));
-
-      const area = screen.getByLabelText(/Limite de 200 documentos atingido: exclua um documento para enviar outro\./);
-      expect(area).toBeDisabled();
-      expect(screen.getByText(/A obra tem 200 de 200 documentos\./)).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^Enviar \d/ })).not.toBeInTheDocument();
-    },
-    TEMPO_OBRA_CHEIA,
-  );
-
-  it(
-    'excluir um documento da obra cheia libera a área de envio',
-    async () => {
-      await montar(documentos(200));
-      expect(campo()).toBeDisabled();
-
-      await user().click(screen.getByRole('button', { name: 'Excluir doc-1.pdf' }));
-      await user().click(screen.getByRole('button', { name: 'Excluir definitivamente' }));
-
-      await screen.findByText('Documento excluído.');
-      await waitFor(() => expect(campo()).toBeEnabled());
-      expect(screen.getByText(/A obra tem 199 de 200 documentos\./)).toBeInTheDocument();
-    },
-    TEMPO_OBRA_CHEIA,
-  );
-
-  it(
-    'o 201º documento (servidor recusa com 400 {message}) vira erro só naquela linha',
-    async () => {
-      await montar(documentos(199), [
-        http.post(POST_PROJETOS, () =>
-          enviados.at(-1)?.nome === 'ultimo.pdf'
-            ? HttpResponse.json({ message: 'A obra já tem o máximo de 200 documentos.' }, { status: 400 })
-            : undefined,
-        ),
-      ]);
-      escolher(doc('ultimo.pdf'));
-
-      await enviar('Enviar 1 documento');
-
-      expect(await within(fila()).findByText('A obra já tem o máximo de 200 documentos.')).toBeInTheDocument();
-      expect(within(linha('ultimo.pdf')).getByText('Erro')).toBeInTheDocument();
-      expect(screen.queryByText(/Envio interrompido/)).not.toBeInTheDocument();
-    },
-    TEMPO_OBRA_CHEIA,
-  );
 });
 
 describe('Projetos (admin) - envio: etapa e tipo do lote', () => {

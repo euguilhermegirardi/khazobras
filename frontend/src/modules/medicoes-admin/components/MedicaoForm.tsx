@@ -9,6 +9,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useEtapas } from '@/hooks/useEtapas';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import { ApiError } from '@/services/apiClient';
 import { formatCurrency } from '@/utils/format';
 import { ITEM_GRID, MAX_ITENS } from '../constants';
@@ -58,6 +59,7 @@ export const MedicaoForm = ({ obraId, proximoNumero, onCancel, onSaved }: Medica
   // Mês de hoje fixado na montagem (competência padrão).
   const [competenciaInicial] = useState(() => mesAtual(new Date()));
   // Hooks
+  const envio = useEnvioUnico();
   const criar = useCriarMedicao(obraId);
   const etapas = useEtapas(obraId);
   const {
@@ -100,15 +102,18 @@ export const MedicaoForm = ({ obraId, proximoNumero, onCancel, onSaved }: Medica
     setFormError(temErroDeCampo && gerais.length === 0 ? null : toFormError(error, gerais));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const criada = await criar.mutateAsync(toCreateBody(obraId, values));
-      onSaved(`Medição ${criada.numero} criada.`);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const criada = await criar.mutateAsync(toCreateBody(obraId, values));
+        envio.concluir();
+        onSaved(`Medição ${criada.numero} criada.`);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -201,11 +206,11 @@ export const MedicaoForm = ({ obraId, proximoNumero, onCancel, onSaved }: Medica
       </section>
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={criar.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={criar.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={criar.isPending}>
-          {criar.isPending ? 'Salvando…' : 'Criar medição'}
+        <Button type="submit" disabled={criar.isPending || envio.enviando}>
+          {criar.isPending || envio.enviando ? 'Salvando…' : 'Criar medição'}
         </Button>
       </DialogFooter>
     </form>

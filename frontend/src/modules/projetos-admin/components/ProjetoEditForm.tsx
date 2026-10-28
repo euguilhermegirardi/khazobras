@@ -8,6 +8,7 @@ import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useEtapas } from '@/hooks/useEtapas';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { ProjetoDocumento } from '@/interfaces/projeto';
 import { ApiError } from '@/services/apiClient';
 import { toMensagemErro, type MensagemErro } from '@/utils/erros';
@@ -39,6 +40,7 @@ export const ProjetoEditForm = ({ obraId, projeto, onCancel, onSaved }: ProjetoE
   // Estados
   const [formError, setFormError] = useState<MensagemErro | null>(null);
   // Hooks
+  const envio = useEnvioUnico();
   const editar = useEditarProjeto(obraId);
   // O diálogo só monta o formulário com as etapas resolvidas (o select nativo não reaplica o valor se as opções
   // chegarem depois); se falharam, o formulário segue só com "Sem etapa" (e "Etapa atual" se o documento tem uma).
@@ -67,21 +69,24 @@ export const ProjetoEditForm = ({ obraId, projeto, onCancel, onSaved }: ProjetoE
     else setFormError(toMensagemErro(error, MENSAGEM_FALHA, MENSAGEM_NAO_ENCONTRADO));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    const body = toProjetoBody(values);
-    // Nada mudou: não há o que gravar.
-    if (semMudancas(body, projeto)) {
-      onCancel();
-      return;
-    }
-    try {
-      await editar.mutateAsync({ id: projeto.id, body });
-      onSaved('Documento atualizado.');
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      const body = toProjetoBody(values);
+      // Nada mudou: não há o que gravar.
+      if (semMudancas(body, projeto)) {
+        onCancel();
+        return;
+      }
+      try {
+        await editar.mutateAsync({ id: projeto.id, body });
+        envio.concluir();
+        onSaved('Documento atualizado.');
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -120,11 +125,11 @@ export const ProjetoEditForm = ({ obraId, projeto, onCancel, onSaved }: ProjetoE
       </FormField>
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={editar.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={editar.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={editar.isPending}>
-          {editar.isPending ? 'Salvando…' : 'Salvar alterações'}
+        <Button type="submit" disabled={editar.isPending || envio.enviando}>
+          {editar.isPending || envio.enviando ? 'Salvando…' : 'Salvar alterações'}
         </Button>
       </DialogFooter>
     </form>

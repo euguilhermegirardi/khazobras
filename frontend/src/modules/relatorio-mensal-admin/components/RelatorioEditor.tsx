@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { RelatorioMensalAdmin } from '@/interfaces/relatorioMensal';
 import { ApiError } from '@/services/apiClient';
 import { toMensagemErro, type MensagemErro } from '@/utils/erros';
@@ -49,6 +50,7 @@ export const RelatorioEditor = ({ obraId, relatorio, onCancel, onSaved }: Relato
   // Hoje fixado na montagem: competência padrão do relatório novo.
   const [hoje] = useState(() => new Date());
   // Hooks
+  const envio = useEnvioUnico();
   const criar = useCriarRelatorio(obraId);
   const editar = useEditarRelatorio(obraId, relatorio?.id ?? '');
   const {
@@ -64,7 +66,7 @@ export const RelatorioEditor = ({ obraId, relatorio, onCancel, onSaved }: Relato
   const [mes, conteudo] = useWatch({ control, name: ['competencia', 'conteudo'] });
 
   // Constants derivadas
-  const salvando = criar.isPending || editar.isPending;
+  const salvando = criar.isPending || editar.isPending || envio.enviando;
   const competenciaPrevia = competenciaDoMes(mes);
   const passouDoLimite = conteudo.length > CONTEUDO_MAX_LENGTH;
 
@@ -87,16 +89,19 @@ export const RelatorioEditor = ({ obraId, relatorio, onCancel, onSaved }: Relato
     else setFormError(toMensagemErro(error, MENSAGEM_FALHA, MENSAGEM_NAO_ENCONTRADO));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const body = toRelatorioBody(values);
-      const salvo = relatorio ? await editar.mutateAsync(body) : await criar.mutateAsync({ obraId, ...body });
-      onSaved(relatorio ? 'Rascunho atualizado.' : 'Rascunho criado. O cliente só vê depois de publicar.', salvo);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const body = toRelatorioBody(values);
+        const salvo = relatorio ? await editar.mutateAsync(body) : await criar.mutateAsync({ obraId, ...body });
+        envio.concluir();
+        onSaved(relatorio ? 'Rascunho atualizado.' : 'Rascunho criado. O cliente só vê depois de publicar.', salvo);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (

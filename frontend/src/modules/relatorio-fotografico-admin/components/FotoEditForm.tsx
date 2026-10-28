@@ -6,6 +6,7 @@ import { FormField } from '@/components/FormField';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { Foto } from '@/interfaces/relatorioFotografico';
 import { ApiError } from '@/services/apiClient';
 import { toMensagemErro, type MensagemErro } from '@/utils/erros';
@@ -38,6 +39,7 @@ export const FotoEditForm = ({ obraId, foto, onCancel, onSaved }: FotoEditFormPr
   // Hoje fixado na montagem: a data da foto vai até amanhã.
   const [hoje] = useState(() => new Date());
   // Hooks
+  const envio = useEnvioUnico();
   const editar = useEditarFoto(obraId);
   const schema = useMemo(() => fotoFormSchemaPara(hoje), [hoje]);
   const {
@@ -62,21 +64,24 @@ export const FotoEditForm = ({ obraId, foto, onCancel, onSaved }: FotoEditFormPr
     else setFormError(toMensagemErro(error, MENSAGEM_FALHA, MENSAGEM_NAO_ENCONTRADO));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    const patch = toFotoPatch(values, foto);
-    // Nada mudou: não há o que gravar.
-    if (Object.keys(patch).length === 0) {
-      onCancel();
-      return;
-    }
-    try {
-      await editar.mutateAsync({ fotoId: foto.id, body: patch });
-      onSaved('Foto atualizada.');
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      const patch = toFotoPatch(values, foto);
+      // Nada mudou: não há o que gravar.
+      if (Object.keys(patch).length === 0) {
+        onCancel();
+        return;
+      }
+      try {
+        await editar.mutateAsync({ fotoId: foto.id, body: patch });
+        envio.concluir();
+        onSaved('Foto atualizada.');
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -97,11 +102,11 @@ export const FotoEditForm = ({ obraId, foto, onCancel, onSaved }: FotoEditFormPr
       </FormField>
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={editar.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={editar.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={editar.isPending}>
-          {editar.isPending ? 'Salvando…' : 'Salvar alterações'}
+        <Button type="submit" disabled={editar.isPending || envio.enviando}>
+          {editar.isPending || envio.enviando ? 'Salvando…' : 'Salvar alterações'}
         </Button>
       </DialogFooter>
     </form>

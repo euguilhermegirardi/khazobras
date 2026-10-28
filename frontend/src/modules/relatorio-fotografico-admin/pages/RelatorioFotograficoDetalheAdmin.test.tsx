@@ -671,11 +671,18 @@ describe('Relatório fotográfico (admin) - estresse', () => {
     const lista = await screen.findByRole('list', { name: 'Fotos do relatório' });
     // O contador do cabeçalho do card (a última foto também mostra "100 de 100").
     expect(screen.getByRole('heading', { name: 'Fotos', level: 2 }).parentElement).toHaveTextContent('100 de 100');
-    expect(within(lista).getAllByRole('listitem')).toHaveLength(100);
-    expect(screen.getByLabelText(/Limite de 100 fotos atingido/)).toBeDisabled();
-    expect(acao('Mover', 'foto 100 (Descrição 100)', ' para a direita')).toBeDisabled();
-    expect(acao('Mover', 'foto 10 (Descrição 10)', ' para a direita')).toBeEnabled();
-    expect(acao('Remover', 'foto 1 (Descrição 1)')).toBeInTheDocument();
+    // Com 100 cartões, consulta sem escopo/`hidden: true` checa a visibilidade de cada nó (segundos sob CPU saturada):
+    // o input vai por seletor e os botões são procurados dentro do cartão da foto.
+    expect(within(lista).getAllByRole('listitem', { hidden: true })).toHaveLength(100);
+    const campo = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(campo).toBeDisabled();
+    expect(campo).toHaveAccessibleName(/Limite de 100 fotos atingido/);
+    const cartao = (descricao: string) => within(lista).getByText(descricao).closest('li') as HTMLElement;
+    const botaoDe = (descricao: string, nome: string) =>
+      within(cartao(descricao)).getByRole('button', { name: nome, hidden: true });
+    expect(botaoDe('Descrição 100', 'Mover a foto 100 (Descrição 100) para a direita')).toBeDisabled();
+    expect(botaoDe('Descrição 10', 'Mover a foto 10 (Descrição 10) para a direita')).toBeEnabled();
+    expect(botaoDe('Descrição 1', 'Remover a foto 1 (Descrição 1)')).toBeInTheDocument();
   });
 
   it('descrição de 255 caracteres: o rótulo dos botões é cortado em 40 e o texto da foto é truncado com title', async () => {

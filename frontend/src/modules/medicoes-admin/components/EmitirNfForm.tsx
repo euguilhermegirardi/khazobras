@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import { ApiError } from '@/services/apiClient';
 import {
   emitirNfSchema,
@@ -46,6 +47,7 @@ export const EmitirNfForm = ({ obraId, medicaoId, onCancel, onSaved }: EmitirNfF
   // Estados
   const [formError, setFormError] = useState<FormError | null>(null);
   // Hooks
+  const envio = useEnvioUnico();
   const emitir = useEmitirNf(obraId, medicaoId);
   const {
     register,
@@ -64,15 +66,18 @@ export const EmitirNfForm = ({ obraId, medicaoId, onCancel, onSaved }: EmitirNfF
     setFormError(nfNumber && gerais.length === 0 ? null : toFormError(error, gerais));
   };
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const emitida = await emitir.mutateAsync(toIssueInvoiceBody(values));
-      onSaved(`NF ${emitida.nfNumber ?? values.nfNumber.trim()} emitida.`);
-    } catch (error) {
-      handleServerError(error);
-    }
-  });
+  const onSubmit = handleSubmit((values) =>
+    envio.executar(async () => {
+      setFormError(null);
+      try {
+        const emitida = await emitir.mutateAsync(toIssueInvoiceBody(values));
+        envio.concluir();
+        onSaved(`NF ${emitida.nfNumber ?? values.nfNumber.trim()} emitida.`);
+      } catch (error) {
+        handleServerError(error);
+      }
+    }),
+  );
 
   // Return
   return (
@@ -92,11 +97,11 @@ export const EmitirNfForm = ({ obraId, medicaoId, onCancel, onSaved }: EmitirNfF
       </FormField>
 
       <DialogFooter className="mt-1">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={emitir.isPending}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={emitir.isPending || envio.enviando}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={emitir.isPending}>
-          {emitir.isPending ? 'Emitindo…' : 'Emitir NF'}
+        <Button type="submit" disabled={emitir.isPending || envio.enviando}>
+          {emitir.isPending || envio.enviando ? 'Emitindo…' : 'Emitir NF'}
         </Button>
       </DialogFooter>
     </form>

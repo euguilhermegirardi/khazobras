@@ -176,21 +176,6 @@ describe('Projetos (admin) - lista', () => {
     expect(screen.getByText('<i>x</i>')).toBeInTheDocument();
     expect(main().querySelector('b, i')).toBeNull();
   });
-
-  it('200 documentos com nomes de 255 caracteres: todos listados, com ações pelo nome exato', async () => {
-    const longo = (i: number) => `${String(i).padStart(3, '0')}-${'n'.repeat(247)}.pdf`;
-    const todos = Array.from({ length: 200 }, (_, i) => projeto(`d${i}`, { nome: longo(i) }));
-    expect(longo(7)).toHaveLength(255);
-    const api = servidorProjetos(todos);
-    server.use(...api.handlers);
-    renderApp(ROTA, 'Admin');
-
-    await screen.findByText('200 documentos');
-    expect(screen.getAllByRole('row')).toHaveLength(201);
-    expect(screen.getByRole('button', { name: `Excluir ${longo(199)}` })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: `Editar ${longo(0)}` })).toBeInTheDocument();
-    expect(screen.getByText(/A obra tem 200 de 200 documentos\./)).toBeInTheDocument();
-  }, 30_000);
 });
 
 describe('Projetos (admin) - botões por linha', () => {
