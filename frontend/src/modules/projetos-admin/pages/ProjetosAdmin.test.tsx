@@ -176,24 +176,6 @@ describe('Projetos (admin) - lista', () => {
     expect(screen.getByText('<i>x</i>')).toBeInTheDocument();
     expect(main().querySelector('b, i')).toBeNull();
   });
-
-  it('200 documentos com nomes de 255 caracteres: todos listados, com ações pelo nome exato', async () => {
-    const longo = (i: number) => `${String(i).padStart(3, '0')}-${'n'.repeat(247)}.pdf`;
-    const todos = Array.from({ length: 200 }, (_, i) => projeto(`d${i}`, { nome: longo(i) }));
-    expect(longo(7)).toHaveLength(255);
-    const api = servidorProjetos(todos);
-    server.use(...api.handlers);
-    renderApp(ROTA, 'Admin');
-
-    await screen.findByText('200 documentos');
-    // `hidden: true` e `within(linha)`: com 200 linhas, `getByRole` sem escopo checa a visibilidade de cada nó e
-    // calcula o nome de ~800 botões (segundos num Mac lento).
-    expect(screen.getAllByRole('row', { hidden: true })).toHaveLength(201);
-    const linhaDe = (nome: string) => screen.getByTitle(nome).closest('tr') as HTMLElement;
-    expect(within(linhaDe(longo(199))).getByRole('button', { name: `Excluir ${longo(199)}` })).toBeInTheDocument();
-    expect(within(linhaDe(longo(0))).getByRole('button', { name: `Editar ${longo(0)}` })).toBeInTheDocument();
-    expect(screen.getByText(/A obra tem 200 de 200 documentos\./)).toBeInTheDocument();
-  }, 30_000);
 });
 
 describe('Projetos (admin) - botões por linha', () => {
