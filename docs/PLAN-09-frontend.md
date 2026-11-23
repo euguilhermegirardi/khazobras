@@ -877,6 +877,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-11-23 — `feat/projetos-nome-sem-extensao`: feat(projetos-admin): editar documento altera so o nome, com a extensao fixa. Arquivos: front (1), modules/projetos-admin (6).
 - 2026-10-27 — `fix/testes-robustos-2`: (sem commits ainda; descreva o que está staged). Arquivos: modules/relatorio-fotografico-admin (2).
 - 2026-10-25 — `fix/testes-robustos`: test: timeouts folgados e espera das requisições em voo no afterEach; test: esperar o estado final em vez de checar logo após o primeiro elemento; docs: regras de teste anti-flaky em frontend-testes.md. Arquivos: infra (1), modules/contratos-admin (1), modules/financeiro-admin (2), modules/medicoes-admin (1), modules/relatorio-fotografico-admin (3), modules/relatorio-mensal-admin (1), front (2).
 - 2026-10-21 — `feat/projetos-dwg`: feat(backend): validador aceita DWG (AutoCAD) so para projetos. Arquivos: backend (1), testes backend (1). Pendente: front incluir `.dwg` nos tipos aceitos e no ícone; decidir limite de 10 MB para DWG; build/test não rodados (sem .NET no ambiente).
