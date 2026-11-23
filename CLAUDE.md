@@ -54,6 +54,12 @@ do `git diff --cached`, roda `cd frontend && npm run plano:registro -- --escreve
 `git add docs/PLAN-09-frontend.md` e commita de novo. `SKIP_PLAN_CHECK=1` ou branch `wip/*` só se o
 usuário pedir. Antes do merge: `plano:registro -- --escrever` com tudo commitado + commit `docs: registro`.
 
+## Pull requests
+
+**Sem assinaturas no PR.** O título e a descrição do PR não levam rodapé de autoria nem de ferramenta (por exemplo
+"Generated with Claude Code", links de sessão ou `Co-Authored-By`). A descrição traz só o conteúdo: o que muda,
+como foi verificado e o que ficou de fora.
+
 ## Regras de segurança (inegociáveis — dados extremamente sensíveis)
 
 1. **Nenhum segredo em arquivo versionado.** Só em `appsettings.Development.json` (gitignored) ou variáveis
