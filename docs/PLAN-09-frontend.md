@@ -833,6 +833,9 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     Sem miniaturas (documento não tem prévia), então não há carga de imagens a medir.
   - **Testes antigos afetados:** nenhum (1008 verdes). O de ordem do menu do admin só vale se Projetos for aceito depois de Relatório fotográfico.
   - **Falta (tester):** ver relatório: tela, e2e, mocks de captura; segurança (escrita) e design.
+  - **Editar documento: só o nome, sem a extensão** (`feat/projetos-nome-sem-extensao`, pedido do Guilherme). O campo "Nome do documento" edita só a base; a extensão
+    (caixa original, `partirNome`) aparece fixa ao lado, não editável, e é reanexada no PUT (`toProjetoBody(values, extensao)`). Validação local: base não vazia, base + extensão
+    ≤ 255, sem barras/controle; base que já termina com a extensão vale ("x.pdf.pdf"). Só front: o backend segue exigindo a extensão no nome (proteção).
 
 - **Relatório ao cliente, front** (`feat/relatorio-admin`, 21/10). `modules/relatorio-mensal-admin`, item "Relatório ao cliente" (`FileText`) em `ADMIN_NAV.obra`
   **depois de Projetos** (SPEC §6 item 13; Notificar cliente, item 14, ainda não existe).

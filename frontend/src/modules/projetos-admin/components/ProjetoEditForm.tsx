@@ -23,7 +23,7 @@ import {
   semMudancas,
   toProjetoBody,
 } from '../projetoForm';
-import { extensaoDe, PROJETO_NOME_MAX, PROJETO_TIPO_MAX } from '../projetoRegras';
+import { partirNome, PROJETO_NOME_MAX, PROJETO_TIPO_MAX } from '../projetoRegras';
 import { EtapaOpcoes } from './EtapaOpcoes';
 
 interface ProjetoEditFormProps {
@@ -45,7 +45,7 @@ export const ProjetoEditForm = ({ obraId, projeto, onCancel, onSaved }: ProjetoE
   // O diálogo só monta o formulário com as etapas resolvidas (o select nativo não reaplica o valor se as opções
   // chegarem depois); se falharam, o formulário segue só com "Sem etapa" (e "Etapa atual" se o documento tem uma).
   const { data: etapas = [] } = useEtapas(obraId);
-  const extensao = extensaoDe(projeto.nome);
+  const { extensao } = partirNome(projeto.nome);
   const schema = useMemo(() => projetoFormSchemaPara(extensao), [extensao]);
   const {
     register,
@@ -72,7 +72,7 @@ export const ProjetoEditForm = ({ obraId, projeto, onCancel, onSaved }: ProjetoE
   const onSubmit = handleSubmit((values) =>
     envio.executar(async () => {
       setFormError(null);
-      const body = toProjetoBody(values);
+      const body = toProjetoBody(values, extensao);
       // Nada mudou: não há o que gravar.
       if (semMudancas(body, projeto)) {
         onCancel();
@@ -97,9 +97,18 @@ export const ProjetoEditForm = ({ obraId, projeto, onCancel, onSaved }: ProjetoE
         id="projeto-nome"
         label="Nome do documento"
         error={errors.nome?.message}
-        hint={extensao ? `Mantenha a extensão do arquivo (${extensao}).` : undefined}
+        hint={extensao ? `A extensão (${extensao}) não pode ser alterada.` : undefined}
       >
-        {(c) => <Input {...c} maxLength={PROJETO_NOME_MAX} autoComplete="off" {...register('nome')} />}
+        {(c) => (
+          <div className="flex items-center gap-1.5">
+            <Input {...c} maxLength={PROJETO_NOME_MAX - extensao.length} autoComplete="off" {...register('nome')} />
+            {extensao && (
+              <span className="shrink-0 rounded-md border bg-muted px-2.5 py-2 text-[13px] text-muted-foreground">
+                {extensao}
+              </span>
+            )}
+          </div>
+        )}
       </FormField>
 
       <FormField

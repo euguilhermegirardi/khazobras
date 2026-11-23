@@ -165,7 +165,7 @@ test('admin lista, envia 2 arquivos, edita e exclui documentos', async ({ page }
   // Editar: renomeia, muda a etapa e limpa o tipo; o PUT leva os 3 campos.
   await page.getByRole('button', { name: 'Editar Memorial descritivo.pdf' }).click();
   const editar = page.getByRole('dialog', { name: 'Editar documento' });
-  await editar.getByLabel('Nome do documento').fill('Memorial final.pdf');
+  await editar.getByLabel('Nome do documento').fill('Memorial final');
   await editar.getByLabel('Tipo de documento').fill('');
   await editar.getByLabel('Etapa').selectOption({ label: 'Fundação' });
   await editar.getByRole('button', { name: 'Salvar alterações' }).click();
