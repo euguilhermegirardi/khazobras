@@ -256,11 +256,11 @@ describe('Projetos (admin) - editar', () => {
     renderApp(ROTA, 'Admin');
     const dialog = await abrir('Planta.pdf');
 
-    expect(within(dialog).getByLabelText('Nome do documento')).toHaveValue('Planta.pdf');
+    expect(within(dialog).getByLabelText('Nome do documento')).toHaveValue('Planta');
     expect(within(dialog).getByLabelText('Tipo de documento')).toHaveValue('Planta baixa');
     expect(within(dialog).getByLabelText('Etapa')).toHaveValue(ETAPA_FUNDACAO);
 
-    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: '  Planta final.pdf ' } });
+    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: '  Planta final ' } });
     await user().selectOptions(within(dialog).getByLabelText('Etapa'), 'Alvenaria');
     await salvar(dialog);
 
@@ -309,33 +309,49 @@ describe('Projetos (admin) - editar', () => {
     expect(api.chamadas.editar[0]?.body).toEqual({ nome: 'a.pdf', tipoDocumento: null, etapaId: null });
   });
 
-  it('o nome precisa manter a extensão, sem diferenciar maiúsculas; sem extensão ou com outra é recusado localmente', async () => {
+  it('o campo mostra só a base; a extensão fica fixa ao lado, legível, ligada ao campo e não editável', async () => {
+    const api = servidorProjetos([projeto('p1', { nome: 'Planta.pdf' })]);
+    server.use(...api.handlers);
+    renderApp(ROTA, 'Admin');
+    const dialog = await abrir('Planta.pdf');
+    const nome = within(dialog).getByLabelText('Nome do documento');
+
+    expect(nome).toHaveValue('Planta');
+    expect(nome).toHaveAttribute('maxLength', '251');
+    expect(within(dialog).getByText('.pdf')).toBeInTheDocument();
+    expect(within(dialog).queryByDisplayValue('.pdf')).not.toBeInTheDocument();
+    expect(within(dialog).queryByDisplayValue('Planta.pdf')).not.toBeInTheDocument();
+    expect(nome).toHaveAccessibleDescription('A extensão (.pdf) não pode ser alterada.');
+  });
+
+  it('salvar envia base + extensão original, inclusive em MAIÚSCULAS', async () => {
     const api = servidorProjetos([projeto('p1', { nome: 'Planta.PDF' })]);
     server.use(...api.handlers);
     renderApp(ROTA, 'Admin');
     const dialog = await abrir('Planta.PDF');
-    const nome = within(dialog).getByLabelText('Nome do documento');
 
-    fireEvent.change(nome, { target: { value: 'Planta.txt' } });
+    expect(within(dialog).getByText('.PDF')).toBeInTheDocument();
+    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: ' Planta nova ' } });
     await salvar(dialog);
-    expect(
-      await within(dialog).findByText('O nome deve terminar com a extensão do arquivo (.pdf).'),
-    ).toBeInTheDocument();
-    expect(nome).toHaveAttribute('aria-invalid', 'true');
 
-    fireEvent.change(nome, { target: { value: 'Planta' } });
-    await salvar(dialog);
-    await waitFor(() => expect(nome).toHaveAccessibleDescription(/terminar com a extensão do arquivo/));
-    expect(api.chamadas.editar).toHaveLength(0);
-
-    // Outra caixa da mesma extensão vale.
-    fireEvent.change(nome, { target: { value: 'Planta nova.pdf' } });
-    await salvar(dialog);
     await waitFor(() => expect(api.chamadas.editar).toHaveLength(1));
-    expect(api.chamadas.editar[0]?.body.nome).toBe('Planta nova.pdf');
+    expect(api.chamadas.editar[0]?.body.nome).toBe('Planta nova.PDF');
   });
 
-  it('nome vazio, com barra ou acima de 255 caracteres é recusado localmente; com exatamente 255 vai', async () => {
+  it('base que já termina com a extensão é aceita e vira "x.pdf.pdf"', async () => {
+    const api = servidorProjetos([projeto('p1', { nome: 'a.pdf' })]);
+    server.use(...api.handlers);
+    renderApp(ROTA, 'Admin');
+    const dialog = await abrir('a.pdf');
+
+    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: 'x.pdf' } });
+    await salvar(dialog);
+
+    await waitFor(() => expect(api.chamadas.editar).toHaveLength(1));
+    expect(api.chamadas.editar[0]?.body.nome).toBe('x.pdf.pdf');
+  });
+
+  it('base vazia, com barra ou que estoura 255 com a extensão é recusada localmente; base + extensão = 255 vai', async () => {
     const api = servidorProjetos([projeto('p1', { nome: 'a.pdf' })]);
     server.use(...api.handlers);
     renderApp(ROTA, 'Admin');
@@ -345,23 +361,29 @@ describe('Projetos (admin) - editar', () => {
     fireEvent.change(nome, { target: { value: '   ' } });
     await salvar(dialog);
     expect(await within(dialog).findByText('Informe o nome do documento.')).toBeInTheDocument();
+    expect(nome).toHaveAttribute('aria-invalid', 'true');
 
-    fireEvent.change(nome, { target: { value: 'pasta/a.pdf' } });
+    fireEvent.change(nome, { target: { value: 'pasta/a' } });
     await salvar(dialog);
     expect(await within(dialog).findByText(/não pode ter barras/)).toBeInTheDocument();
 
-    fireEvent.change(nome, { target: { value: 'pasta\\a.pdf' } });
+    fireEvent.change(nome, { target: { value: 'pasta\\a' } });
     await salvar(dialog);
     await waitFor(() => expect(nome).toHaveAccessibleDescription(/não pode ter barras/));
 
-    fireEvent.change(nome, { target: { value: `${'n'.repeat(252)}.pdf` } });
+    // 252 + ".pdf" = 256: estoura.
+    fireEvent.change(nome, { target: { value: 'n'.repeat(252) } });
     await salvar(dialog);
-    await waitFor(() => expect(nome).toHaveAccessibleDescription('O nome aceita no máximo 255 caracteres.'));
+    await waitFor(() =>
+      expect(nome).toHaveAccessibleDescription('O nome aceita no máximo 251 caracteres (a extensão .pdf já conta).'),
+    );
     expect(api.chamadas.editar).toHaveLength(0);
 
-    fireEvent.change(nome, { target: { value: `${'n'.repeat(251)}.pdf` } });
+    // 251 + ".pdf" = 255: vai.
+    fireEvent.change(nome, { target: { value: 'n'.repeat(251) } });
     await salvar(dialog);
     await waitFor(() => expect(api.chamadas.editar).toHaveLength(1));
+    expect(api.chamadas.editar[0]?.body.nome).toBe(`${'n'.repeat(251)}.pdf`);
   });
 
   it('tipo com mais de 50 caracteres é recusado localmente', async () => {
@@ -398,7 +420,7 @@ describe('Projetos (admin) - editar', () => {
     renderApp(ROTA, 'Admin');
     const dialog = await abrir('a.pdf');
 
-    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: 'b.pdf' } });
+    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: 'b' } });
     await user().click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -417,7 +439,7 @@ describe('Projetos (admin) - editar', () => {
     renderApp(ROTA, 'Admin');
     const dialog = await abrir('a.pdf');
 
-    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: 'b.pdf' } });
+    fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: 'b' } });
     await salvar(dialog);
 
     await waitFor(() =>
@@ -474,7 +496,7 @@ describe('Projetos (admin) - editar', () => {
       ['c.pdf', 'Este documento não foi encontrado. Feche e atualize a página.'],
     ] as const) {
       const dialog = await abrir(nome);
-      fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: `novo-${nome}` } });
+      fireEvent.change(within(dialog).getByLabelText('Nome do documento'), { target: { value: 'novo' } });
       await salvar(dialog);
       expect(await within(dialog).findByRole('alert')).toHaveTextContent(esperado);
       await user().click(within(dialog).getByRole('button', { name: 'Cancelar' }));
@@ -622,7 +644,7 @@ describe('Projetos (admin) - papel e navegação', () => {
     await u.click(await screen.findByRole('button', { name: 'Editar a.pdf' }));
     const dialog = await screen.findByRole('dialog', { name: 'Editar documento' });
     fireEvent.change(await within(dialog).findByLabelText('Nome do documento'), {
-      target: { value: 'a-revisada.pdf' },
+      target: { value: 'a-revisada' },
     });
     await u.click(within(dialog).getByRole('button', { name: 'Salvar alterações' }));
     await screen.findByText('Documento atualizado.');

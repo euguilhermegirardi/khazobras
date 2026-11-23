@@ -33,6 +33,15 @@ export function extensaoDe(nome: string): string {
   return ponto < 0 ? '' : nome.slice(ponto).toLowerCase();
 }
 
+/**
+ * Separa o nome em base e extensão (a partir do último ponto), **preservando a caixa original** da extensão
+ * ("Planta.PDF" -> "Planta" + ".PDF"). Sem ponto, a extensão é "".
+ */
+export function partirNome(nome: string): { base: string; extensao: string } {
+  const ponto = nome.lastIndexOf('.');
+  return ponto < 0 ? { base: nome, extensao: '' } : { base: nome.slice(0, ponto), extensao: nome.slice(ponto) };
+}
+
 /** Tem barra (`/` ou `\`) ou caractere de controle (0x00-0x1F, 0x7F)? O backend recusa os dois. */
 export function temBarraOuControle(texto: string): boolean {
   for (let i = 0; i < texto.length; i += 1) {

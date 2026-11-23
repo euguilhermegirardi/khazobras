@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ProjetoDocumento } from '@/interfaces/projeto';
+import { partirNome } from './projetoRegras';
 import {
   PROJETO_CAMPOS_SERVIDOR,
   projetoFormFrom,
@@ -26,61 +27,77 @@ const erros = (valores: { nome: string; tipoDocumento?: string; etapaId?: string
 };
 
 describe('projetoFormSchemaPara', () => {
-  it('aceita nome com a extensão do arquivo, sem diferenciar maiúsculas', () => {
+  it('valida só a base: aceita qualquer base não vazia, inclusive uma que já termina com a extensão', () => {
+    expect(erros({ nome: 'Rev 2' })).toEqual({});
     expect(erros({ nome: 'Rev 2.pdf' })).toEqual({});
-    expect(erros({ nome: 'REV 2.PDF' })).toEqual({});
+    expect(erros({ nome: 'a.b' })).toEqual({});
   });
 
-  it('exige nome, no máximo 255, sem barras nem controle', () => {
+  it('exige base, base + extensão no máximo 255, sem barras nem controle', () => {
     expect(erros({ nome: '   ' }).nome).toMatch(/Informe o nome/);
-    expect(erros({ nome: `${'a'.repeat(252)}.pdf` }).nome).toMatch(/no máximo 255/);
-    expect(erros({ nome: 'a/b.pdf' }).nome).toMatch(/barras/);
-    expect(erros({ nome: 'a\\b.pdf' }).nome).toMatch(/barras/);
-    expect(erros({ nome: 'a\u0001b.pdf' }).nome).toMatch(/controle/);
+    expect(erros({ nome: 'a'.repeat(251) })).toEqual({});
+    expect(erros({ nome: 'a'.repeat(252) }).nome).toBe(
+      'O nome aceita no máximo 251 caracteres (a extensão .pdf já conta).',
+    );
+    expect(erros({ nome: 'a'.repeat(255) }, '')).toEqual({});
+    expect(erros({ nome: 'a'.repeat(256) }, '').nome).toBe('O nome aceita no máximo 255 caracteres.');
+    expect(erros({ nome: 'a/b' }).nome).toMatch(/barras/);
+    expect(erros({ nome: 'a\\b' }).nome).toMatch(/barras/);
+    expect(erros({ nome: 'a\u0001b' }).nome).toMatch(/controle/);
   });
 
-  it('exige manter a extensão do arquivo', () => {
-    expect(erros({ nome: 'planta' }).nome).toMatch(/\.pdf/);
-    expect(erros({ nome: 'planta.docx' }).nome).toMatch(/\.pdf/);
-    expect(erros({ nome: 'planta.pdf.txt' }).nome).toMatch(/\.pdf/);
+  it('o limite conta a extensão na caixa original', () => {
+    expect(erros({ nome: 'a'.repeat(251) }, '.PDF')).toEqual({});
+    expect(erros({ nome: 'a'.repeat(250) }, '.jpeg')).toEqual({});
+    expect(erros({ nome: 'a'.repeat(251) }, '.jpeg').nome).toMatch(/no máximo 250/);
   });
 
   it('tipo: até 50 caracteres (50 passa), sem controle; vazio vale', () => {
-    expect(erros({ nome: 'a.pdf', tipoDocumento: 'x'.repeat(50) })).toEqual({});
-    expect(erros({ nome: 'a.pdf', tipoDocumento: 'x'.repeat(51) }).tipoDocumento).toMatch(/no máximo 50/);
-    expect(erros({ nome: 'a.pdf', tipoDocumento: 'a\u0000b' }).tipoDocumento).toMatch(/controle/);
-    expect(erros({ nome: 'a.pdf', tipoDocumento: '' })).toEqual({});
+    expect(erros({ nome: 'a', tipoDocumento: 'x'.repeat(50) })).toEqual({});
+    expect(erros({ nome: 'a', tipoDocumento: 'x'.repeat(51) }).tipoDocumento).toMatch(/no máximo 50/);
+    expect(erros({ nome: 'a', tipoDocumento: 'a\u0000b' }).tipoDocumento).toMatch(/controle/);
+    expect(erros({ nome: 'a', tipoDocumento: '' })).toEqual({});
   });
 });
 
 describe('toProjetoBody / projetoFormFrom / semMudancas', () => {
-  it('manda sempre os três campos; vazio vira null e o texto é aparado', () => {
-    expect(toProjetoBody({ nome: ' Rev.pdf ', tipoDocumento: '  ', etapaId: '' })).toEqual({
+  it('manda sempre os três campos; vazio vira null, a base é aparada e a extensão é reanexada', () => {
+    expect(toProjetoBody({ nome: ' Rev ', tipoDocumento: '  ', etapaId: '' }, '.pdf')).toEqual({
       nome: 'Rev.pdf',
       tipoDocumento: null,
       etapaId: null,
     });
-    expect(toProjetoBody({ nome: 'a.pdf', tipoDocumento: ' Memorial ', etapaId: 'e2' })).toEqual({
-      nome: 'a.pdf',
+    expect(toProjetoBody({ nome: 'a', tipoDocumento: ' Memorial ', etapaId: 'e2' }, '.PDF')).toEqual({
+      nome: 'a.PDF',
       tipoDocumento: 'Memorial',
       etapaId: 'e2',
     });
   });
 
-  it('formulário parte dos valores salvos (null vira vazio)', () => {
+  it('base que já termina com a extensão vira "x.pdf.pdf" (sem ser esperto); sem extensão, só a base', () => {
+    expect(toProjetoBody({ nome: 'x.pdf', tipoDocumento: '', etapaId: '' }, '.pdf').nome).toBe('x.pdf.pdf');
+    expect(toProjetoBody({ nome: 'x', tipoDocumento: '', etapaId: '' }, '').nome).toBe('x');
+  });
+
+  it('formulário parte da base e dos valores salvos (null vira vazio)', () => {
     expect(projetoFormFrom(projeto({ etapaId: null, tipoDocumento: null }))).toEqual({
-      nome: 'Planta baixa.pdf',
+      nome: 'Planta baixa',
       tipoDocumento: '',
       etapaId: '',
     });
+    expect(projetoFormFrom(projeto({ nome: 'a.b.PDF' })).nome).toBe('a.b');
   });
 
-  it('detecta "nada mudou"', () => {
+  it('detecta "nada mudou" usando a extensão original', () => {
     const p = projeto();
-    expect(semMudancas(toProjetoBody(projetoFormFrom(p)), p)).toBe(true);
-    expect(semMudancas({ ...toProjetoBody(projetoFormFrom(p)), etapaId: null }, p)).toBe(false);
-    expect(semMudancas({ ...toProjetoBody(projetoFormFrom(p)), tipoDocumento: null }, p)).toBe(false);
-    expect(semMudancas({ ...toProjetoBody(projetoFormFrom(p)), nome: 'Outro.pdf' }, p)).toBe(false);
+    const { extensao } = partirNome(p.nome);
+    const body = toProjetoBody(projetoFormFrom(p), extensao);
+    expect(semMudancas(body, p)).toBe(true);
+    expect(semMudancas({ ...body, etapaId: null }, p)).toBe(false);
+    expect(semMudancas({ ...body, tipoDocumento: null }, p)).toBe(false);
+    expect(semMudancas({ ...body, nome: 'Outro.pdf' }, p)).toBe(false);
+    const maiusculo = projeto({ nome: 'Planta.PDF' });
+    expect(semMudancas(toProjetoBody(projetoFormFrom(maiusculo), '.PDF'), maiusculo)).toBe(true);
   });
 });
 

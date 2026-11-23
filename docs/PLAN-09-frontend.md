@@ -833,6 +833,9 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
     Sem miniaturas (documento não tem prévia), então não há carga de imagens a medir.
   - **Testes antigos afetados:** nenhum (1008 verdes). O de ordem do menu do admin só vale se Projetos for aceito depois de Relatório fotográfico.
   - **Falta (tester):** ver relatório: tela, e2e, mocks de captura; segurança (escrita) e design.
+  - **Editar documento: só o nome, sem a extensão** (`feat/projetos-nome-sem-extensao`, pedido do Guilherme). O campo "Nome do documento" edita só a base; a extensão
+    (caixa original, `partirNome`) aparece fixa ao lado, não editável, e é reanexada no PUT (`toProjetoBody(values, extensao)`). Validação local: base não vazia, base + extensão
+    ≤ 255, sem barras/controle; base que já termina com a extensão vale ("x.pdf.pdf"). Só front: o backend segue exigindo a extensão no nome (proteção).
 
 - **Relatório ao cliente, front** (`feat/relatorio-admin`, 21/10). `modules/relatorio-mensal-admin`, item "Relatório ao cliente" (`FileText`) em `ADMIN_NAV.obra`
   **depois de Projetos** (SPEC §6 item 13; Notificar cliente, item 14, ainda não existe).
@@ -874,6 +877,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-11-23 — `feat/projetos-nome-sem-extensao`: feat(projetos-admin): editar documento altera so o nome, com a extensao fixa. Arquivos: front (1), modules/projetos-admin (6).
 - 2026-10-27 — `fix/testes-robustos-2`: (sem commits ainda; descreva o que está staged). Arquivos: modules/relatorio-fotografico-admin (2).
 - 2026-10-25 — `fix/testes-robustos`: test: timeouts folgados e espera das requisições em voo no afterEach; test: esperar o estado final em vez de checar logo após o primeiro elemento; docs: regras de teste anti-flaky em frontend-testes.md. Arquivos: infra (1), modules/contratos-admin (1), modules/financeiro-admin (2), modules/medicoes-admin (1), modules/relatorio-fotografico-admin (3), modules/relatorio-mensal-admin (1), front (2).
 - 2026-10-21 — `feat/projetos-dwg`: feat(backend): validador aceita DWG (AutoCAD) so para projetos. Arquivos: backend (1), testes backend (1). Pendente: front incluir `.dwg` nos tipos aceitos e no ícone; decidir limite de 10 MB para DWG; build/test não rodados (sem .NET no ambiente).

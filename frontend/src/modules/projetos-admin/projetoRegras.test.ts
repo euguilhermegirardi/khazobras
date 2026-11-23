@@ -4,6 +4,7 @@ import {
   PROJETO_EXTENSOES_TEXTO,
   PROJETO_MAX_BYTES,
   PROJETO_NOME_MAX,
+  partirNome,
   temBarraOuControle,
   temControle,
   validarProjetoArquivo,
@@ -55,5 +56,22 @@ describe('extensaoDe / temBarraOuControle / temControle', () => {
     expect(temBarraOuControle('a\u007fb')).toBe(true);
     expect(temControle('a/b')).toBe(false);
     expect(temControle('a\tb')).toBe(true);
+  });
+});
+
+describe('partirNome', () => {
+  it('separa base e extensão preservando a caixa original da extensão', () => {
+    expect(partirNome('planta.pdf')).toEqual({ base: 'planta', extensao: '.pdf' });
+    expect(partirNome('Planta.PDF')).toEqual({ base: 'Planta', extensao: '.PDF' });
+  });
+
+  it('usa só o último ponto', () => {
+    expect(partirNome('a.b.pdf')).toEqual({ base: 'a.b', extensao: '.pdf' });
+    expect(partirNome('x.pdf.pdf')).toEqual({ base: 'x.pdf', extensao: '.pdf' });
+  });
+
+  it('sem ponto, a extensão é vazia', () => {
+    expect(partirNome('planta')).toEqual({ base: 'planta', extensao: '' });
+    expect(partirNome('')).toEqual({ base: '', extensao: '' });
   });
 });
