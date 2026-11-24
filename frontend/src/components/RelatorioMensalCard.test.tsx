@@ -18,13 +18,24 @@ describe('RelatorioMensalCard', () => {
     expect(screen.queryByText(/Publicado em/)).not.toBeInTheDocument();
   });
 
-  it('preserva quebras de linha e espaços do texto, sem interpretar HTML', () => {
+  it('texto antigo (sem marcação) continua legível, com as quebras, e HTML não é interpretado', () => {
     const conteudo = 'Linha 1\n\n  Linha 3 com recuo\n<b>não é negrito</b>';
     const { container } = render(<RelatorioMensalCard relatorio={{ ...base, conteudo }} />);
 
-    // Sem normalizar espaços: o texto no DOM é exatamente o que veio da API.
-    expect(screen.getByText(conteudo, { normalizer: (texto) => texto })).toBeInTheDocument();
+    expect(screen.getByText('Linha 1')).toBeInTheDocument();
+    expect(container).toHaveTextContent('Linha 3 com recuo');
+    expect(container).toHaveTextContent('<b>não é negrito</b>');
     expect(container.querySelector('b')).toBeNull();
+  });
+
+  it('renderiza o Markdown do relatório (negrito, título e lista)', () => {
+    const { container } = render(
+      <RelatorioMensalCard relatorio={{ ...base, conteudo: '## Resumo\n\n**Bom** andamento\n\n- Laje' }} />,
+    );
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Resumo' })).toBeInTheDocument();
+    expect(container.querySelector('strong')).toHaveTextContent('Bom');
+    expect(screen.getByRole('listitem')).toHaveTextContent('Laje');
   });
 
   it('texto de uma linha só, sem espaços, é renderizado inteiro (a quebra é do CSS)', () => {

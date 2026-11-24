@@ -3,7 +3,7 @@ export type RelatorioMensalStatus = 'draft' | 'published';
 
 /**
  * Espelha RelatorioMensalClienteResponse (visão do cliente, sem `createdByUserId`). `competencia` é DATE ("yyyy-MM-dd"); `publishedAt`/`createdAt` são ISO 8601.
- * `conteudo` é texto puro: nunca renderizar como HTML.
+ * `conteudo` é Markdown simples (ou texto puro, nos relatórios antigos): renderizar só com `MarkdownTexto`, nunca como HTML.
  */
 export interface RelatorioMensal {
   id: string;
