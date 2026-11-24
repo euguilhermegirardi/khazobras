@@ -206,6 +206,15 @@ test('admin cria, edita, publica, vê o histórico e exclui outro rascunho', asy
     { auth: 'Bearer token-sintetico', body: { obraId: OBRA, competencia: '2026-10-01', conteudo: texto } },
   ]);
 
+  // Formatação (Markdown simples): negrito pela barra; a prévia mostra o negrito e o campo guarda o texto cru.
+  await page.getByLabel('Conteúdo').fill('Pisos concluídos');
+  await page.getByLabel('Conteúdo').press('Control+A');
+  await page.getByRole('button', { name: 'Negrito' }).click();
+  await expect(page.getByLabel('Conteúdo')).toHaveValue('**Pisos concluídos**');
+  await expect(page.getByRole('region', { name: 'Como o cliente vê' }).locator('strong')).toHaveText(
+    'Pisos concluídos',
+  );
+
   // Editar: PUT leva só os 2 campos.
   const novoTexto = `${texto}• Gesso: início dos forros\n`;
   await page.getByLabel('Conteúdo').fill(novoTexto);
