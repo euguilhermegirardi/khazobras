@@ -1,9 +1,11 @@
 import { ArrowLeft, Building, Building2, LogOut } from 'lucide-react';
-import { Link, Outlet, useMatch } from 'react-router-dom';
+import { Link, Outlet, useLocation, useMatch } from 'react-router-dom';
 import { EMPRESA, type NavConfig } from '../navigation';
 import { SidebarBlock } from './SidebarBlock';
 import { SidebarLink } from './SidebarLink';
 import { useAuth } from '@/auth/useAuth';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorState } from '@/components/ErrorState';
 import { Button } from '@/components/ui/button';
 
 interface AppShellProps {
@@ -21,6 +23,7 @@ export const AppShell = ({ nav, obraRoute }: AppShellProps) => {
   // Hooks
   const { session, signOut } = useAuth();
   const obraMatch = useMatch(obraRoute);
+  const { pathname } = useLocation();
 
   // Constants derivadas
   const obraId = obraMatch?.params.obraId;
@@ -86,7 +89,14 @@ export const AppShell = ({ nav, obraRoute }: AppShellProps) => {
               {nav.hub.label}
             </Link>
           )}
-          <Outlet />
+          <ErrorBoundary
+            key={pathname}
+            fallback={(reset, error) => (
+              <ErrorState error={error} fallbackMessage="Não foi possível exibir esta tela." onRetry={reset} />
+            )}
+          >
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>

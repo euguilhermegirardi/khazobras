@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { RelatorioMensalAdmin } from '@/interfaces/relatorioMensal';
 import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates';
+import { markdownParaTexto } from '@/utils/markdownTexto';
 import { RelatorioStatusBadge } from './RelatorioStatusBadge';
 
 interface RelatorioLinhaProps {
@@ -17,9 +18,12 @@ interface RelatorioLinhaProps {
 
 const SEM_VALOR = '—';
 const RESUMO_MAX = 200;
+// Só o começo do texto é convertido (a lista pode ter muitos relatórios de até 20000 caracteres).
+const RESUMO_LIDO_MAX = 2000;
 
-/** Primeiros caracteres do texto numa linha só (quebras viram espaço), para a coluna "Resumo". */
-const resumoDe = (conteudo: string) => conteudo.slice(0, RESUMO_MAX).replace(/\s+/g, ' ').trim();
+/** Primeiros caracteres do texto numa linha só, sem os marcadores do Markdown, para a coluna "Resumo". */
+const resumoDe = (conteudo: string) =>
+  markdownParaTexto(conteudo.slice(0, RESUMO_LIDO_MAX)).slice(0, RESUMO_MAX).trim();
 
 /**
  * Uma linha da lista: competência (link), resumo do texto (truncado), status, datas e ações. Altura fixa (botões de 28px)

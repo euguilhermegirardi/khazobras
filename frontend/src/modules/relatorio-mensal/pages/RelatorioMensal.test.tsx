@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -47,6 +47,77 @@ describe('Relatório mensal (cliente)', () => {
     renderApp(ROTA, 'Client');
 
     expect(await screen.findByText('<b>negrito</b>')).toBeInTheDocument();
+  });
+
+  it('renderiza o Markdown do relatório (título, negrito, itálico e listas) para o cliente', async () => {
+    server.use(
+      getLista([
+        relatorio({ conteudo: '## Resumo\n\nObra **adiantada** e *sem* atrasos.\n\n- Pisos\n\n1. Alvenaria' }),
+      ]),
+    );
+    renderApp(ROTA, 'Client');
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Resumo' })).toBeInTheDocument();
+    expect(document.querySelector('strong')).toHaveTextContent('adiantada');
+    expect(document.querySelector('em')).toHaveTextContent('sem');
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual(
+      expect.arrayContaining(['Pisos', 'Alvenaria']),
+    );
+    // Só o título da página é h1: o Markdown nunca cria outro.
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  });
+
+  it('HTML, script, link e imagem no texto não viram elementos para o cliente', async () => {
+    server.use(
+      getLista([
+        relatorio({
+          conteudo: '<script>alert(1)</script> <img src=x onerror=alert(2)> [x](javascript:alert(3)) ![y](a.png) fim',
+        }),
+      ]),
+    );
+    renderApp(ROTA, 'Client');
+
+    expect(await screen.findByText(/fim$/)).toBeInTheDocument();
+    const main = screen.getByRole('main');
+    expect(main.querySelector('script, img, [onerror], [href^="javascript"]')).toBeNull();
+    expect(within(main).queryByRole('link', { name: 'x' })).not.toBeInTheDocument();
+    expect(main).toHaveTextContent('<script>alert(1)</script>');
+  });
+
+  it('cliente: relatório de 20000 caracteres e outro hostil convivem, sem editor, barra nem elementos perigosos', async () => {
+    const longo = `${'Obra **ok** e *bem*. '.repeat(900)}FIM-LONGO`;
+    expect(longo.length).toBeLessThanOrEqual(20000);
+    server.use(
+      getLista([
+        relatorio({ id: 'r1', competencia: '2026-03-01', conteudo: longo }),
+        relatorio({
+          id: 'r2',
+          competencia: '2026-02-01',
+          conteudo:
+            '# Grande\n\n<iframe src="https://evil.example"></iframe> [a](javascript:alert(1)) ![i](http://x/y.png) &lt;b&gt;',
+        }),
+      ]),
+    );
+    renderApp(ROTA, 'Client');
+
+    expect(await screen.findByText(/FIM-LONGO/)).toBeInTheDocument();
+    const main = screen.getByRole('main');
+    await waitFor(() => expect(within(main).getByRole('heading', { level: 2, name: 'Grande' })).toBeInTheDocument());
+    expect(
+      main.querySelector('iframe, img, script, textarea, [role="toolbar"], a[href^="javascript"], a[href^="http"]'),
+    ).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(main).toHaveTextContent('<iframe src="https://evil.example"></iframe>');
+    expect(within(main).queryByRole('tab')).not.toBeInTheDocument();
+  });
+
+  it('texto antigo (sem marcação) aparece igual, com as quebras de linha', async () => {
+    server.use(getLista([relatorio({ conteudo: 'Linha 1\nLinha 2' })]));
+    renderApp(ROTA, 'Client');
+
+    // O "\n" fica no texto (o CSS `whitespace-pre-line` o mostra como quebra); nada é juntado nem perdido.
+    const paragrafo = (await screen.findByText(/Linha 1/)) as HTMLElement;
+    expect(paragrafo.textContent).toBe('Linha 1\nLinha 2');
   });
 
   it('mostra mensagem útil quando não há relatório publicado', async () => {

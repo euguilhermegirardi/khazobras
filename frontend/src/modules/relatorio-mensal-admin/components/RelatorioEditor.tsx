@@ -1,13 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { ErroAlert } from '@/components/ErroAlert';
 import { FormField } from '@/components/FormField';
 import { RelatorioMensalCard } from '@/components/RelatorioMensalCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useEnvioUnico } from '@/hooks/useEnvioUnico';
 import type { RelatorioMensalAdmin } from '@/interfaces/relatorioMensal';
 import { ApiError } from '@/services/apiClient';
@@ -26,6 +25,7 @@ import {
   type RelatorioFormValues,
   toRelatorioBody,
 } from '../relatorioForm';
+import { ConteudoMarkdownEditor } from './ConteudoMarkdownEditor';
 
 interface RelatorioEditorProps {
   obraId: string;
@@ -126,12 +126,20 @@ export const RelatorioEditor = ({ obraId, relatorio, onCancel, onSaved }: Relato
 
           <FormField id="relatorio-conteudo" label="Conteúdo" error={errors.conteudo?.message}>
             {(c) => (
-              <Textarea
-                {...c}
-                rows={14}
-                className="min-h-64 resize-y"
-                placeholder="Resumo do mês para o cliente: o que foi feito, pendências e próximos passos."
-                {...register('conteudo')}
+              <Controller
+                control={control}
+                name="conteudo"
+                render={({ field }) => (
+                  <ConteudoMarkdownEditor
+                    {...c}
+                    name={field.name}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    inputRef={field.ref}
+                    placeholder="Resumo do mês para o cliente: o que foi feito, pendências e próximos passos."
+                  />
+                )}
               />
             )}
           </FormField>

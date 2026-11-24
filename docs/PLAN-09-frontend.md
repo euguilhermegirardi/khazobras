@@ -28,7 +28,7 @@
 |---|---|---|---|---|
 | 1 | Hub | ✅ `GET /obras` (cliente vê só as suas) | ✅ | `feat/hub-cliente` (na main) |
 | 2 | Fechamento (medições + aprovar) | ✅ medições + `POST /medicoes/{id}/approve` só do cliente (`ClientOnly`, UPDATE condicional) | ✅ | `feat/fechamento` + `feat/backend-aprovacao-cliente` (PRs #1 e #2, na main). Lista + itens + aprovar com confirmação; 58 testes + 2 e2e. Relatório: `docs/relatorios/2026-10-16-fechamento.md` |
-| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro; 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
+| 3 | Relatório mensal | ✅ `GET /obras/{id}/relatorios-mensais?onlyPublished=true` | ✅ | `feat/relatorio-mensal` (+ `feat/ajustes-relatorio-shell`). Lista dos publicados, mês mais novo primeiro, texto puro (hoje Markdown simples: ver Decisões, "Relatório ao cliente, editor Markdown"); 10 testes + 2 e2e. Visual conferido pelo Guilherme no localhost (18/10). B4/B5 resolvidas no backend, filtro `published` no SQL. Relatório: `docs/relatorios/2026-10-16-relatorio-mensal.md` |
 | 4 | Relatório fotográfico | ✅ `GET /obras/{id}/relatorios-fotograficos` + `GET /fotos/{fotoId}/arquivo` (download autenticado da imagem) | ✅ | `feat/relatorio-fotografico`. Tabs Mensal/Etapa, grade de fotos via blob autenticado, ampliar; 20 testes + 2 e2e. 2 rodadas (design: overlay escuro; segurança: download preso à obra no SQL). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-relatorio-fotografico.md` |
 | 5 | Financeiro (somente leitura) | ✅ lançamentos `visivel_cliente` + download de comprovante (presos à obra no SQL) | ✅ | `feat/financeiro`. Só a visão Lançamentos (tabela paginada + download de comprovante); Resumo/Por categoria e parcelas dependem de Contratos. 21 testes + 3 e2e. 1 rodada (segurança: PATCH de visibilidade e detalhe presos à obra). **Backend não compilado na nuvem: `dotnet build` + `dotnet test` no Mac antes do merge.** Relatório: `docs/relatorios/2026-10-18-financeiro.md` |
 | 6 | Cronograma (sem Curva S) | ✅ `GET /obras/{id}/etapas` (detalhe preso à obra no SQL) + `percentualConcluido` (script 008; edição pelo Gantt admin) | ✅ | `feat/cronograma` (empilhada sobre `feat/financeiro`). Linha do tempo mensal + 4 KPIs, com % concluído ao lado da barra (desde `feat/etapas-admin`); 18 testes + 15 da timeline + 3 e2e. 1 rodada (design: largura, respiro, cores da legenda). **Backend não compilado na nuvem.** Relatório: `docs/relatorios/2026-10-18-cronograma.md` |
@@ -126,7 +126,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Relatório ao cliente (backlog, o backend do admin está pronto: ver Decisões): sem despublicar (o SPEC não pede; decisão de produto: o cliente já pode
   ter lido), sem versões do texto (o histórico é a auditoria: quem/quando/quais campos, nunca o texto anterior; guardar versões exigiria tabela
   nova `relatorios_mensais_versoes`, script 009), sem "publicado por" como coluna (sai do histórico), sem lixeira na exclusão do rascunho,
-  sem notificar o cliente ao publicar (a tela "Notificar cliente" é separada), texto puro sem formatação (negrito, listas) nem anexos/fotos
+  sem notificar o cliente ao publicar (a tela "Notificar cliente" é separada), formatação só em Markdown simples (negrito, itálico, título, listas; sem link, imagem, tabela nem código, de propósito) e sem anexos/fotos
   no relatório, sem modelo de relatório; `GET /obras/{id}/relatorios-mensais` devolve array puro (no máximo um por mês, limitado pelo `UNIQUE`),
   com o texto inteiro de cada um (até 20000 caracteres); a auditoria é gravada depois da escrita, fora da transação (falha = 500 com a
   alteração feita; mesma lacuna de Medições, Contratos, Financeiro, Fotos e Projetos); os testes HTTP usam repositório falso, então o SQL novo
@@ -868,6 +868,39 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   - **Testes antigos afetados:** nenhum (1089 verdes, incluindo os 8+ novos dos utilitários puros). O de ordem do menu do admin só vale se Relatório ao cliente for aceito depois de Projetos.
   - **Falta (tester):** tela, e2e, mocks de captura; segurança (escrita) e design.
 
+- **Relatório ao cliente, editor Markdown** (`feat/relatorio-editor-markdown`, 23/11; pedido do Guilherme; o backend **não muda**: `conteudo` segue 1..20000 caracteres, sem controle
+  exceto `\n \r \t` e sem U+202A–202E/U+2066–2069, e o front continua validando isso no **texto cru**; o contador também conta o Markdown cru).
+  - **Markdown simples, de propósito:** barra acima do textarea com Negrito (`**x**`), Itálico (`*x*`), Título (`## x`), Lista (`- x`) e Lista numerada (`1. x`); atalhos Ctrl/Cmd+B e Ctrl/Cmd+I.
+    **Sem link, imagem, HTML cru, tabela nem código** (superfície de ataque e de erro menor para um texto que o cliente lê). O texto continua no campo `conteudo`, como texto.
+  - **Edição pura** em `modules/relatorio-mensal-admin/markdownEdicao.ts` (texto + seleção entram, texto + seleção saem): com seleção envolve/prefixa e **alterna** (já formatado = desfaz, seja o marcador
+    dentro ou em volta da seleção); sem seleção insere o par com o cursor no meio (ou prefixa a linha; `**|**` vazio desfaz); espaços das pontas ficam fora do marcador; em várias linhas formata/prefixa
+    cada linha (Markdown não atravessa parágrafos), lista numerada só numera linhas com texto, e trocar de lista para título (ou o contrário) substitui o prefixo.
+  - **Editor** (`ConteudoMarkdownEditor` + `MarkdownBarra`): abas **Escrever | Pré-visualizar** (Radix `Tabs`; o textarea fica montado nas duas, o rótulo "Conteúdo" continua valendo), barra com `role="toolbar"`,
+    botões `type="button"` com `aria-label` em português, `title` e `aria-keyshortcuts`; `mousedown` sem ação padrão mantém foco/seleção no textarea, que ganha o foco e a seleção de volta depois do clique.
+    Sem `aria-pressed` (não há estado persistente do botão). O painel "Escrever" tem `tabIndex={-1}` (o padrão do Radix, `0`, criava uma parada de Tab a mais antes da barra). Campo ligado ao RHF por `Controller`.
+  - **Renderização segura** (`components/MarkdownTexto`, compartilhada com o cliente): `react-markdown` **10.1.0** (versão exata; compatível com React 19), **sem `rehype-raw`** (HTML cru aparece como texto),
+    `allowedElements` = p, br, strong, em, h2, h3, ul, ol, li **mais h1 e h4–h6 só para remapear** (`#` vira h2, `####` vira h3: a página já tem h1; sem permitir h1 o `#` virava texto), `unwrapDisallowed`
+    (link vira só o texto, imagem some, código/citação/tabela viram texto). Sem `dangerouslySetInnerHTML`. `whitespace-pre-line` em `p`/`li` preserva a quebra de linha simples dos **relatórios antigos em texto puro**
+    (Markdown a juntaria); linhas em branco viram parágrafos; recuo de 4+ espaços vira bloco de código no parse, mas o `<code>` é desembrulhado e o `<pre>` vira `div` com `whitespace-pre-line` (texto simples, sem monoespaço). Usado no `RelatorioMensalCard` (tela do cliente, detalhe publicado e "Como o cliente vê") e na aba Pré-visualizar.
+  - **Prévias curtas** (coluna "Resumo" da lista): `utils/markdownTexto.markdownParaTexto` tira os marcadores (só o começo do texto, 2000 caracteres, é convertido) para não quebrar a linha da tabela.
+  - **Testes:** `markdownEdicao.test.ts` (25), `utils/markdownTexto.test.ts`, `components/MarkdownTexto.test.tsx` (script, `<img onerror>`, HTML cru, `javascript:`, imagem e tabela não viram elementos; h1 nunca),
+    `ConteudoMarkdownEditor.test.tsx` (botões, atalhos, foco/seleção, abas), `RelatorioAdminMarkdown.test.tsx` (novo, editar, publicado, lista) e casos novos na visão do cliente; e2e `relatorio-admin` ganhou o passo do Negrito (**não executado na nuvem: sem navegador**).
+  - **Testes antigos afetados:** `RelatorioMensalCard.test` ("preserva quebras de linha e espaços... exatamente como veio") deixou de valer: o recuo e a linha em branco agora passam pelo Markdown. Troquei pelo equivalente
+    (texto legível, quebras preservadas, HTML não interpretado) e adicionei o do Markdown renderizado.
+  - **Texto patológico e falhas (revisão de segurança, `MarkdownTexto`):** o relatório publicado não pode ser editado/excluído (409), então o texto não pode quebrar a tela do cliente. `'+ '.repeat(10000)`,
+    `'> '.repeat(10000)`, `'1. '.repeat(6666)` e `'>'.repeat(20000)` estouravam a pilha (RangeError) ou levavam ~13 s no `react-markdown`. Decisão: (i) pré-checagem `utils/markdownSeguro.markdownPatologico` antes do
+    parse: se alguma linha tiver **mais de 6** contêineres de bloco seguidos no início (`>`, `-`/`+`/`*`, `1.`/`1)`, com espaços entre eles; limite 6 inclusive passa) ou o texto tiver **mais de 2000 linhas** de
+    item/citação, renderiza o texto cru em `<p class="whitespace-pre-wrap">` (mesmo visual do texto puro antigo); (ii) `components/ErrorBoundary` (reutilizável, `key` remonta ao mudar o conteúdo) em volta do
+    `Markdown` com o mesmo fallback, e outro no `Outlet` do `AppShell` (`key` = rota; mostra `ErrorState` com "Tentar novamente") para que nenhuma falha de renderização deixe a SPA em branco.
+    **Limitações:** aninhamento por recuo (`  - ` com espaços crescentes) não conta na profundidade (custa ~100 níveis em 20000 caracteres, sem estouro observado); acima do limite o Markdown legítimo (ex.: lista
+    com 7+ níveis na mesma linha) aparece com os marcadores à mostra, de propósito.
+  - **Entidades bidi:** `&#x202E;`, `&rlm;`, `&zwj;`, `&#x200B;`, `&#xFEFF;`, `&#x061C;`, `&#x2066;`... são decodificadas pelo micromark e passavam o filtro do backend/`relatorioForm` (que só vê o literal).
+    Plugin rehype `rehypeSemBidi` remove `U+061C U+200B–200F U+202A–202E U+2066–2069 U+FEFF` dos nós de texto depois do parse (sem habilitar HTML cru); o fallback de texto cru aplica `removerBidi` na exibição.
+    O backend continua só recusando o literal (não muda). `markdownParaTexto`: regex de link/imagem limitados (`[^\]\n]{0,200}`, endereço com no máximo 2000 trechos), sem custo quadrático em `'['.repeat(20000)`.
+  - **Dependências:** `npm audit` aponta `undici` (alta) vindo do **`jsdom`** (só dev/teste); `npm audit --omit=dev` = **0 vulnerabilidades**, nada disso vai para o bundle.
+  - **Pendente:** sem `\_` / escape de marcador na barra; sem desfazer específico (o Ctrl+Z do navegador pode não restaurar a
+    seleção em textarea controlado depois de formatar); revisão de design (captura da barra e da aba Pré-visualizar em 1280/1440 e escuro) a cargo do `design-reviewer`.
+
 - **Robustez sob lentidão (fix/testes-robustos-2, 27/10):** (1) excluir pelo detalhe do Relatório fotográfico admin não relê o detalhe apagado
   (`useExcluirRelatorio(obraId, false)` invalida com `predicate` que pula a chave do id; a página chama `removerRelatorioDoCache` ao desmontar; mesmo padrão do
   Relatório ao cliente admin). (2) **Envio duplo de formulário era bug real:** o React Router troca a tela dentro de uma transição, então o formulário ficava
@@ -877,6 +910,7 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 
 ## Registro
 
+- 2026-11-23 — `feat/relatorio-editor-markdown`: feat(relatorio): funções puras de edição Markdown e texto simples para prévias; feat(relatorio): componente MarkdownTexto seguro (sem HTML cru, links nem imagens) no cartão do relatório; feat(relatorio-mensal-admin): editor Markdown simples com barra, abas Escrever/Pre-visualizar e resumo em texto simples; docs: registro; fix(relatorio): resumo em texto simples remove negrito com itálico dentro e link com parênteses; test(relatorio): casos adversariais do editor Markdown, limite de 20000, caracteres proibidos e envio cru; test: casos adversariais do editor Markdown (parcial); fix(relatorio): texto patológico e entidades bidi não derrubam nem enganam a tela; test(e2e): relatorio admin cobre editor Markdown (foco, seleção, atalhos, abas, emoji, envio cru); test(relatorio): texto cru (aninhamento extremo), listas por recuo e entidades bidi no editor e no cartao; test(e2e): relatorio barra de formatação, prévia igual ao cliente, envio cru e visão do cliente sem HTML/links/imagens; docs: relatorio da manha, backlog e capturas do editor Markdown. Arquivos: docs (20), front (15), front/rotas-layouts (1), modules/relatorio-mensal-admin (9), modules/relatorio-mensal (1).
 - 2026-11-23 — `feat/projetos-nome-sem-extensao`: feat(projetos-admin): editar documento altera so o nome, com a extensao fixa. Arquivos: front (1), modules/projetos-admin (6).
 - 2026-10-27 — `fix/testes-robustos-2`: (sem commits ainda; descreva o que está staged). Arquivos: modules/relatorio-fotografico-admin (2).
 - 2026-10-25 — `fix/testes-robustos`: test: timeouts folgados e espera das requisições em voo no afterEach; test: esperar o estado final em vez de checar logo após o primeiro elemento; docs: regras de teste anti-flaky em frontend-testes.md. Arquivos: infra (1), modules/contratos-admin (1), modules/financeiro-admin (2), modules/medicoes-admin (1), modules/relatorio-fotografico-admin (3), modules/relatorio-mensal-admin (1), front (2).
@@ -928,6 +962,18 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - `UpdateAsync` calcula `campos` da auditoria com leitura anterior ao UPDATE: duas edições concorrentes podem registrar campos errados.
 - `ConteudoSemCaracteresInvalidos` não recusa U+200E/U+200F/U+061C nem largura zero (U+200B–U+200D, U+FEFF); espelhar no front (`relatorioForm.ts`) e nos testes.
 - `RelatorioMensalHistoricoResponse` devolve `userId` que a tela não usa; remover do DTO e do tipo.
-- Sem versões do texto, sem despublicar, sem notificar cliente; conteúdo é texto puro.
+- Sem versões do texto, sem despublicar, sem notificar cliente; conteúdo é Markdown simples (relatórios antigos em texto puro continuam legíveis).
 - Design: badge "Rascunho" quase sem contorno sobre o fundo cinza no topo do detalhe; botões outline vermelhos perdem a cor no hover (`hover:text-danger`), padrão comum a outras telas.
 - `components/ui/textarea.tsx` escrito à mão (shadcn sem rede): reinstalar pelo CLI.
+
+### Backlog — Editor Markdown do relatório (23/11, security-reviewer, tester e design-reviewer, todos baixos)
+- Ctrl+Z do navegador não desfaz a formatação feita pela barra/atalho (o `value` do textarea é trocado por código; `setRangeText` ou `execCommand('insertText')` resolveriam). O botão alterna o formato de volta.
+- "Publicar" com texto editado e não salvo publica a versão salva e descarta a edição sem aviso (já existia; o editor torna mais provável).
+- Selecionar um pedaço da marcação e formatar gera marcadores extras (`a ****b**** c`); caso raro, não corrompe o envio.
+- Texto só com `****` ou `---` passa na validação e renderiza vazio; a prévia não avisa "nada para mostrar".
+- Enter com erro de validação e a aba Pré-visualizar aberta tenta focar o textarea oculto.
+- Markdown legítimo com mais de 6 níveis de marcador de bloco na mesma linha (ou mais de 2000 linhas de item/citação) cai em texto cru com os marcadores à mostra (decisão consciente contra estouro de pilha).
+- Entidades bidi/largura zero são removidas só na exibição (front); o backend continua recusando apenas o caractere literal.
+- Resumo da lista do admin cola título e parágrafo ("Trabalhos executados no mês O mês foi…"): juntar com " · " ou pular o título (`RelatorioLinha.tsx`).
+- Alvos da barra com 28px (`size-7`), aceitável em desktop; `size-8` se reclamarem. Anel de foco da aba "Pré-visualizar" grosso depois do clique (conferir com mouse real).
+- Rodar o e2e fora do container (Mac) e os testes de página com latência real continua sendo a checagem final do usuário.

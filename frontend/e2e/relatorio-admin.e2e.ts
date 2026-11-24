@@ -197,7 +197,7 @@ test('admin cria, edita, publica, vê o histórico e exclui outro rascunho', asy
   expect(chamadas.criar).toHaveLength(0);
   await page.getByLabel('Competência (mês)').fill('2026-10');
   const texto = '  Trabalhos do mês\n• Pisos concluídos\n• <b>Telhado</b> em andamento\n';
-  await page.getByLabel('Conteúdo').fill(texto);
+  await page.getByLabel('Conteúdo', { exact: true }).fill(texto);
   await expect(page.getByRole('region', { name: 'Como o cliente vê' }).getByText('Outubro de 2026')).toBeVisible();
   await page.getByRole('button', { name: 'Criar rascunho' }).click();
   await expect(page.getByText('Rascunho criado. O cliente só vê depois de publicar.')).toBeVisible();
@@ -206,9 +206,18 @@ test('admin cria, edita, publica, vê o histórico e exclui outro rascunho', asy
     { auth: 'Bearer token-sintetico', body: { obraId: OBRA, competencia: '2026-10-01', conteudo: texto } },
   ]);
 
+  // Formatação (Markdown simples): negrito pela barra; a prévia mostra o negrito e o campo guarda o texto cru.
+  await page.getByLabel('Conteúdo', { exact: true }).fill('Pisos concluídos');
+  await page.getByLabel('Conteúdo', { exact: true }).press('Control+A');
+  await page.getByRole('button', { name: 'Negrito' }).click();
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toHaveValue('**Pisos concluídos**');
+  await expect(page.getByRole('region', { name: 'Como o cliente vê' }).locator('strong')).toHaveText(
+    'Pisos concluídos',
+  );
+
   // Editar: PUT leva só os 2 campos.
   const novoTexto = `${texto}• Gesso: início dos forros\n`;
-  await page.getByLabel('Conteúdo').fill(novoTexto);
+  await page.getByLabel('Conteúdo', { exact: true }).fill(novoTexto);
   await page.getByRole('button', { name: 'Salvar alterações' }).click();
   await expect(page.getByText('Rascunho atualizado.')).toBeVisible();
   expect(chamadas.editar).toEqual([
@@ -226,7 +235,7 @@ test('admin cria, edita, publica, vê o histórico e exclui outro rascunho', asy
   await expect(page.getByText('Relatório publicado. O cliente já pode vê-lo.')).toBeVisible();
   expect(chamadas.publicar).toEqual([{ id: 'novo1', auth: 'Bearer token-sintetico' }]);
   await expect(page.getByText(/Relatório publicado: somente leitura/)).toBeVisible();
-  await expect(page.getByLabel('Conteúdo')).toHaveCount(0);
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^(Publicar|Excluir rascunho|Salvar alterações)/ })).toHaveCount(0);
   // O HTML digitado aparece como texto, nunca como elemento.
   await expect(page.getByRole('region', { name: 'Como o cliente vê' }).getByText(/<b>Telhado<\/b>/)).toBeVisible();
@@ -264,6 +273,94 @@ test('admin cria, edita, publica, vê o histórico e exclui outro rascunho', asy
   expect(chamadas.semMock).toEqual([]);
 });
 
+test('editor Markdown no navegador: foco e seleção após a barra, atalhos, abas, emoji e envio cru', async ({
+  page,
+}) => {
+  const erros = coletarErros(page);
+  const chamadas = await mockApi(page, []);
+  await entrarComo(page, 'Admin');
+  await page.goto(`${ROTA}/novo`);
+  const campo = page.getByLabel('Conteúdo', { exact: true });
+  const estado = () =>
+    campo.evaluate((el: HTMLTextAreaElement) => ({
+      valor: el.value,
+      inicio: el.selectionStart,
+      fim: el.selectionEnd,
+      focado: document.activeElement === el,
+    }));
+  const selecionar = (inicio: number, fim: number) =>
+    campo.evaluate(
+      (el: HTMLTextAreaElement, [i, f]) => {
+        el.focus();
+        el.setSelectionRange(i ?? 0, f ?? 0);
+      },
+      [inicio, fim],
+    );
+
+  // Clique na barra: o foco e a seleção ficam no campo, sobre o trecho formatado.
+  await campo.fill('Obra concluída hoje');
+  await selecionar(5, 14);
+  await page.getByRole('button', { name: 'Negrito' }).click();
+  expect(await estado()).toEqual({ valor: 'Obra **concluída** hoje', inicio: 7, fim: 16, focado: true });
+
+  // Ctrl+B desfaz (alterna) e Ctrl+I formata, sem digitar a letra.
+  await page.keyboard.press('Control+b');
+  expect(await estado()).toEqual({ valor: 'Obra concluída hoje', inicio: 5, fim: 14, focado: true });
+  await page.keyboard.press('Control+i');
+  expect((await estado()).valor).toBe('Obra *concluída* hoje');
+  await page.keyboard.press('Control+i');
+
+  // Meio de palavra e emoji (índices UTF-16 no navegador real).
+  await selecionar(8, 11);
+  await page.getByRole('button', { name: 'Itálico' }).click();
+  expect((await estado()).valor).toBe('Obra con*clu*ída hoje');
+  await campo.fill('😀 ok');
+  await selecionar(0, 2);
+  await page.getByRole('button', { name: 'Negrito' }).click();
+  expect((await estado()).valor).toBe('**😀** ok');
+
+  // Troca de aba: o texto e a seleção continuam, a prévia mostra o negrito e o vazio mostra o aviso.
+  await selecionar(2, 4);
+  await page.getByRole('tab', { name: 'Pré-visualizar' }).click();
+  await expect(page.getByRole('tabpanel', { name: 'Pré-visualizar' }).locator('strong')).toHaveText('😀');
+  await page.getByRole('tab', { name: 'Escrever' }).click();
+  expect(await estado()).toMatchObject({ valor: '**😀** ok', inicio: 2, fim: 4 });
+  await campo.fill('');
+  await page.getByRole('tab', { name: 'Pré-visualizar' }).click();
+  await expect(page.getByText(/Nada para mostrar ainda/)).toBeVisible();
+  await page.getByRole('tab', { name: 'Escrever' }).click();
+
+  // Várias linhas: lista numerada e título; o texto enviado é exatamente o do campo (quebras do navegador = "\n").
+  await campo.fill('Resumo\n\nPisos\nTelhado');
+  await campo.press('Control+A');
+  await page.getByRole('button', { name: 'Lista numerada' }).click();
+  expect((await estado()).valor).toBe('1. Resumo\n\n2. Pisos\n3. Telhado');
+  await page.getByRole('button', { name: 'Lista numerada' }).click();
+  await selecionar(0, 0);
+  await page.getByRole('button', { name: 'Título' }).click();
+  expect((await estado()).valor).toBe('## Resumo\n\nPisos\nTelhado');
+
+  await page.getByLabel('Competência (mês)').fill('2026-11');
+  await page.getByRole('button', { name: 'Criar rascunho' }).click();
+  await expect(page.getByText('Rascunho criado. O cliente só vê depois de publicar.')).toBeVisible();
+  expect(chamadas.criar.map((c) => c.body.conteudo)).toEqual(['## Resumo\n\nPisos\nTelhado']);
+  expect(erros).toEqual([]);
+  expect(chamadas.semMock).toEqual([]);
+});
+
+test('texto colado com caractere de direção do texto é recusado no navegador e nada é enviado', async ({ page }) => {
+  const chamadas = await mockApi(page, []);
+  await entrarComo(page, 'Admin');
+  await page.goto(`${ROTA}/novo`);
+
+  await page.getByLabel('Competência (mês)').fill('2026-11');
+  await page.getByLabel('Conteúdo', { exact: true }).fill('relatório ‮fdp.exe ok');
+  await page.getByRole('button', { name: 'Criar rascunho' }).click();
+
+  await expect(page.getByText('O conteúdo não pode ter caracteres de controle nem de direção do texto.')).toBeVisible();
+  expect(chamadas.criar).toEqual([]);
+});
+
 test('excluir o rascunho pela própria página volta à lista sem piscar "não encontrado"', async ({ page }) => {
   const chamadas = await mockApi(page, [relatorio('r1', '2026-10-01'), publicado('r2', '2026-09-01')]);
   await entrarComo(page, 'Admin');
@@ -278,7 +375,7 @@ test('excluir o rascunho pela própria página volta à lista sem piscar "não e
   });
 
   await page.goto(`${ROTA}/r1`);
-  await expect(page.getByLabel('Conteúdo')).toBeVisible();
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Excluir rascunho' }).click();
   await page.getByRole('button', { name: 'Excluir definitivamente' }).click();
 
@@ -300,11 +397,11 @@ test('mês repetido (409) aparece no campo da competência e o texto digitado fi
 
   await page.goto(`${ROTA}/novo`);
   await page.getByLabel('Competência (mês)').fill('2026-09');
-  await page.getByLabel('Conteúdo').fill('Meu texto');
+  await page.getByLabel('Conteúdo', { exact: true }).fill('Meu texto');
   await page.getByRole('button', { name: 'Criar rascunho' }).click();
 
   await expect(page.getByText(/Já existe um relatório desta obra para este mês/)).toBeVisible();
-  await expect(page.getByLabel('Conteúdo')).toHaveValue('Meu texto');
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toHaveValue('Meu texto');
   expect(chamadas.criar).toHaveLength(1);
 });
 
@@ -315,7 +412,7 @@ test('relatório de outra obra na URL mostra "não encontrado nesta obra" e não
   await page.goto(`${ROTA}/rx`);
   await expect(page.getByText('Relatório não encontrado nesta obra.')).toBeVisible();
   await expect(page.getByText('Segredo de outra obra')).toHaveCount(0);
-  await expect(page.getByLabel('Conteúdo')).toHaveCount(0);
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toHaveCount(0);
 });
 
 test('60 relatórios, texto de 20000 caracteres e histórico de 100 carregam sem erro de console e sem estourar a largura', async ({
@@ -357,14 +454,14 @@ test('60 relatórios, texto de 20000 caracteres e histórico de 100 carregam sem
 
   // Rascunho com 20000 caracteres (uma "palavra" de 3068 sem espaço) e histórico de 100.
   await page.goto(`${ROTA}/rx`);
-  await expect(page.getByLabel('Conteúdo')).toBeVisible();
-  expect(await page.getByLabel('Conteúdo').inputValue()).toHaveLength(20000);
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toBeVisible();
+  expect(await page.getByLabel('Conteúdo', { exact: true }).inputValue()).toHaveLength(20000);
   await expect(page.getByText('20000/20000')).toBeVisible();
   await expect(page.getByRole('list', { name: 'Alterações do relatório' }).getByRole('listitem')).toHaveCount(100);
   expect(await semEstouroHorizontal(page)).toBe(true);
   const previa = page.getByRole('region', { name: 'Como o cliente vê' });
   const larguras = await previa.evaluate((el) => {
-    const p = el.querySelector('p.whitespace-pre-wrap') ?? el.querySelector('p:last-of-type');
+    const p = el.querySelector('p.whitespace-pre-line') ?? el.querySelector('p:last-of-type');
     const estilo = p ? getComputedStyle(p) : null;
     return {
       regiao: el.scrollWidth <= el.clientWidth,
@@ -373,7 +470,8 @@ test('60 relatórios, texto de 20000 caracteres e histórico de 100 carregam sem
       overflowWrap: estilo?.overflowWrap,
     };
   });
-  expect(larguras).toEqual({ regiao: true, paragrafo: true, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' });
+  // O parágrafo do Markdown usa `pre-line` (a quebra simples do texto antigo continua visível, espaços colapsam).
+  expect(larguras).toEqual({ regiao: true, paragrafo: true, whiteSpace: 'pre-line', overflowWrap: 'anywhere' });
   const lista100 = page.getByRole('list', { name: 'Alterações do relatório' });
   expect(await lista100.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
 
@@ -394,12 +492,130 @@ test('relatório publicado de 20000 caracteres também cabe na largura (somente 
 
   await page.goto(`${ROTA}/rx`);
   await expect(page.getByText(/Relatório publicado: somente leitura/)).toBeVisible();
-  await expect(page.getByLabel('Conteúdo')).toHaveCount(0);
+  await expect(page.getByLabel('Conteúdo', { exact: true })).toHaveCount(0);
   expect(await semEstouroHorizontal(page)).toBe(true);
   const cabe = await page
     .getByRole('region', { name: 'Como o cliente vê' })
     .evaluate((el) => el.scrollWidth <= el.clientWidth);
   expect(cabe).toBe(true);
+  expect(erros).toEqual([]);
+});
+
+// Texto montado com a barra (as cinco ferramentas). Blocos separados por linha em branco: sem continuação preguiçosa.
+const MARKDOWN_BARRA = '## Resumo\n\n- Pisos\n- Telhado\n\n1. Gesso\n\n*Fundação* **concluída** hoje';
+// Estrutura que o cliente (e a prévia do admin) tem de mostrar para o texto acima: tag + texto, na ordem do documento.
+const ESTRUTURA_BARRA = [
+  'H2:Resumo',
+  'UL:Pisos Telhado',
+  'LI:Pisos',
+  'LI:Telhado',
+  'OL:Gesso',
+  'LI:Gesso',
+  'P:Fundação concluída hoje',
+  'EM:Fundação',
+  'STRONG:concluída',
+];
+const estruturaDoTexto = (raiz: Element) =>
+  [...raiz.querySelectorAll('h2,h3,ul,ol,li,p,strong,em,a,img')].map(
+    (n) => `${n.tagName}:${(n.textContent ?? '').replace(/\s+/g, ' ').trim()}`,
+  );
+
+test('barra de formatação: prévia igual ao que o cliente verá e o rascunho/publicação enviam o Markdown cru', async ({
+  page,
+}) => {
+  const erros = coletarErros(page);
+  const chamadas = await mockApi(page, []);
+  await entrarComo(page, 'Admin');
+  await page.goto(`${ROTA}/novo`);
+  const campo = page.getByLabel('Conteúdo', { exact: true });
+  const selecionarTrecho = (trecho: string) =>
+    campo.evaluate((el: HTMLTextAreaElement, t: string) => {
+      const i = el.value.indexOf(t);
+      el.focus();
+      el.setSelectionRange(i, i + t.length);
+    }, trecho);
+
+  await campo.fill('Resumo\n\nPisos\nTelhado\n\nGesso\n\nFundação concluída hoje');
+  await campo.evaluate((el: HTMLTextAreaElement) => {
+    el.focus();
+    el.setSelectionRange(0, 0);
+  });
+  await page.getByRole('button', { name: 'Título' }).click();
+  await selecionarTrecho('Pisos\nTelhado');
+  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  await selecionarTrecho('Gesso');
+  await page.getByRole('button', { name: 'Lista numerada' }).click();
+  await selecionarTrecho('concluída');
+  await page.getByRole('button', { name: 'Negrito' }).click();
+  await selecionarTrecho('Fundação');
+  await page.getByRole('button', { name: 'Itálico' }).click();
+  await expect(campo).toHaveValue(MARKDOWN_BARRA);
+
+  // Aba Pré-visualizar: mesma estrutura que o cliente verá e barra fora da tela (não há campo para formatar).
+  await page.getByRole('tab', { name: 'Pré-visualizar' }).click();
+  const painel = page.getByRole('tabpanel', { name: 'Pré-visualizar' });
+  await expect(painel.locator('h2')).toHaveText('Resumo');
+  expect(await painel.evaluate(estruturaDoTexto)).toEqual(ESTRUTURA_BARRA);
+  // Na prévia a barra sai da tela (painel "Escrever" oculto); ao voltar, está ativa de novo.
+  await expect(page.getByRole('toolbar', { name: 'Formatação do texto' })).toBeHidden();
+  await page.getByRole('tab', { name: 'Escrever' }).click();
+  await expect(page.getByRole('button', { name: 'Negrito' })).toBeEnabled();
+
+  // Criar o rascunho: o corpo leva o Markdown exatamente como no campo.
+  await page.getByLabel('Competência (mês)').fill('2026-12');
+  await page.getByRole('button', { name: 'Criar rascunho' }).click();
+  await expect(page.getByText('Rascunho criado. O cliente só vê depois de publicar.')).toBeVisible();
+  expect(chamadas.criar.map((c) => c.body.conteudo)).toEqual([MARKDOWN_BARRA]);
+
+  // Publicar: o texto gravado não muda (o servidor guarda o cru) e o PUT/POST não reescrevem o conteúdo.
+  await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await page.getByRole('button', { name: 'Publicar agora' }).click();
+  await expect(page.getByText('Relatório publicado. O cliente já pode vê-lo.')).toBeVisible();
+  expect(chamadas.publicar).toEqual([{ id: 'novo1', auth: 'Bearer token-sintetico' }]);
+  expect(chamadas.editar).toEqual([]);
+  // Publicado, somente leitura: a mesma estrutura, agora sem campo.
+  const tituloLido = page.getByRole('region', { name: 'Como o cliente vê' }).getByRole('heading', { name: 'Resumo' });
+  await expect(tituloLido).toBeVisible();
+  expect(await tituloLido.locator('xpath=..').evaluate(estruturaDoTexto)).toEqual(ESTRUTURA_BARRA);
+  expect(erros).toEqual([]);
+  expect(chamadas.semMock).toEqual([]);
+});
+
+test('cliente vê a formatação renderizada e HTML, links e imagens colados viram só texto', async ({ page }) => {
+  const erros = coletarErros(page);
+  const externas: string[] = [];
+  page.on('request', (r) => {
+    if (r.url().includes('evil.example')) externas.push(r.url());
+  });
+  const hostil =
+    'Veja <b>html</b> <script>window.__xss=1</script> <img src="http://evil.example/p.png" onerror="window.__xss=1"> ' +
+    '[clique](http://evil.example/x) ![foto](http://evil.example/i.png) <http://evil.example/auto> [js](javascript:alert(1))';
+  await mockApi(page, [
+    publicado('r1', '2026-10-01', { conteudo: MARKDOWN_BARRA }),
+    publicado('r2', '2026-09-01', { conteudo: hostil }),
+  ]);
+  await entrarComo(page, 'Client');
+  await page.goto(`/cliente/obras/${OBRA}/relatorio-mensal`);
+
+  // Formatação: a mesma estrutura da prévia do admin e nenhum marcador Markdown sobrando na tela.
+  const titulo = page.locator('h2', { hasText: 'Resumo' });
+  await expect(titulo).toBeVisible();
+  expect(await titulo.locator('xpath=..').evaluate(estruturaDoTexto)).toEqual(ESTRUTURA_BARRA);
+  await expect(page.getByText('**concluída**')).toHaveCount(0);
+  await expect(page.getByText('## Resumo')).toHaveCount(0);
+
+  // Hostil: nada de elemento perigoso dentro do texto; o HTML aparece como texto; nada externo é pedido.
+  const paragrafo = page.locator('p', { hasText: 'clique' });
+  await expect(paragrafo).toBeVisible();
+  await expect(paragrafo).toContainText('<b>html</b>');
+  await expect(paragrafo.locator('a, img, script, b, iframe')).toHaveCount(0);
+  await expect(page.locator('img[src*="evil.example"], a[href*="evil.example"], a[href^="javascript:"]')).toHaveCount(
+    0,
+  );
+  await page.waitForTimeout(300);
+  expect(externas).toEqual([]);
+  expect(await page.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
+  await expect(page.getByRole('button', { name: /criar|novo|editar|excluir|publicar/i })).toHaveCount(0);
   expect(erros).toEqual([]);
 });
 
@@ -410,7 +626,7 @@ test('cliente é barrado em todas as rotas novas e nenhuma chamada é feita', as
   for (const rota of [ROTA, `${ROTA}/novo`, `${ROTA}/r1`]) {
     await page.goto(rota);
     await expect(page.getByRole('heading', { name: 'Sem permissão' })).toBeVisible();
-    await expect(page.getByLabel('Conteúdo')).toHaveCount(0);
+    await expect(page.getByLabel('Conteúdo', { exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /criar|novo|editar|excluir|publicar|salvar/i })).toHaveCount(0);
   }
   expect(chamadas.leituras).toBe(0);

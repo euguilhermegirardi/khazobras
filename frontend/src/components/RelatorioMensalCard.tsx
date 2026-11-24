@@ -1,5 +1,6 @@
 import type { RelatorioMensal } from '@/interfaces/relatorioMensal';
 import { formatMonthYearTitle, formatTimestamp } from '@/utils/dates';
+import { MarkdownTexto } from '@/components/MarkdownTexto';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface RelatorioMensalCardProps {
@@ -10,7 +11,7 @@ interface RelatorioMensalCardProps {
 
 /**
  * O relatório como o cliente o vê: competência, data de publicação e texto. Usado na tela do cliente e na
- * pré-visualização do admin ("Como o cliente vê").
+ * pré-visualização do admin ("Como o cliente vê"). O texto é Markdown simples, renderizado sem HTML cru nem links.
  */
 export const RelatorioMensalCard = ({ relatorio, contentClassName }: RelatorioMensalCardProps) => (
   <Card>
@@ -21,8 +22,8 @@ export const RelatorioMensalCard = ({ relatorio, contentClassName }: RelatorioMe
       )}
     </CardHeader>
     <CardContent className={contentClassName}>
-      {/* Texto puro vindo da API: preserva quebras e espaços sem interpretar HTML; linha longa sem espaço quebra. */}
-      <p className="text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{relatorio.conteudo}</p>
+      {/* Markdown simples (ou texto puro antigo): nunca vira HTML do usuário; ver `MarkdownTexto`. */}
+      <MarkdownTexto conteudo={relatorio.conteudo} />
     </CardContent>
   </Card>
 );
