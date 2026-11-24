@@ -501,6 +501,124 @@ test('relatório publicado de 20000 caracteres também cabe na largura (somente 
   expect(erros).toEqual([]);
 });
 
+// Texto montado com a barra (as cinco ferramentas). Blocos separados por linha em branco: sem continuação preguiçosa.
+const MARKDOWN_BARRA = '## Resumo\n\n- Pisos\n- Telhado\n\n1. Gesso\n\n*Fundação* **concluída** hoje';
+// Estrutura que o cliente (e a prévia do admin) tem de mostrar para o texto acima: tag + texto, na ordem do documento.
+const ESTRUTURA_BARRA = [
+  'H2:Resumo',
+  'UL:Pisos Telhado',
+  'LI:Pisos',
+  'LI:Telhado',
+  'OL:Gesso',
+  'LI:Gesso',
+  'P:Fundação concluída hoje',
+  'EM:Fundação',
+  'STRONG:concluída',
+];
+const estruturaDoTexto = (raiz: Element) =>
+  [...raiz.querySelectorAll('h2,h3,ul,ol,li,p,strong,em,a,img')].map(
+    (n) => `${n.tagName}:${(n.textContent ?? '').replace(/\s+/g, ' ').trim()}`,
+  );
+
+test('barra de formatação: prévia igual ao que o cliente verá e o rascunho/publicação enviam o Markdown cru', async ({
+  page,
+}) => {
+  const erros = coletarErros(page);
+  const chamadas = await mockApi(page, []);
+  await entrarComo(page, 'Admin');
+  await page.goto(`${ROTA}/novo`);
+  const campo = page.getByLabel('Conteúdo', { exact: true });
+  const selecionarTrecho = (trecho: string) =>
+    campo.evaluate((el: HTMLTextAreaElement, t: string) => {
+      const i = el.value.indexOf(t);
+      el.focus();
+      el.setSelectionRange(i, i + t.length);
+    }, trecho);
+
+  await campo.fill('Resumo\n\nPisos\nTelhado\n\nGesso\n\nFundação concluída hoje');
+  await campo.evaluate((el: HTMLTextAreaElement) => {
+    el.focus();
+    el.setSelectionRange(0, 0);
+  });
+  await page.getByRole('button', { name: 'Título' }).click();
+  await selecionarTrecho('Pisos\nTelhado');
+  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  await selecionarTrecho('Gesso');
+  await page.getByRole('button', { name: 'Lista numerada' }).click();
+  await selecionarTrecho('concluída');
+  await page.getByRole('button', { name: 'Negrito' }).click();
+  await selecionarTrecho('Fundação');
+  await page.getByRole('button', { name: 'Itálico' }).click();
+  await expect(campo).toHaveValue(MARKDOWN_BARRA);
+
+  // Aba Pré-visualizar: mesma estrutura que o cliente verá e barra fora da tela (não há campo para formatar).
+  await page.getByRole('tab', { name: 'Pré-visualizar' }).click();
+  const painel = page.getByRole('tabpanel', { name: 'Pré-visualizar' });
+  await expect(painel.locator('h2')).toHaveText('Resumo');
+  expect(await painel.evaluate(estruturaDoTexto)).toEqual(ESTRUTURA_BARRA);
+  // Na prévia a barra sai da tela (painel "Escrever" oculto); ao voltar, está ativa de novo.
+  await expect(page.getByRole('toolbar', { name: 'Formatação do texto' })).toBeHidden();
+  await page.getByRole('tab', { name: 'Escrever' }).click();
+  await expect(page.getByRole('button', { name: 'Negrito' })).toBeEnabled();
+
+  // Criar o rascunho: o corpo leva o Markdown exatamente como no campo.
+  await page.getByLabel('Competência (mês)').fill('2026-12');
+  await page.getByRole('button', { name: 'Criar rascunho' }).click();
+  await expect(page.getByText('Rascunho criado. O cliente só vê depois de publicar.')).toBeVisible();
+  expect(chamadas.criar.map((c) => c.body.conteudo)).toEqual([MARKDOWN_BARRA]);
+
+  // Publicar: o texto gravado não muda (o servidor guarda o cru) e o PUT/POST não reescrevem o conteúdo.
+  await page.getByRole('button', { name: 'Publicar', exact: true }).click();
+  await page.getByRole('button', { name: 'Publicar agora' }).click();
+  await expect(page.getByText('Relatório publicado. O cliente já pode vê-lo.')).toBeVisible();
+  expect(chamadas.publicar).toEqual([{ id: 'novo1', auth: 'Bearer token-sintetico' }]);
+  expect(chamadas.editar).toEqual([]);
+  // Publicado, somente leitura: a mesma estrutura, agora sem campo.
+  const tituloLido = page.getByRole('region', { name: 'Como o cliente vê' }).getByRole('heading', { name: 'Resumo' });
+  await expect(tituloLido).toBeVisible();
+  expect(await tituloLido.locator('xpath=..').evaluate(estruturaDoTexto)).toEqual(ESTRUTURA_BARRA);
+  expect(erros).toEqual([]);
+  expect(chamadas.semMock).toEqual([]);
+});
+
+test('cliente vê a formatação renderizada e HTML, links e imagens colados viram só texto', async ({ page }) => {
+  const erros = coletarErros(page);
+  const externas: string[] = [];
+  page.on('request', (r) => {
+    if (r.url().includes('evil.example')) externas.push(r.url());
+  });
+  const hostil =
+    'Veja <b>html</b> <script>window.__xss=1</script> <img src="http://evil.example/p.png" onerror="window.__xss=1"> ' +
+    '[clique](http://evil.example/x) ![foto](http://evil.example/i.png) <http://evil.example/auto> [js](javascript:alert(1))';
+  await mockApi(page, [
+    publicado('r1', '2026-10-01', { conteudo: MARKDOWN_BARRA }),
+    publicado('r2', '2026-09-01', { conteudo: hostil }),
+  ]);
+  await entrarComo(page, 'Client');
+  await page.goto(`/cliente/obras/${OBRA}/relatorio-mensal`);
+
+  // Formatação: a mesma estrutura da prévia do admin e nenhum marcador Markdown sobrando na tela.
+  const titulo = page.locator('h2', { hasText: 'Resumo' });
+  await expect(titulo).toBeVisible();
+  expect(await titulo.locator('xpath=..').evaluate(estruturaDoTexto)).toEqual(ESTRUTURA_BARRA);
+  await expect(page.getByText('**concluída**')).toHaveCount(0);
+  await expect(page.getByText('## Resumo')).toHaveCount(0);
+
+  // Hostil: nada de elemento perigoso dentro do texto; o HTML aparece como texto; nada externo é pedido.
+  const paragrafo = page.locator('p', { hasText: 'clique' });
+  await expect(paragrafo).toBeVisible();
+  await expect(paragrafo).toContainText('<b>html</b>');
+  await expect(paragrafo.locator('a, img, script, b, iframe')).toHaveCount(0);
+  await expect(page.locator('img[src*="evil.example"], a[href*="evil.example"], a[href^="javascript:"]')).toHaveCount(
+    0,
+  );
+  await page.waitForTimeout(300);
+  expect(externas).toEqual([]);
+  expect(await page.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined();
+  await expect(page.getByRole('button', { name: /criar|novo|editar|excluir|publicar/i })).toHaveCount(0);
+  expect(erros).toEqual([]);
+});
+
 test('cliente é barrado em todas as rotas novas e nenhuma chamada é feita', async ({ page }) => {
   const chamadas = await mockApi(page, [relatorio('r1', '2026-10-01')]);
   await entrarComo(page, 'Client');
