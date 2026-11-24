@@ -54,11 +54,23 @@ do `git diff --cached`, roda `cd frontend && npm run plano:registro -- --escreve
 `git add docs/PLAN-09-frontend.md` e commita de novo. `SKIP_PLAN_CHECK=1` ou branch `wip/*` só se o
 usuário pedir. Antes do merge: `plano:registro -- --escrever` com tudo commitado + commit `docs: registro`.
 
-## Pull requests
+## Commits e pull requests
+
+**Autor dos commits é o usuário.** Antes do primeiro commit da sessão, confira `git config user.name` e `user.email`;
+devem ser `Guilherme Girardi` e `48716406+euguilhermegirardi@users.noreply.github.com` (config local do repo, nunca
+global). Nunca commitar como "Claude". O trailer `Co-Authored-By` pode continuar.
 
 **Sem assinaturas no PR.** O título e a descrição do PR não levam rodapé de autoria nem de ferramenta (por exemplo
 "Generated with Claude Code", links de sessão ou `Co-Authored-By`). A descrição traz só o conteúdo: o que muda,
 como foi verificado e o que ficou de fora.
+
+**Formato da descrição do PR** (escolha pelo tipo; título no imperativo e curto, em português):
+- **Correção:** `Problema` (o que o usuário via/o que quebrava) → `Causa` (uma linha) → `Solução`.
+- **Nova feature:** descrição completa: o que a funcionalidade faz e para quem, telas/endpoints envolvidos, regras
+  de acesso e decisões de design relevantes.
+- **Adição ou manutenção** (docs, chore, refactor, testes): `O que foi adicionado/alterado` e `Por quê`.
+
+Todos terminam com `Como foi verificado` (testes rodados e checagem manual) e `Fora do escopo` (o que ficou para depois).
 
 ## Regras de segurança (inegociáveis — dados extremamente sensíveis)
 
