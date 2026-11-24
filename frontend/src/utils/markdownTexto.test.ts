@@ -69,3 +69,22 @@ describe('markdownParaTexto', () => {
     }
   });
 });
+
+describe('markdownParaTexto - entradas patológicas de link e imagem', () => {
+  const LIMITE_MS = 1500;
+
+  it.each([
+    ['"[" x 20000', '['.repeat(20000)],
+    ['"![" x 10000', '!['.repeat(10000)],
+    ['"[](" + "(" x 20000', '[](' + '('.repeat(20000)],
+    ['"[a](" x 4000', '[a]('.repeat(4000)],
+  ])('%s termina rápido', (_nome, texto) => {
+    const inicio = performance.now();
+    markdownParaTexto(texto);
+    expect(performance.now() - inicio).toBeLessThan(LIMITE_MS);
+  });
+
+  it('link e imagem comuns continuam virando o texto', () => {
+    expect(markdownParaTexto('veja [o projeto](https://x/a_(b)) e ![foto](x.png)')).toBe('veja o projeto e foto');
+  });
+});

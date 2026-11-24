@@ -881,13 +881,24 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
   - **Renderização segura** (`components/MarkdownTexto`, compartilhada com o cliente): `react-markdown` **10.1.0** (versão exata; compatível com React 19), **sem `rehype-raw`** (HTML cru aparece como texto),
     `allowedElements` = p, br, strong, em, h2, h3, ul, ol, li **mais h1 e h4–h6 só para remapear** (`#` vira h2, `####` vira h3: a página já tem h1; sem permitir h1 o `#` virava texto), `unwrapDisallowed`
     (link vira só o texto, imagem some, código/citação/tabela viram texto). Sem `dangerouslySetInnerHTML`. `whitespace-pre-line` em `p`/`li` preserva a quebra de linha simples dos **relatórios antigos em texto puro**
-    (Markdown a juntaria); linhas em branco viram parágrafos; recuo de 4+ espaços não vira bloco de código. Usado no `RelatorioMensalCard` (tela do cliente, detalhe publicado e "Como o cliente vê") e na aba Pré-visualizar.
+    (Markdown a juntaria); linhas em branco viram parágrafos; recuo de 4+ espaços vira bloco de código no parse, mas o `<code>` é desembrulhado e o `<pre>` vira `div` com `whitespace-pre-line` (texto simples, sem monoespaço). Usado no `RelatorioMensalCard` (tela do cliente, detalhe publicado e "Como o cliente vê") e na aba Pré-visualizar.
   - **Prévias curtas** (coluna "Resumo" da lista): `utils/markdownTexto.markdownParaTexto` tira os marcadores (só o começo do texto, 2000 caracteres, é convertido) para não quebrar a linha da tabela.
   - **Testes:** `markdownEdicao.test.ts` (25), `utils/markdownTexto.test.ts`, `components/MarkdownTexto.test.tsx` (script, `<img onerror>`, HTML cru, `javascript:`, imagem e tabela não viram elementos; h1 nunca),
     `ConteudoMarkdownEditor.test.tsx` (botões, atalhos, foco/seleção, abas), `RelatorioAdminMarkdown.test.tsx` (novo, editar, publicado, lista) e casos novos na visão do cliente; e2e `relatorio-admin` ganhou o passo do Negrito (**não executado na nuvem: sem navegador**).
   - **Testes antigos afetados:** `RelatorioMensalCard.test` ("preserva quebras de linha e espaços... exatamente como veio") deixou de valer: o recuo e a linha em branco agora passam pelo Markdown. Troquei pelo equivalente
     (texto legível, quebras preservadas, HTML não interpretado) e adicionei o do Markdown renderizado.
-  - **Pendente:** `npm audit` aponta `undici` (alta, dependência transitiva de teste/msw, anterior a esta mudança); sem `\_` / escape de marcador na barra; sem desfazer específico (o Ctrl+Z do navegador pode não restaurar a
+  - **Texto patológico e falhas (revisão de segurança, `MarkdownTexto`):** o relatório publicado não pode ser editado/excluído (409), então o texto não pode quebrar a tela do cliente. `'+ '.repeat(10000)`,
+    `'> '.repeat(10000)`, `'1. '.repeat(6666)` e `'>'.repeat(20000)` estouravam a pilha (RangeError) ou levavam ~13 s no `react-markdown`. Decisão: (i) pré-checagem `utils/markdownSeguro.markdownPatologico` antes do
+    parse: se alguma linha tiver **mais de 6** contêineres de bloco seguidos no início (`>`, `-`/`+`/`*`, `1.`/`1)`, com espaços entre eles; limite 6 inclusive passa) ou o texto tiver **mais de 2000 linhas** de
+    item/citação, renderiza o texto cru em `<p class="whitespace-pre-wrap">` (mesmo visual do texto puro antigo); (ii) `components/ErrorBoundary` (reutilizável, `key` remonta ao mudar o conteúdo) em volta do
+    `Markdown` com o mesmo fallback, e outro no `Outlet` do `AppShell` (`key` = rota; mostra `ErrorState` com "Tentar novamente") para que nenhuma falha de renderização deixe a SPA em branco.
+    **Limitações:** aninhamento por recuo (`  - ` com espaços crescentes) não conta na profundidade (custa ~100 níveis em 20000 caracteres, sem estouro observado); acima do limite o Markdown legítimo (ex.: lista
+    com 7+ níveis na mesma linha) aparece com os marcadores à mostra, de propósito.
+  - **Entidades bidi:** `&#x202E;`, `&rlm;`, `&zwj;`, `&#x200B;`, `&#xFEFF;`, `&#x061C;`, `&#x2066;`... são decodificadas pelo micromark e passavam o filtro do backend/`relatorioForm` (que só vê o literal).
+    Plugin rehype `rehypeSemBidi` remove `U+061C U+200B–200F U+202A–202E U+2066–2069 U+FEFF` dos nós de texto depois do parse (sem habilitar HTML cru); o fallback de texto cru aplica `removerBidi` na exibição.
+    O backend continua só recusando o literal (não muda). `markdownParaTexto`: regex de link/imagem limitados (`[^\]\n]{0,200}`, endereço com no máximo 2000 trechos), sem custo quadrático em `'['.repeat(20000)`.
+  - **Dependências:** `npm audit` aponta `undici` (alta) vindo do **`jsdom`** (só dev/teste); `npm audit --omit=dev` = **0 vulnerabilidades**, nada disso vai para o bundle.
+  - **Pendente:** sem `\_` / escape de marcador na barra; sem desfazer específico (o Ctrl+Z do navegador pode não restaurar a
     seleção em textarea controlado depois de formatar); revisão de design (captura da barra e da aba Pré-visualizar em 1280/1440 e escuro) a cargo do `design-reviewer`.
 
 - **Robustez sob lentidão (fix/testes-robustos-2, 27/10):** (1) excluir pelo detalhe do Relatório fotográfico admin não relê o detalhe apagado

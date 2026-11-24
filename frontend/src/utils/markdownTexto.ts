@@ -1,7 +1,7 @@
 // Endereço do link: aceita um nível de parênteses (`javascript:alert(1)`, `https://x/a_(b)`).
-const ENDERECO = String.raw`\((?:[^()]|\([^)]*\))*\)`;
-const IMAGEM = new RegExp(String.raw`!\[([^\]]*)\]${ENDERECO}`, 'g');
-const LINK = new RegExp(String.raw`\[([^\]]*)\]${ENDERECO}`, 'g');
+const ENDERECO = String.raw`\((?:[^()\n]|\([^)\n]{0,500}\)){0,2000}\)`;
+const IMAGEM = new RegExp(String.raw`!\[([^\]\n]{0,200})\]${ENDERECO}`, 'g');
+const LINK = new RegExp(String.raw`\[([^\]\n]{0,200})\]${ENDERECO}`, 'g');
 const NEGRITO = /\*\*([^\s*](?:[^*]*[^\s*])?)\*\*/g;
 const ITALICO = /\*([^\s*](?:[^*]*[^\s*])?)\*/g;
 // Negrito com itálico dentro (`**a *b* c**`) só fecha na segunda volta: o miolo do negrito não pode ter `*`.
