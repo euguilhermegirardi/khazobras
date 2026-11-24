@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
@@ -202,6 +202,124 @@ describe('ConteudoMarkdownEditor', () => {
     await userEvent.setup().click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
 
     expect(screen.getByText(/Nada para mostrar ainda/)).toBeInTheDocument();
+  });
+
+  it('pré-visualização com só espaços e quebras de linha também mostra o aviso de vazio', async () => {
+    render(<Campo inicial={'  \n\n \t '} />);
+
+    await userEvent.setup().click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+
+    expect(screen.getByText(/Nada para mostrar ainda/)).toBeInTheDocument();
+  });
+
+  it('trocar de aba várias vezes não perde o texto e a barra volta a formatar a seleção', async () => {
+    const valores: string[] = [];
+    render(<Campo inicial="Obra concluída hoje" aoMudar={(v) => valores.push(v)} />);
+    const u = userEvent.setup();
+    selecionar(5, 14);
+
+    for (let i = 0; i < 3; i += 1) {
+      await u.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+      expect(screen.getByRole('tabpanel', { name: 'Pré-visualizar' })).toHaveTextContent('Obra concluída hoje');
+      await u.click(screen.getByRole('tab', { name: 'Escrever' }));
+      expect(area()).toHaveValue('Obra concluída hoje');
+    }
+    expect(valores).toEqual([]);
+
+    selecionar(5, 14);
+    await u.click(botao('Negrito'));
+    expect(area()).toHaveValue('Obra **concluída** hoje');
+  });
+
+  it('clicar na barra não tira o foco do textarea (mousedown sem ação padrão)', () => {
+    render(<Campo inicial="texto" />);
+    selecionar(0, 5);
+
+    for (const nome of ['Negrito', 'Itálico', 'Título', 'Lista', 'Lista numerada']) {
+      // `fireEvent` devolve `false` quando o evento foi cancelado (preventDefault): o navegador não move o foco.
+      expect(fireEvent.mouseDown(botao(nome)), nome).toBe(false);
+    }
+    expect(area()).toHaveFocus();
+  });
+
+  it('botão com o textarea sem foco: foca o campo e formata o texto', async () => {
+    render(<Campo inicial="texto" />);
+    expect(area()).not.toHaveFocus();
+
+    await userEvent.setup().click(botao('Lista'));
+
+    expect(area()).toHaveValue('- texto');
+    expect(area()).toHaveFocus();
+  });
+
+  it('seleção no meio da palavra: clique mantém foco e seleção exatamente sobre o trecho', async () => {
+    render(<Campo inicial="concluída" />);
+    selecionar(3, 6);
+
+    await userEvent.setup().click(botao('Itálico'));
+
+    expect(area()).toHaveValue('con*clu*ída');
+    expect(area()).toHaveFocus();
+    expect([area().selectionStart, area().selectionEnd]).toEqual([4, 7]);
+  });
+
+  it('emoji selecionado: a seleção volta sobre o emoji (índices UTF-16)', async () => {
+    render(<Campo inicial="obra 😀 ok" />);
+    selecionar(5, 7);
+
+    await userEvent.setup().click(botao('Negrito'));
+
+    expect(area()).toHaveValue('obra **😀** ok');
+    expect(area().value.slice(area().selectionStart, area().selectionEnd)).toBe('😀');
+  });
+
+  it('Ctrl+B duas vezes na mesma seleção volta ao texto original e mantém a seleção', async () => {
+    render(<Campo inicial="alpha beta" />);
+    selecionar(0, 5);
+    const u = userEvent.setup();
+
+    await u.keyboard('{Control>}b{/Control}');
+    await u.keyboard('{Control>}b{/Control}');
+
+    expect(area()).toHaveValue('alpha beta');
+    expect([area().selectionStart, area().selectionEnd]).toEqual([0, 5]);
+  });
+
+  it('Ctrl+Shift+B, Ctrl+Alt+B (AltGr) e B sozinho não formatam; Ctrl+B com CapsLock (B maiúsculo) formata', () => {
+    render(<Campo inicial="alpha" />);
+    selecionar(0, 5);
+
+    const semShift = fireEvent.keyDown(area(), { key: 'B', ctrlKey: true, shiftKey: true });
+    const altGr = fireEvent.keyDown(area(), { key: 'b', ctrlKey: true, altKey: true });
+    const sozinho = fireEvent.keyDown(area(), { key: 'b' });
+    // Eventos ignorados não têm o padrão cancelado (o navegador continua com o que faria).
+    expect([semShift, altGr, sozinho]).toEqual([true, true, true]);
+    expect(area()).toHaveValue('alpha');
+
+    // CapsLock ligado: `key` vem maiúscula, sem Shift.
+    fireEvent.keyDown(area(), { key: 'B', ctrlKey: true });
+    expect(area()).toHaveValue('**alpha**');
+  });
+
+  it('Ctrl+B sem seleção insere o par e o texto digitado em seguida fica em negrito', async () => {
+    render(<Campo inicial="" />);
+    const u = userEvent.setup();
+    selecionar(0);
+
+    await u.keyboard('{Control>}b{/Control}');
+    await u.keyboard('forte');
+
+    expect(area()).toHaveValue('**forte**');
+  });
+
+  it('colar texto com marcadores e linhas misturadas não é alterado pela barra até haver clique', async () => {
+    render(<Campo />);
+    const u = userEvent.setup();
+    area().focus();
+
+    await u.paste('# a\r\n- b\r\n**c**');
+
+    expect(area().value.replace(/\r\n/g, '\n')).toBe('# a\n- b\n**c**');
   });
 
   it('na pré-visualização, HTML, links e imagens do texto não viram elementos', async () => {

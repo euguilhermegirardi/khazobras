@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
@@ -82,6 +82,33 @@ describe('Relatório mensal (cliente)', () => {
     expect(main.querySelector('script, img, [onerror], [href^="javascript"]')).toBeNull();
     expect(within(main).queryByRole('link', { name: 'x' })).not.toBeInTheDocument();
     expect(main).toHaveTextContent('<script>alert(1)</script>');
+  });
+
+  it('cliente: relatório de 20000 caracteres e outro hostil convivem, sem editor, barra nem elementos perigosos', async () => {
+    const longo = `${'Obra **ok** e *bem*. '.repeat(900)}FIM-LONGO`;
+    expect(longo.length).toBeLessThanOrEqual(20000);
+    server.use(
+      getLista([
+        relatorio({ id: 'r1', competencia: '2026-03-01', conteudo: longo }),
+        relatorio({
+          id: 'r2',
+          competencia: '2026-02-01',
+          conteudo:
+            '# Grande\n\n<iframe src="https://evil.example"></iframe> [a](javascript:alert(1)) ![i](http://x/y.png) &lt;b&gt;',
+        }),
+      ]),
+    );
+    renderApp(ROTA, 'Client');
+
+    expect(await screen.findByText(/FIM-LONGO/)).toBeInTheDocument();
+    const main = screen.getByRole('main');
+    await waitFor(() => expect(within(main).getByRole('heading', { level: 2, name: 'Grande' })).toBeInTheDocument());
+    expect(
+      main.querySelector('iframe, img, script, textarea, [role="toolbar"], a[href^="javascript"], a[href^="http"]'),
+    ).toBeNull();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(main).toHaveTextContent('<iframe src="https://evil.example"></iframe>');
+    expect(within(main).queryByRole('tab')).not.toBeInTheDocument();
   });
 
   it('texto antigo (sem marcação) aparece igual, com as quebras de linha', async () => {
