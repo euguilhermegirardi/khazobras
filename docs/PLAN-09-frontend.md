@@ -965,3 +965,15 @@ Ao implementar uma, removê-la daqui e atualizar a tabela de telas. Faltam (prov
 - Sem versões do texto, sem despublicar, sem notificar cliente; conteúdo é Markdown simples (relatórios antigos em texto puro continuam legíveis).
 - Design: badge "Rascunho" quase sem contorno sobre o fundo cinza no topo do detalhe; botões outline vermelhos perdem a cor no hover (`hover:text-danger`), padrão comum a outras telas.
 - `components/ui/textarea.tsx` escrito à mão (shadcn sem rede): reinstalar pelo CLI.
+
+### Backlog — Editor Markdown do relatório (23/11, security-reviewer, tester e design-reviewer, todos baixos)
+- Ctrl+Z do navegador não desfaz a formatação feita pela barra/atalho (o `value` do textarea é trocado por código; `setRangeText` ou `execCommand('insertText')` resolveriam). O botão alterna o formato de volta.
+- "Publicar" com texto editado e não salvo publica a versão salva e descarta a edição sem aviso (já existia; o editor torna mais provável).
+- Selecionar um pedaço da marcação e formatar gera marcadores extras (`a ****b**** c`); caso raro, não corrompe o envio.
+- Texto só com `****` ou `---` passa na validação e renderiza vazio; a prévia não avisa "nada para mostrar".
+- Enter com erro de validação e a aba Pré-visualizar aberta tenta focar o textarea oculto.
+- Markdown legítimo com mais de 6 níveis de marcador de bloco na mesma linha (ou mais de 2000 linhas de item/citação) cai em texto cru com os marcadores à mostra (decisão consciente contra estouro de pilha).
+- Entidades bidi/largura zero são removidas só na exibição (front); o backend continua recusando apenas o caractere literal.
+- Resumo da lista do admin cola título e parágrafo ("Trabalhos executados no mês O mês foi…"): juntar com " · " ou pular o título (`RelatorioLinha.tsx`).
+- Alvos da barra com 28px (`size-7`), aceitável em desktop; `size-8` se reclamarem. Anel de foco da aba "Pré-visualizar" grosso depois do clique (conferir com mouse real).
+- Rodar o e2e fora do container (Mac) e os testes de página com latência real continua sendo a checagem final do usuário.
