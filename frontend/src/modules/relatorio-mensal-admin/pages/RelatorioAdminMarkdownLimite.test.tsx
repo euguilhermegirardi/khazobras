@@ -13,6 +13,7 @@ import { server } from '@/test/server';
 const user = () => userEvent.setup();
 const conteudoInput = () => screen.getByLabelText('Conteúdo') as HTMLTextAreaElement;
 const botao = (nome: string) => screen.getByRole('button', { name: nome });
+const previaCliente = () => screen.getByRole('region', { name: 'Como o cliente vê' });
 const MAX = 20000;
 const ERRO_LIMITE = `O conteúdo aceita no máximo ${MAX} caracteres.`;
 const ERRO_CARACTERE = 'O conteúdo não pode ter caracteres de controle nem de direção do texto.';
@@ -96,6 +97,37 @@ describe('Editor Markdown - limite de 20000 caracteres', () => {
     const painel = screen.getByRole('tabpanel', { name: 'Pré-visualizar' });
     expect(painel.querySelectorAll('strong')).toHaveLength(MAX / 10);
     expect(screen.getByText(`${MAX}/${MAX}`)).toBeInTheDocument();
+  });
+});
+
+describe('Editor Markdown - texto patológico e entidades', () => {
+  it('colar 20000 caracteres de citações aninhadas não derruba o formulário: prévia mostra o texto e salvar envia o cru', async () => {
+    const api = await abrirNovo();
+    const patologico = '> '.repeat(MAX / 2);
+
+    fireEvent.change(conteudoInput(), { target: { value: patologico } });
+
+    expect(screen.getByText(`${MAX}/${MAX}`)).toBeInTheDocument();
+    await user().click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+    expect(screen.getByRole('tabpanel', { name: 'Pré-visualizar' }).textContent).toBe(patologico);
+    expect(within(previaCliente()).getByText(/^>/)).toBeInTheDocument();
+
+    await user().click(screen.getByRole('button', { name: 'Criar rascunho' }));
+    await waitFor(() => expect(api.chamadas.criar).toHaveLength(1));
+    expect(api.chamadas.criar[0]?.body.conteudo).toBe(patologico);
+  });
+
+  it('entidade de direção do texto (&#x202E;) é aceita como texto, mas nunca chega ao DOM da prévia nem ao do cliente', async () => {
+    await abrirNovo();
+    const u = user();
+
+    fireEvent.change(conteudoInput(), { target: { value: 'relatório A&#x202E;B&rlm;C ok' } });
+    await u.click(screen.getByRole('tab', { name: 'Pré-visualizar' }));
+
+    const painel = screen.getByRole('tabpanel', { name: 'Pré-visualizar' });
+    expect(painel).toHaveTextContent('relatório ABC ok');
+    expect(painel.textContent).not.toMatch(/[​-‏‪-‮⁦-⁩]/);
+    expect(previaCliente().textContent).not.toMatch(/[​-‏‪-‮⁦-⁩]/);
   });
 });
 
